@@ -173,13 +173,11 @@
 </div>
 
 <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+    import { supabase } from '/src/supabase.js'
 
-    const supabase = createClient(
-    'https://ipxmloqgoukieuerbxtl.supabase.co',
-    'sb_publishable_jVOmm2g3WLxtIrr-rVRvtA_aWaUtB-E',
-        { auth: { storageKey: 'fdussault-auth-v1' } }
-    )
+    // Si déjà connecté, aller directement à l'app
+    const { data: { session: existingSession } } = await supabase.auth.getSession()
+    if (existingSession) { window.location.replace('/'); }
 
     const MAX_ATTEMPTS = 3
     const LOCKOUT_MS = 30000

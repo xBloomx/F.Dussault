@@ -498,8 +498,18 @@ window.addEventListener('signature_mode', (e) => {
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function boot() {
     try {
+        // Vérifier la session SANS appeler getUser() qui peut causer des locks
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+            window.location.replace('/login.html')
+            return
+        }
+
         const user = await loadSession()
-        if (!user) { window.location.href = '/login.html'; return }
+        if (!user) {
+            window.location.replace('/login.html')
+            return
+        }
 
         // Vérifier maintenance
         if (currentRole !== 'A0') {
@@ -513,21 +523,17 @@ async function boot() {
             }
         }
 
-        // Log connexion déjà géré dans auth.js:loadSession() — pas de duplication ici
-
         appliquerPermissions()
 
-        // Cacher le loader principal
         mainLoader.style.opacity = '0'
         setTimeout(() => mainLoader.style.display = 'none', 400)
 
-        // Gérer shortcut PWA ou charger accueil
         handlePWAShortcut()
         if (currentView === 'accueil') await navigateTo('accueil')
 
     } catch (e) {
         console.error('[Boot] Erreur critique:', e)
-        window.location.href = '/login.html'
+        // NE PAS rediriger ici — évite la boucle infinie
     }
 }
 
