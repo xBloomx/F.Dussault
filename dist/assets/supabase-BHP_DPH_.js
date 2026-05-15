@@ -1,0 +1,1 @@
+import{n as e}from"./dist-DIBucx4m.js";var t=e(`https://ipxmloqgoukieuerbxtl.supabase.co`,`sb_publishable_jVOmm2g3WLxtIrr-rVRvtA_aWaUtB-E`,{auth:{storageKey:`fdussault-auth-v1`,autoRefreshToken:!0,persistSession:!0,detectSessionInUrl:!1}});export{t};

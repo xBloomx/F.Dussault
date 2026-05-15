@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Interface F.Dussault</title>
+
+    <link rel="apple-touch-icon" href="/assets/logo_app.png">
+    <link rel="icon" type="image/png" href="/assets/logo_app.png">
+    <link rel="manifest" href="/assets/manifest-LThmKfCU.json">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="F.Dussault">
+    <meta name="theme-color" content="#1e1f26">
+
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            padding-left: env(safe-area-inset-left, 0px);
+            padding-right: env(safe-area-inset-right, 0px);
+        }
+
+        /* ── SIDEBAR ─────────────────────────────────────────────── */
+        .sidebar {
+            width: 80px;
+            background-color: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            z-index: 1000;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            flex-shrink: 0;
+        }
+        .sidebar::-webkit-scrollbar { display: none; }
+        .sidebar-top { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
+        .sidebar-bottom { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; margin-top: auto; padding-top: 15px; }
+
+        .nav-btn {
+            position: relative;
+            background: none; border: none; cursor: pointer;
+            padding: 10px; border-radius: 10px;
+            transition: 0.2s;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .nav-btn:hover { background-color: rgba(255,255,255,0.3); }
+        .nav-btn.active { background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-btn img, .nav-btn svg { width: 30px; height: 30px; object-fit: contain; display: block; transition: transform 0.2s ease; }
+        .nav-btn:hover img, .nav-btn:hover svg { transform: scale(1.15); }
+        .nav-btn svg { stroke: black; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+        /* Badge messagerie */
+        .notif-badge {
+            position: absolute; top: 4px; right: 4px;
+            background: #ff4d4d; color: white;
+            font-size: 10px; font-weight: bold;
+            min-width: 16px; height: 16px; border-radius: 8px;
+            display: none; align-items: center; justify-content: center;
+            padding: 0 4px; line-height: 1;
+            border: 2px solid var(--sidebar-bg);
+        }
+        .notif-badge.visible { display: flex; }
+
+        /* ── MAIN CONTENT ─────────────────────────────────────────── */
+        .main-content {
+            flex: 1; display: flex; flex-direction: column;
+            position: relative; background-color: var(--bg-dark);
+            overflow: hidden;
+        }
+
+        #app-loader {
+            position: absolute; inset: 0;
+            background: var(--bg-dark);
+            z-index: 500;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 0.3s ease;
+        }
+        #app-loader.hidden { opacity: 0; pointer-events: none; }
+
+        #app-container {
+            flex: 1; height: 100%; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* ─── Toast : géré par src/shared/styles.css (.shared-toast) ─── */
+
+        /* Indicateur connexion */
+        #conn-indicator {
+            position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+            background: rgba(30,31,38,0.95); border: 1px solid #333;
+            color: #28a745; font-size: 11px; padding: 4px 10px;
+            border-radius: 20px; display: flex; align-items: center; gap: 5px;
+            z-index: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        #conn-indicator.offline { color: #ff4d4d; }
+        #conn-indicator.show { opacity: 1; }
+        #conn-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+        /* Menu hamburger mobile */
+        .menu-btn {
+            display: none;
+            position: fixed;
+            top: calc(25px + env(safe-area-inset-top, 0px));
+            right: calc(25px + env(safe-area-inset-right, 0px));
+            z-index: 1100;
+            background-color: var(--accent);
+            border: none; width: 48px; height: 48px;
+            border-radius: 12px; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+            justify-content: center; align-items: center;
+        }
+        .menu-btn:active { transform: scale(0.90); }
+        .menu-btn svg { width: 26px; height: 26px; stroke: black; stroke-width: 3; stroke-linecap: round; display: block; }
+        .menu-btn.hide { opacity: 0; pointer-events: none; transform: scale(0.5); }
+
+        #overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none; z-index: 900;
+            backdrop-filter: blur(2px);
+        }
+        #overlay.active { display: block; }
+
+        /* Écran maintenance */
+        #maintenance-screen {
+            display: none;
+            position: fixed; inset: 0;
+            background-color: #1e1f26;
+            z-index: 999999;
+            flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 20px;
+        }
+
+        /* Mode signature plein écran */
+        body.signature-mode-active .sidebar { display: none !important; }
+        body.signature-mode-active .menu-btn { display: none !important; }
+        body.signature-mode-active { padding: 0 !important; }
+
+        /* Responsive */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar { position: relative; left: 0; width: 80px; }
+            .menu-btn { display: none; }
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed; top: 0; left: -100px;
+                width: 100px; height: 100vh;
+                background: var(--sidebar-bg);
+                transition: left 0.3s ease;
+                z-index: 1000;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+                padding-top: calc(20px + env(safe-area-inset-top, 0px));
+                padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            }
+            .sidebar.open { left: 0; }
+            .menu-btn { display: flex; }
+        }
+    </style>
+    <!-- emoji-picker-element pour la messagerie -->
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
+  <script type="module" crossorigin src="/assets/main-BZBmDNl6.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-Cf3xff8G.js">
+  <link rel="modulepreload" crossorigin href="/assets/preload-helper-Dd-HcVz_.js">
+  <link rel="modulepreload" crossorigin href="/assets/dist-DIBucx4m.js">
+  <link rel="modulepreload" crossorigin href="/assets/supabase-BHP_DPH_.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-BoJf8KxA.js">
+  <link rel="stylesheet" crossorigin href="/assets/main-CUylyM1W.css">
+</head>
+<body>
+
+<!-- Loader initial -->
+<div id="security-loader" style="position:fixed;inset:0;background:#1e1f26;z-index:99999;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:opacity 0.4s ease">
+    <img src="/assets/logo+nom.png" alt="Logo F.Dussault" style="width:220px;height:auto;margin-bottom:25px;display:block">
+    <svg width="200" height="3" viewBox="0 0 200 3">
+        <rect width="200" height="3" fill="rgba(255,255,255,0.05)" rx="1.5"/>
+        <rect width="70" height="3" fill="#fcca46" rx="1.5">
+            <animate attributeName="x" values="-70; 200" dur="1.7s" repeatCount="indefinite"/>
+        </rect>
+    </svg>
+</div>
+
+<!-- Indicateur connexion -->
+<div id="conn-indicator"><div id="conn-dot"></div><span id="conn-text">Connecté</span></div>
+
+<!-- Écran maintenance -->
+<div id="maintenance-screen">
+    <svg style="width:100px;height:100px;color:#fcca46;stroke:currentColor;stroke-width:2;fill:none;margin-bottom:20px" viewBox="0 0 24 24">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <h1 style="color:white;margin:0 0 10px;font-size:32px;font-weight:bold">Maintenance en cours</h1>
+    <p style="color:#aaa;font-size:16px;max-width:400px;line-height:1.5;margin:0 auto">L'application F.Dussault est temporairement indisponible pour une mise à jour.</p>
+    <p style="color:#666;font-size:13px;margin-top:30px">Veuillez réessayer plus tard.</p>
+</div>
+
+<!-- Hamburger -->
+<button id="menu-toggle" class="menu-btn" title="Ouvrir le menu" aria-label="Menu">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>
+</button>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="sidebar">
+    <div class="sidebar-top">
+        <button class="nav-btn active" data-view="accueil" title="Accueil" aria-label="Accueil">
+            <img src="/assets/logo_accueil.png" alt="Accueil" onerror="this.style.display='none'">
+        </button>
+        <button class="nav-btn" data-view="facture" title="Factures" aria-label="Factures">
+            <img src="/assets/logo_facture.png" alt="Factures" onerror="this.style.display='none'">
+        </button>
+        <button class="nav-btn hidden" id="btn-nav-soumissions" data-view="soumissions" title="Soumissions" aria-label="Soumissions">
+            <img src="/assets/logo_soumission.png" alt="Soumissions" onerror="this.style.display='none'">
+        </button>
+        <button class="nav-btn" data-view="feuilleTemps" title="Feuille de temps" aria-label="Feuille de temps">
+            <img src="/assets/logo_feuille_de_temps.png" alt="Feuille de temps" onerror="this.style.display='none'">
+        </button>
+        <button class="nav-btn" id="btn-nav-messagerie" data-view="messagerie" title="Messagerie" aria-label="Messagerie">
+            <img src="/assets/logo_messagerie.png" alt="Messagerie" onerror="this.style.display='none'">
+            <span class="notif-badge" id="badge-messagerie">0</span>
+        </button>
+        <button class="nav-btn hidden" id="btn-nav-courriel" data-view="courriel" title="Boîte Courriel" aria-label="Boîte Courriel">
+            <img src="/assets/logo_courriel.png" alt="Boîte Courriel" onerror="this.style.display='none'">
+        </button>
+        <button class="nav-btn" data-view="calendrier" title="Calendrier" aria-label="Calendrier">
+            <img src="/assets/logo_calendrier.png" alt="Calendrier" onerror="this.style.display='none'">
+        </button>
+        <button class="nav-btn" data-view="clients" title="Clients" aria-label="Clients">
+            <img src="/assets/logo_client.png" alt="Clients" onerror="this.style.display='none'">
+        </button>
+        <button class="nav-btn" data-view="outils" title="Outils" aria-label="Outils">
+            <img src="/assets/logo_outils.png" alt="Outils" onerror="this.style.display='none'">
+        </button>
+        <button class="nav-btn hidden" id="btn-nav-po" data-view="po" title="Bons de commande" aria-label="Bons de commande">
+            <img src="/assets/logo_po.png" alt="Bons de commande" onerror="this.style.display='none'">
+        </button>
+    </div>
+    <div class="sidebar-bottom">
+        <button class="nav-btn hidden" id="btn-nav-admin" data-view="admin" title="Administration" aria-label="Administration">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </button>
+        <button class="nav-btn" data-view="profil" title="Profil personnel" aria-label="Profil personnel">
+            <img src="/assets/logo_profil.png" alt="Profil" onerror="this.style.display='none'">
+        </button>
+    </div>
+</aside>
+
+<!-- Contenu principal -->
+<div class="main-content">
+    <div id="app-loader">
+        <svg width="200" height="3" viewBox="0 0 200 3">
+            <rect width="200" height="3" fill="rgba(255,255,255,0.05)" rx="1.5"/>
+            <rect width="70" height="3" fill="#fcca46" rx="1.5">
+                <animate attributeName="x" values="-70; 200" dur="1.7s" repeatCount="indefinite"/>
+            </rect>
+        </svg>
+    </div>
+    <div id="app-container"></div>
+</div>
+
+<div id="overlay"></div>
+<div id="toast-container"></div>
+
+</body>
+</html>
