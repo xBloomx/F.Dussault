@@ -1,6 +1,7 @@
 {
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/login.html", "destination": "/login.html" },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ]
 }
