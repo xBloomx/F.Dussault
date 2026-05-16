@@ -1,4 +1,4 @@
-import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-DQWUsYD6.js";import{n as m,r as h,t as g}from"./signature-B2p-Whyr.js";var _=`Employé`,v=`mine`,y=[],b=0,x=25,S=!1,C=null,w=null,T=null,E=null,D=!1,O=[],k=0,A=0,j=null,M=null;async function ee(e){return _=i?.prenom_nom||`Employé`,e.innerHTML=`
+import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-CYjZVXFS.js";import{n as m,r as h,t as g}from"./signature-B2p-Whyr.js";var _=`Employé`,v=`mine`,y=[],b=0,x=25,S=!1,C=null,w=null,T=null,E=null,D=!1,O=[],k=0,A=0,j=null,M=null;async function ee(e){return _=i?.prenom_nom||`Employé`,e.innerHTML=`
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .fact-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
@@ -54,8 +54,8 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         .status-option { padding: 16px 20px; color: white; cursor: pointer; transition: 0.2s; font-size: 15px; font-weight: bold; border-bottom: 1px solid #3a3b46; }
         .status-option:hover { background: #3a3b46; color: var(--accent); }
         .correction-banner { background: rgba(255,77,77,0.15); border: 1px dashed var(--btn-red); padding: 15px; margin: 20px auto 0; max-width: 8.5in; border-radius: 8px; color: white; line-height: 1.5; font-size: 14px; display: flex; gap: 10px; }
-        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: flex; flex-direction: column; align-items: center; touch-action: auto; }
-        #invoice-container { display: block; width: 8.5in; transform-origin: top center; transition: transform 0.1s ease-out; padding-bottom: 50px; }
+        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: auto; }
+        #invoice-container { display: block; width: 8.5in; transform-origin: 0 0; padding-bottom: 50px; }
         .page { width: 8.5in; height: 11in; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 auto 20px; color: black; padding: 0.25in; flex-shrink: 0; }
         input { outline: none; border-radius: 0; }
         input:focus { background-color: transparent !important; border-bottom: 2px solid #000 !important; }

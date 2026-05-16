@@ -42,8 +42,10 @@ export function createZoomController({
         if (!area) return
         const areaW   = area.clientWidth
         const scaledW = docWidthPx * scale
-        pointX = scaledW < areaW ? (areaW - scaledW) / 2 : 0
-        pointY = 0
+        // Centrer horizontalement
+        pointX = scaledW < areaW ? (areaW - scaledW) / 2 : Math.max(0, (areaW - scaledW) / 2)
+        // Toujours partir du haut
+        pointY = 15
     }
 
     // ── Pointer Events (tactile + souris unifié) ──────────────────────────────

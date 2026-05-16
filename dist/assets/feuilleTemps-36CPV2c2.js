@@ -1,4 +1,4 @@
-import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-DQWUsYD6.js";var m=`Employé`,h=`mine`,g=[],_=null,v=null,y=0,b=25,x=!1,S=null,C=null,w=null;function T(){return t(`view_all_timesheets`)||t(`approve_timesheets`)}async function E(e){return m=i?.prenom_nom||`Employé`,e.innerHTML=`
+import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-CYjZVXFS.js";var m=`Employé`,h=`mine`,g=[],_=null,v=null,y=0,b=25,x=!1,S=null,C=null,w=null;function T(){return t(`view_all_timesheets`)||t(`approve_timesheets`)}async function E(e){return m=i?.prenom_nom||`Employé`,e.innerHTML=`
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .fdt-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
@@ -44,8 +44,8 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
             .top-bar::-webkit-scrollbar { display: none; }
             .top-bar .action-btn { flex-shrink: 0; width: auto; margin-bottom: 0; font-size: 11px; padding: 8px 15px; }
         }
-        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: flex; flex-direction: column; align-items: center; touch-action: auto; }
-        #zoom-wrapper { display: block; width: 8.5in; transform-origin: top center; transition: transform 0.1s ease-out; padding-bottom: 50px; }
+        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: auto; }
+        #zoom-wrapper { display: block; width: 8.5in; transform-origin: 0 0; padding-bottom: 50px; }
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: rgba(30,31,38,0.95); padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: 1px solid #555; }
         .zoom-controls button { background: var(--accent); border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1e1f26; }
         .zoom-controls span { color: white; font-size: 12px; font-weight: bold; min-width: 45px; text-align: center; }

@@ -1,4 +1,4 @@
-import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-DQWUsYD6.js";import{n as m,r as h,t as g}from"./signature-B2p-Whyr.js";var _=`Employé`,v=`mine`,y=[],b=null,x=null,S=0,C=25,w=!1,T=null,E=0,D=0,O=null,k=null;async function A(e){return _=i?.prenom_nom||`Employé`,e.innerHTML=`
+import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-CYjZVXFS.js";import{n as m,r as h,t as g}from"./signature-B2p-Whyr.js";var _=`Employé`,v=`mine`,y=[],b=null,x=null,S=0,C=25,w=!1,T=null,E=0,D=0,O=null,k=null;async function A(e){return _=i?.prenom_nom||`Employé`,e.innerHTML=`
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .soum-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
@@ -45,11 +45,11 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
             .top-bar::-webkit-scrollbar { display: none; }
             .top-bar .action-btn { flex-shrink: 0; width: auto; margin-bottom: 0; font-size: 11px; padding: 8px 15px; }
         }
-        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: flex; flex-direction: column; align-items: center; touch-action: auto; }
+        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: auto; }
         .page { width: 8.5in; height: 11in; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 auto 20px; color: black; padding: 0.25in; flex-shrink: 0; }
         input { outline: none; border-radius: 0; }
         input:focus { background-color: transparent !important; border-bottom: 2px solid #000 !important; }
-        #quote-container { display: block; width: 8.5in; transform-origin: top center; transition: transform 0.1s ease-out; padding-bottom: 50px; }
+        #quote-container { display: block; width: 8.5in; transform-origin: 0 0; padding-bottom: 50px; }
         .top-section { width: 100%; }
         .header-main { width: 100%; margin-top: -15px; margin-bottom: 0; text-align: center; }
         .header-main img { width: 100%; height: auto; display: block; }
