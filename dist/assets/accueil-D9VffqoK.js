@@ -94,9 +94,11 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{c as t,i as n,n as r,r as i,t 
         @media (max-width: 768px) {
             .main-content { padding: 15px; }
             .dash-header { flex-direction: column; gap: 15px; align-items: flex-start; }
+            .dash-title { padding-right: 80px; }
             .header-actions { width: 100%; flex-direction: column; align-items: stretch; gap: 10px; }
             .action-btn { width: 100%; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
             .date-text { width: 100%; text-align: center; }
+            .quick-action-card { min-height: 130px; padding: 25px 15px; }
         }
     </style>
 
