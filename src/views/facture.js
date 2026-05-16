@@ -110,7 +110,7 @@ export async function render(container) {
         .main-table td { border: 1px solid black; height: 24px; background: var(--blue-bg); padding: 0; }
         .main-table tbody tr:last-child td { border-bottom: 4px double black; }
         .main-table input { width: 100%; height: 100%; background: transparent; border: none; padding: 0 5px; box-sizing: border-box; font-size: 12px; color: black; font-weight: bold; }
-        .desc-textarea { width: 100%; min-height: 18px; background: transparent; border: none; padding: 0 5px; box-sizing: border-box; font-size: 12px; color: black; font-weight: bold; resize: none; overflow: hidden; line-height: 1.4; font-family: inherit; display: block; }
+        .desc-textarea { width: 100%; height: 22px; background: transparent; border: none; padding: 0 5px; box-sizing: border-box; font-size: 12px; color: black; font-weight: bold; resize: none; overflow: hidden; line-height: 22px; font-family: inherit; display: block; white-space: nowrap; }
         .bottom-section { margin-top: auto; width: 100%; }
         .time-wrapper { width: 100%; border: 1px solid black; border-collapse: collapse; table-layout: fixed; }
         .time-label-col { width: 110px; border-right: 1px solid black; padding: 5px; vertical-align: top; }
@@ -457,8 +457,8 @@ async function init(container) {
     container.querySelector('#pim-camera-input').addEventListener('change', e => { addPaperPages(e.target.files, invoiceContainer); e.target.value = '' })
     container.querySelector('#pim-gallery-input').addEventListener('change', e => { addPaperPages(e.target.files, invoiceContainer); e.target.value = '' })
 
-    // Textarea auto-resize
-    invoiceContainer.addEventListener('input', e => { if (e.target?.classList.contains('desc-textarea')) autoResizeTextarea(e.target) })
+    // Textarea auto-jump à la cellule suivante quand ligne pleine
+    setupDescTextareaJump(invoiceContainer)
 
     // Signature
     watchContainer(invoiceContainer)
@@ -1159,7 +1159,60 @@ function toggleStatusMenu(e, container) {
 }
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
-function autoResizeTextarea(ta) { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px' }
+function autoResizeTextarea(ta) {
+    // Ne pas grandir — hauteur fixe
+    ta.style.height = '22px'
+}
+
+function setupDescTextareaJump(invoiceContainer) {
+    invoiceContainer.addEventListener('input', e => {
+        const ta = e.target
+        if (!ta.classList.contains('desc-textarea')) return
+
+        // Mesure si le texte dépasse la largeur de la cellule
+        const canvas = setupDescTextareaJump._canvas || (setupDescTextareaJump._canvas = document.createElement('canvas'))
+        const ctx = canvas.getContext('2d')
+        const style = window.getComputedStyle(ta)
+        ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+
+        const maxW = ta.clientWidth - 10 // padding
+        const text = ta.value
+        const w = ctx.measureText(text).width
+
+        if (w > maxW) {
+            // Trouver le dernier espace pour couper proprement
+            const words = text.split(' ')
+            let line1 = ''
+            let overflow = ''
+            for (let i = 0; i < words.length; i++) {
+                const test = line1 ? line1 + ' ' + words[i] : words[i]
+                if (ctx.measureText(test).width > maxW) {
+                    overflow = words.slice(i).join(' ')
+                    break
+                }
+                line1 = test
+            }
+
+            if (!overflow) {
+                // Pas d'espace — couper au caractère
+                overflow = text.slice(-1)
+                line1 = text.slice(0, -1)
+            }
+
+            ta.value = line1
+
+            // Aller à la cellule desc suivante
+            const allDesc = Array.from(invoiceContainer.querySelectorAll('.desc-textarea'))
+            const idx = allDesc.indexOf(ta)
+            if (idx !== -1 && idx + 1 < allDesc.length) {
+                const next = allDesc[idx + 1]
+                next.value = overflow + next.value
+                next.focus()
+                next.setSelectionRange(overflow.length, overflow.length)
+            }
+        }
+    })
+}
 
 function showConfirmModal(msg, callback, container, title = 'Confirmation') {
     container.querySelector('#confirmMsg').innerHTML = msg
