@@ -42,7 +42,7 @@ export async function render(container) {
         .b-paper { background: rgba(91,192,235,0.15); color: #5bc0eb; border: 1px solid rgba(91,192,235,0.4); }
         .badges-wrap { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
         #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .dash-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
         .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
@@ -50,11 +50,8 @@ export async function render(container) {
         .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 12px 15px 12px 40px; border-radius: 8px; font-size: 16px; outline: none; }
         .search-icon { position: absolute; left: 12px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-new-invoice-full { width: 100%; background: var(--accent); color: black; border: none; padding: 14px 20px; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .btn-new-invoice-full:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .btn-new-invoice-full svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; }
-        .tabs-container { display: flex; flex-direction: column; gap: 8px; }
-        .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 14px 20px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+        .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
+        .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
         .btn-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
         .invoice-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px; }
@@ -168,6 +165,10 @@ export async function render(container) {
         @keyframes pp-spin { to { transform: rotate(360deg); } }
         @media (max-width: 768px) {
             #view-dashboard { padding: 15px; }
+            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .dash-header .action-btn { width: 100%; justify-content: center; }
+            .tabs-container { flex-direction: column; width: 100%; }
+            .btn-tab { width: 100%; justify-content: center; }
             .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; position: relative; }
             .inv-id { grid-area: id; } .inv-client { grid-area: client; } .inv-author { grid-area: author; } .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; }
             .inv-actions { position: absolute; top: 16px; right: 16px; }
@@ -205,11 +206,10 @@ export async function render(container) {
         <div id="view-dashboard">
             <div class="dash-header">
                 <div class="dash-title"><h1>Facturation</h1><p>Création et suivi comptable</p></div>
+                <button class="action-btn" id="btnNewInvoice">
+                    <svg viewBox="0 0 24 24"><use href="#fic-plus"/></svg> Nouvelle Facture
+                </button>
             </div>
-
-            <button class="btn-new-invoice-full" id="btnNewInvoice">
-                <svg viewBox="0 0 24 24"><use href="#fic-plus"/></svg> Nouvelle Facture
-            </button>
 
             <div class="tabs-container" id="invoice-tabs" style="display:none">
                 <button id="tab-mine" class="btn-tab active">
