@@ -80,7 +80,8 @@ export async function render(container) {
 
         @media (max-width: 768px) {
             .outils-main { padding: 15px; }
-            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
+            .dash-title { padding-right: 80px; width: 100%; }
             .dash-header .btn-action { width: 100%; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
             .tool-item { flex-direction: column; align-items: flex-start; gap: 15px; padding: 15px; }
             .tool-actions { align-self: stretch; margin-left: 0; width: 100%; }
