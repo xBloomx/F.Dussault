@@ -49,7 +49,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r}from"./auth-BoJf8Kx
         .admin-section.active { display: flex; }
         .perm-form-group { margin-bottom: 15px; }
         .perm-form-group label { display: block; color: var(--text-main); font-size: 14px; font-weight: bold; margin-bottom: 8px; }
-        @media (max-width: 768px) { .admin-main { padding: 15px; } .settings-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .admin-main { padding: 15px; } .settings-grid { grid-template-columns: 1fr; } .admin-danger-row { flex-direction: column; } .admin-danger-row .settings-card { min-width: 0 !important; flex: none !important; width: 100%; } }
     </style>
 
     <div class="admin-main">
@@ -184,7 +184,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r}from"./auth-BoJf8Kx
             </div>
 
             <div style="display:flex;flex-direction:column;gap:20px">
-                <div style="display:flex;gap:20px;flex-wrap:wrap">
+                <div class="admin-danger-row" style="display:flex;gap:20px;flex-wrap:wrap">
                     <div class="settings-card" style="flex:1;border-color:var(--btn-red);min-width:250px">
                         <div class="card-header" style="color:var(--btn-red);border-bottom:none;margin-bottom:0">
                             <div class="header-with-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Mode Maintenance</div>
