@@ -1,6 +1,6 @@
-// ── zoom.js — Zoom interne SPA (indépendant du navigateur) ──────────────────
+// ── zoom.js — Zoom qualité Apple (pinch à la position des doigts) ────────────
 // Utilisé par facture.js, soumissions.js, feuilleTemps.js
-// Supporte: boutons +/-, Ctrl+Molette, Pinch mobile, Ctrl+=/-, Ctrl+0
+// Supporte: boutons +/-, Ctrl+Molette, Pinch mobile (zoom à position des doigts), Ctrl+=/-, Ctrl+0
 
 export function createZoomController({
     container,        // conteneur du document (invoice-container, etc.)
@@ -14,26 +14,54 @@ export function createZoomController({
     let current = 1.0
     let _cleanupFns = []
 
-    // ── Appliquer le zoom ────────────────────────────────────────────────────
+    // ── Appliquer le zoom centré (boutons +/-, fit) ──────────────────────────
     function applyZoom(z) {
         current = Math.round(Math.max(minZoom, Math.min(maxZoom, z)) * 100) / 100
         container.style.transformOrigin = 'top center'
         container.style.transform = `scale(${current})`
+        if (zoomDisplay) zoomDisplay.textContent = Math.round(current * 100) + '%'
+        _updateLayout(true)
+    }
 
+    // ── Appliquer le zoom à un point précis (pinch iOS / Ctrl+Molette) ───────
+    function applyZoomAt(newZ, originX, originY) {
+        const area = scrollArea || container.parentElement
+        if (!area) { applyZoom(newZ); return }
+
+        newZ = Math.round(Math.max(minZoom, Math.min(maxZoom, newZ)) * 100) / 100
+
+        // Coordonnées du point sous les doigts dans le document avant zoom
+        const scrollLeft = area.scrollLeft
+        const scrollTop  = area.scrollTop
+        const docX = (scrollLeft + originX) / current
+        const docY = (scrollTop  + originY) / current
+
+        // Appliquer le nouveau zoom depuis top left pour contrôle précis
+        current = newZ
+        container.style.transformOrigin = 'top left'
+        container.style.transform = `scale(${current})`
         if (zoomDisplay) zoomDisplay.textContent = Math.round(current * 100) + '%'
 
+        _updateLayout(false)
+
+        // Repositionner le scroll pour que le point reste sous les doigts
+        area.scrollLeft = docX * current - originX
+        area.scrollTop  = docY * current - originY
+    }
+
+    // ── Layout (marges et hauteur scrollable) ────────────────────────────────
+    function _updateLayout(centered) {
         const area = scrollArea || container.parentElement
         if (!area) return
 
-        const scaledW = docWidthPx * current
-        const areaW = area.clientWidth
+        if (centered) {
+            const scaledW = docWidthPx * current
+            const areaW   = area.clientWidth
+            container.style.marginLeft = scaledW < areaW
+                ? `${Math.max(0, (areaW - scaledW) / 2)}px`
+                : '0px'
+        }
 
-        // Centrer horizontalement si le document est plus petit que la zone
-        container.style.marginLeft = scaledW < areaW
-            ? `${Math.max(0, (areaW - scaledW) / 2)}px`
-            : '0px'
-
-        // Ajuster le margin-bottom pour que le scrollArea ait la bonne hauteur
         const docH = container.offsetHeight
         if (current < 1.0) {
             container.style.marginBottom = `${(docH * current - docH + 60)}px`
@@ -49,11 +77,8 @@ export function createZoomController({
         const area = scrollArea || container.parentElement
         if (!area) return
         const w = area.clientWidth
-        if (w === 0) {
-            requestAnimationFrame(fitToScreen)
-            return
-        }
-        const padding = 30 // px de marge de chaque côté
+        if (w === 0) { requestAnimationFrame(fitToScreen); return }
+        const padding = 30
         const targetZoom = w < (docWidthPx + padding * 2)
             ? Math.round(((w - padding * 2) / docWidthPx) * 100) / 100
             : 1.0
@@ -61,8 +86,8 @@ export function createZoomController({
     }
 
     // ── Boutons +/- ──────────────────────────────────────────────────────────
-    function zoomIn()  { applyZoom(current + step) }
-    function zoomOut() { applyZoom(current - step) }
+    function zoomIn()    { applyZoom(current + step) }
+    function zoomOut()   { applyZoom(current - step) }
     function zoomReset() { fitToScreen() }
 
     // ── Ctrl+Molette ─────────────────────────────────────────────────────────
@@ -70,8 +95,9 @@ export function createZoomController({
         if (!e.ctrlKey && !e.metaKey) return
         e.preventDefault()
         e.stopPropagation()
-        const delta = e.deltaY < 0 ? step : -step
-        applyZoom(current + delta)
+        const area = scrollArea || container.parentElement
+        const rect  = area.getBoundingClientRect()
+        applyZoomAt(current + (e.deltaY < 0 ? step : -step), e.clientX - rect.left, e.clientY - rect.top)
     }
 
     // ── Ctrl+Clavier ─────────────────────────────────────────────────────────
@@ -82,67 +108,70 @@ export function createZoomController({
         else if (e.key === '0') { e.preventDefault(); zoomReset() }
     }
 
-    // ── Pinch-to-zoom mobile ─────────────────────────────────────────────────
+    // ── Pinch-to-zoom iOS — zoom exactement à la position des doigts ─────────
     let _pinchStartDist = null
     let _pinchStartZoom = 1.0
 
-    function getTouchDist(e) {
-        const t = e.touches
-        if (t.length < 2) return null
-        const dx = t[0].clientX - t[1].clientX
-        const dy = t[0].clientY - t[1].clientY
+    function _dist(e) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX
+        const dy = e.touches[0].clientY - e.touches[1].clientY
         return Math.sqrt(dx * dx + dy * dy)
+    }
+
+    function _mid(e) {
+        return {
+            x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+            y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+        }
     }
 
     function onTouchStart(e) {
         if (e.touches.length === 2) {
-            _pinchStartDist = getTouchDist(e)
-            _pinchStartZoom = current
             e.preventDefault()
+            _pinchStartDist = _dist(e)
+            _pinchStartZoom = current
         }
     }
 
     function onTouchMove(e) {
         if (e.touches.length !== 2 || _pinchStartDist === null) return
         e.preventDefault()
-        const dist = getTouchDist(e)
-        if (!dist) return
-        const ratio = dist / _pinchStartDist
-        applyZoom(_pinchStartZoom * ratio)
+
+        const area   = scrollArea || container.parentElement
+        const rect   = area.getBoundingClientRect()
+        const mid    = _mid(e)
+        const originX = mid.x - rect.left
+        const originY = mid.y - rect.top
+        const newZ    = _pinchStartZoom * (_dist(e) / _pinchStartDist)
+
+        applyZoomAt(newZ, originX, originY)
     }
 
     function onTouchEnd(e) {
-        if (e.touches.length < 2) {
-            _pinchStartDist = null
-        }
+        if (e.touches.length < 2) _pinchStartDist = null
     }
 
     // ── Attacher les listeners ───────────────────────────────────────────────
     function attach() {
         const area = scrollArea || container.parentElement
 
-        // Ctrl+Scroll sur la zone de scroll
-        area.addEventListener('wheel', onWheel, { passive: false })
-        _cleanupFns.push(() => area.removeEventListener('wheel', onWheel))
-
-        // Ctrl+Clavier sur le document
+        area.addEventListener('wheel',      onWheel,      { passive: false })
         document.addEventListener('keydown', onKeyDown)
-        _cleanupFns.push(() => document.removeEventListener('keydown', onKeyDown))
-
-        // Pinch sur la zone de scroll
         area.addEventListener('touchstart', onTouchStart, { passive: false })
-        area.addEventListener('touchmove', onTouchMove, { passive: false })
-        area.addEventListener('touchend', onTouchEnd)
-        _cleanupFns.push(() => {
-            area.removeEventListener('touchstart', onTouchStart)
-            area.removeEventListener('touchmove', onTouchMove)
-            area.removeEventListener('touchend', onTouchEnd)
-        })
+        area.addEventListener('touchmove',  onTouchMove,  { passive: false })
+        area.addEventListener('touchend',   onTouchEnd,   { passive: false })
 
-        // Resize fenêtre -> refit
         const onResize = () => fitToScreen()
         window.addEventListener('resize', onResize)
-        _cleanupFns.push(() => window.removeEventListener('resize', onResize))
+
+        _cleanupFns.push(
+            () => area.removeEventListener('wheel', onWheel),
+            () => document.removeEventListener('keydown', onKeyDown),
+            () => area.removeEventListener('touchstart', onTouchStart),
+            () => area.removeEventListener('touchmove',  onTouchMove),
+            () => area.removeEventListener('touchend',   onTouchEnd),
+            () => window.removeEventListener('resize',   onResize)
+        )
     }
 
     // ── Nettoyage ────────────────────────────────────────────────────────────
@@ -151,6 +180,5 @@ export function createZoomController({
         _cleanupFns = []
     }
 
-    // ── API publique ─────────────────────────────────────────────────────────
     return { applyZoom, fitToScreen, zoomIn, zoomOut, zoomReset, attach, destroy, get current() { return current } }
 }
