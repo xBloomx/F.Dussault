@@ -76,7 +76,7 @@ export async function render(container) {
             .top-bar::-webkit-scrollbar { display: none; }
             .top-bar .action-btn { flex-shrink: 0; width: auto; margin-bottom: 0; font-size: 11px; padding: 8px 15px; }
         }
-        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: auto; }
+        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: none; }
         #zoom-wrapper { display: block; width: 8.5in; transform-origin: 0 0; padding-bottom: 50px; }
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: rgba(30,31,38,0.95); padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: 1px solid #555; }
         .zoom-controls button { background: var(--accent); border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1e1f26; }

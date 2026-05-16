@@ -89,7 +89,7 @@ export async function render(container) {
         .status-option { padding: 16px 20px; color: white; cursor: pointer; transition: 0.2s; font-size: 15px; font-weight: bold; border-bottom: 1px solid #3a3b46; }
         .status-option:hover { background: #3a3b46; color: var(--accent); }
         .correction-banner { background: rgba(255,77,77,0.15); border: 1px dashed var(--btn-red); padding: 15px; margin: 20px auto 0; max-width: 8.5in; border-radius: 8px; color: white; line-height: 1.5; font-size: 14px; display: flex; gap: 10px; }
-        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: auto; }
+        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: none; }
         #invoice-container { display: block; width: 8.5in; transform-origin: 0 0; padding-bottom: 50px; }
         .page { width: 8.5in; height: 11in; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 auto 20px; color: black; padding: 0.25in; flex-shrink: 0; }
         input { outline: none; border-radius: 0; }

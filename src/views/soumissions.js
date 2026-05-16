@@ -76,7 +76,7 @@ export async function render(container) {
             .top-bar::-webkit-scrollbar { display: none; }
             .top-bar .action-btn { flex-shrink: 0; width: auto; margin-bottom: 0; font-size: 11px; padding: 8px 15px; }
         }
-        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: auto; }
+        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: none; }
         .page { width: 8.5in; height: 11in; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 auto 20px; color: black; padding: 0.25in; flex-shrink: 0; }
         input { outline: none; border-radius: 0; }
         input:focus { background-color: transparent !important; border-bottom: 2px solid #000 !important; }

@@ -22,6 +22,13 @@ export function createZoomController({
     container.style.willChange      = 'transform'
     container.style.transformOrigin = '0 0'
     container.style.transform       = 'translate3d(0px, 0px, 0px) scale(1)'
+    container.style.touchAction     = 'none'  // bloquer zoom natif sur le container
+
+    // Bloquer le zoom natif Safari iOS sur la scroll-area
+    function _blockNativeZoom(e) {
+        if (e.touches && e.touches.length >= 2) e.preventDefault()
+    }
+    function _blockGesture(e) { e.preventDefault() }
 
     function _clamp(z) { return Math.max(minZoom, Math.min(maxZoom, z)) }
 
@@ -203,6 +210,12 @@ export function createZoomController({
         document.addEventListener('keydown', onKeyDown)
         window.addEventListener('resize', fitToScreen)
 
+        // Bloquer zoom natif Safari iOS sur la zone du document
+        area.addEventListener('touchmove',     _blockNativeZoom, { passive: false })
+        area.addEventListener('gesturestart',  _blockGesture,    { passive: false })
+        area.addEventListener('gesturechange', _blockGesture,    { passive: false })
+        area.addEventListener('gestureend',    _blockGesture,    { passive: false })
+
         _cleanupFns.push(
             () => container.removeEventListener('pointerdown',   onPointerDown),
             () => container.removeEventListener('pointermove',   onPointerMove),
@@ -210,7 +223,11 @@ export function createZoomController({
             () => container.removeEventListener('pointercancel', onPointerUp),
             () => area.removeEventListener('wheel', onWheel),
             () => document.removeEventListener('keydown', onKeyDown),
-            () => window.removeEventListener('resize', fitToScreen)
+            () => window.removeEventListener('resize', fitToScreen),
+            () => area.removeEventListener('touchmove',     _blockNativeZoom),
+            () => area.removeEventListener('gesturestart',  _blockGesture),
+            () => area.removeEventListener('gesturechange', _blockGesture),
+            () => area.removeEventListener('gestureend',    _blockGesture)
         )
     }
 
