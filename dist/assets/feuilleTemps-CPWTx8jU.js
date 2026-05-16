@@ -1,4 +1,4 @@
-import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-D7MONuvB.js";var m=`Employé`,h=`mine`,g=[],_=null,v=null,y=0,b=25,x=!1,S=null,C=null,w=null;function T(){return t(`view_all_timesheets`)||t(`approve_timesheets`)}async function E(e){return m=i?.prenom_nom||`Employé`,e.innerHTML=`
+import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-DLIinQKZ.js";var m=`Employé`,h=`mine`,g=[],_=null,v=null,y=0,b=25,x=!1,S=null,C=null,w=null;function T(){return t(`view_all_timesheets`)||t(`approve_timesheets`)}async function E(e){return m=i?.prenom_nom||`Employé`,e.innerHTML=`
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .fdt-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
