@@ -93,6 +93,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,r as n}from"./auth-BoJf
             .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; }
             .header-actions { width: 100%; }
             .btn-action { flex: 1; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s;}
+            .discrete-stats { margin-top: -5px; margin-bottom: 0; text-align: center; padding-left: 0; }
             .toolbar { flex-direction: column; align-items: stretch; gap: 10px; width: 100%; }
             .filter-select { width: 100%; }
             .client-item { flex-direction: column; align-items: flex-start; gap: 15px; }

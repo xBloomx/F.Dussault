@@ -15,7 +15,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 12px 15px 12px 40px; border-radius: 8px; font-size: 16px; outline: none; }
         .search-icon { position: absolute; left: 12px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .tabs-container { display: flex; gap: 10px; }
+        .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
         .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
         .btn-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
@@ -41,6 +41,12 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         .btn-send { background: var(--btn-blue) !important; color: white !important; }
         .btn-unlock { background: var(--btn-orange) !important; color: white !important; }
         .btn-return { background: var(--btn-red) !important; color: white !important; }
+        @media (max-width: 1024px) {
+            .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+            .top-bar::-webkit-scrollbar { display: none; }
+            .top-bar .action-btn, .office-status-panel { flex-shrink: 0; width: auto; margin-bottom: 0; }
+            .top-bar .action-btn { font-size: 11px; padding: 8px 15px; }
+        }
         .office-status-panel { background: #1a1b23; border: 1px solid #555; padding: 9px 20px; border-radius: 50px; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; cursor: pointer; color: white; font-weight: bold; font-size: 14px; }
         .office-status-panel svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .status-dropdown { position: fixed; background: rgba(43,44,54,0.98); backdrop-filter: blur(10px); border: 1px solid #555; border-radius: 16px; overflow: hidden; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; min-width: 200px; flex-direction: column; }
@@ -48,9 +54,9 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         .status-option { padding: 16px 20px; color: white; cursor: pointer; transition: 0.2s; font-size: 15px; font-weight: bold; border-bottom: 1px solid #3a3b46; }
         .status-option:hover { background: #3a3b46; color: var(--accent); }
         .correction-banner { background: rgba(255,77,77,0.15); border: 1px dashed var(--btn-red); padding: 15px; margin: 20px auto 0; max-width: 8.5in; border-radius: 8px; color: white; line-height: 1.5; font-size: 14px; display: flex; gap: 10px; }
-        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; touch-action: auto; }
-        #invoice-container { display: block; width: 8.5in; transform-origin: top left; transition: transform 0.1s ease-out; padding-bottom: 50px; }
-        .page { width: 8.5in; height: 11in; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 0 20px; color: black; padding: 0.25in; flex-shrink: 0; }
+        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: flex; flex-direction: column; align-items: center; touch-action: auto; }
+        #invoice-container { display: block; width: 8.5in; transform-origin: top center; transition: transform 0.1s ease-out; padding-bottom: 50px; }
+        .page { width: 8.5in; height: 11in; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 auto 20px; color: black; padding: 0.25in; flex-shrink: 0; }
         input { outline: none; border-radius: 0; }
         input:focus { background-color: transparent !important; border-bottom: 2px solid #000 !important; }
         .top-section { width: 100%; }
@@ -130,7 +136,12 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         @keyframes pp-spin { to { transform: rotate(360deg); } }
         @media (max-width: 768px) {
             #view-dashboard { padding: 15px; }
-            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; position: relative; }
+            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
+            .dash-title { padding-right: 80px; width: 100%; }
+            .dash-header .action-btn { width: 100%; justify-content: center; font-size: 14px; }
+            .tabs-container { flex-direction: column; width: 100%; }
+            .btn-tab { width: 100%; justify-content: center; }
+            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; border-left: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
             .inv-id { grid-area: id; } .inv-client { grid-area: client; } .inv-author { grid-area: author; } .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; }
             .inv-actions { position: absolute; top: 16px; right: 16px; }
             .zoom-controls { display: none !important; }

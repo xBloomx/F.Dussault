@@ -4,11 +4,11 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{r as t}from"./auth-BoJf8KxA.js
         .dash-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .btn-compose { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-compose { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .btn-compose:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
         .btn-compose svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-        .email-layout { display: flex; flex: 1; gap: 0; overflow: hidden; background: var(--bg-panel); border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.2); min-height: 0; }
+        .email-layout { display: flex; flex: 1; gap: 0; overflow: hidden; background: var(--bg-panel); border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.2); min-height: 0; position: relative; }
         .email-folders { width: 220px; background: #22232c; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
         .folder-item { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; color: #aaa; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; font-weight: bold; font-size: 13px; }
         .folder-item:hover { background: #2b2c36; color: white; }
@@ -72,8 +72,9 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{r as t}from"./auth-BoJf8KxA.js
         .btn-send svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 
         @media (max-width: 900px) {
-            .email-layout { flex-direction: column; }
-            .email-folders { width: 100%; flex-direction: row; padding: 15px; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; gap: 10px; }
+            .email-layout { flex-direction: column; gap: 0; }
+            .email-folders { width: 100%; flex-direction: row; padding: 15px; border-right: none; border-bottom: 1px solid var(--border); background: var(--bg-panel); overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 10px; scrollbar-width: none; }
+            .email-folders::-webkit-scrollbar { display: none; }
             .folder-item { padding: 8px 16px; border-left: none !important; background: #1e1f26; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
             .folder-item.active { background: var(--accent); color: black; }
             .email-list-col { width: 100%; border-right: none; flex: 1; }
@@ -81,7 +82,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{r as t}from"./auth-BoJf8KxA.js
             .show-reading .email-list-col { display: none; }
             .show-reading .email-folders { display: none; }
             .show-reading .email-view-col { display: flex; }
-            .btn-compose { padding: 0; width: 44px; height: 44px; border-radius: 50%; justify-content: center; margin-right: 60px; }
+            .btn-compose { padding: 0; width: 44px; height: 44px; border-radius: 50%; justify-content: center; margin-right: 60px; flex-shrink: 0; }
             .btn-compose span { display: none; }
         }
     </style>

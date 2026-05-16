@@ -3,12 +3,12 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .fdt-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
         .badge-status { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; color: white; }
-        .b-brouillon { background: #444; } .b-envoye { background: #3498db; } .b-paye { background: #28a745; } .b-renvoye { background: #ff4d4d; }
+        .b-brouillon { background: #444; } .b-envoye { background: #3498db; } .b-attente { background: #fcca46; color: black; } .b-paye { background: #28a745; } .b-renvoye { background: #ff4d4d; }
         #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .tabs-container { display: flex; gap: 10px; }
+        .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
         .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
         .btn-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
@@ -39,8 +39,13 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         .btn-save { background: var(--btn-green) !important; color: white !important; }
         .btn-send { background: var(--btn-blue) !important; color: white !important; }
         .btn-unlock { background: var(--btn-orange) !important; color: white !important; }
-        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; touch-action: auto; }
-        #zoom-wrapper { display: block; width: 8.5in; transform-origin: top left; transition: transform 0.1s ease-out; padding-bottom: 50px; }
+        @media (max-width: 1024px) {
+            .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+            .top-bar::-webkit-scrollbar { display: none; }
+            .top-bar .action-btn { flex-shrink: 0; width: auto; margin-bottom: 0; font-size: 11px; padding: 8px 15px; }
+        }
+        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: flex; flex-direction: column; align-items: center; touch-action: auto; }
+        #zoom-wrapper { display: block; width: 8.5in; transform-origin: top center; transition: transform 0.1s ease-out; padding-bottom: 50px; }
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: rgba(30,31,38,0.95); padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: 1px solid #555; }
         .zoom-controls button { background: var(--accent); border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1e1f26; }
         .zoom-controls span { color: white; font-size: 12px; font-weight: bold; min-width: 45px; text-align: center; }
@@ -68,7 +73,12 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         .btn-modal-ok { background: var(--accent); color: black; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         @media (max-width: 768px) {
             #view-dashboard { padding: 15px; }
-            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "status hours"; gap: 4px 12px; padding: 16px; position: relative; }
+            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
+            .dash-title { padding-right: 80px; width: 100%; }
+            .dash-header .action-btn { width: 100%; justify-content: center; font-size: 14px; }
+            .tabs-container { flex-direction: column; width: 100%; }
+            .btn-tab { width: 100%; justify-content: center; }
+            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "status hours"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; border-left: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
             .inv-id { grid-area: id; } .inv-client { grid-area: client; } .inv-status { grid-area: status; } .inv-hours { grid-area: hours; text-align: right; }
             .inv-actions { position: absolute; top: 16px; right: 16px; }
             .zoom-controls { display: none !important; }

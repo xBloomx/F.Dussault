@@ -68,6 +68,9 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,r as n,t as r}from"./au
         @media (max-width: 768px) {
             .cal-main { padding: 15px; gap: 12px; }
             .dash-header { flex-direction: column; align-items: stretch; gap: 12px; }
+            .dash-header .dash-title { margin-bottom: 0; }
+            .dash-header > div:last-child { display: flex; gap: 10px; }
+            .dash-header .action-btn { flex: 1; justify-content: center; border-radius: 12px; }
             .tabs-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
             .btn-tab { justify-content: center; padding: 11px 8px; font-size: 13px; border-radius: 10px; }
             .btn-tab-dashed { grid-column: 1 / -1; justify-content: center; }
@@ -87,8 +90,8 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,r as n,t as r}from"./au
                 <h1>Calendriers</h1>
                 <p>Personnel, Global et Équipes</p>
             </div>
-            <div style="display:flex;gap:10px">
-                <button class="action-btn" id="btnDeleteCal" style="display:none;background:var(--btn-red);color:white">
+            <div style="display:flex;gap:10px;">
+                <button class="action-btn" id="btnDeleteCal" style="display:none;background:var(--btn-red);color:white;flex-shrink:0">
                     <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     Effacer ce calendrier
                 </button>
