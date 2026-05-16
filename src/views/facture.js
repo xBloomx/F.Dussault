@@ -41,30 +41,34 @@ export async function render(container) {
         .b-brouillon { background: #444; } .b-envoye { background: #3498db; } .b-traite { background: var(--btn-purple); } .b-paye { background: #28a745; } .b-renvoye { background: #fd7e14; }
         .b-paper { background: rgba(91,192,235,0.15); color: #5bc0eb; border: 1px solid rgba(91,192,235,0.4); }
         .badges-wrap { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-        #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; }
+        #view-dashboard { padding: 15px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
+        .dash-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        .toolbar { display: flex; gap: 15px; align-items: center; background: transparent; padding: 0; border-radius: 0; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 12px 15px 12px 40px; border-radius: 8px; font-size: 16px; outline: none; }
+        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #333; color: white; padding: 12px 15px 12px 40px; border-radius: 10px; font-size: 15px; outline: none; box-sizing: border-box; }
         .search-icon { position: absolute; left: 12px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
-        .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-new-invoice-full { width: 100%; background: var(--accent); color: black; border: none; padding: 16px 20px; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn-new-invoice-full:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-new-invoice-full svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+        .tabs-container { display: flex; flex-direction: column; gap: 8px; }
+        .btn-tab { background: #1e1f26; color: white; border: 1px solid #333; padding: 16px 20px; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; box-sizing: border-box; }
         .btn-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
         .invoice-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px; }
-        .invoice-item { background: var(--bg-panel); padding: 12px 20px; border-radius: 10px; display: grid; grid-template-columns: 80px 1fr 140px 130px 100px 44px; align-items: center; gap: 15px; cursor: pointer; border: 1px solid transparent; border-left: 4px solid transparent; transition: 0.2s; }
-        .invoice-item:hover { transform: translateX(5px); background: #343542; border-left-color: var(--accent); background-color: #30313c; border-color: #555;}
-        .inv-id { font-weight: bold; color: var(--accent); font-size: 15px; }
-        .inv-client { font-weight: bold; font-size: 16px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .inv-author { font-size: 14px; color: #888; font-style: italic; }
-        .inv-status { display: flex; align-items: center; }
-        .inv-date { color: #aaa; font-size: 14px; text-align: right; }
-        .inv-actions { display: flex; justify-content: flex-end; }
-        .btn-icon { background: #444; border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; }
-        .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; }
+        .invoice-item { background: #1e1f26; padding: 14px 16px; border-radius: 12px; display: block; cursor: pointer; border: 1px solid #2a2b35; transition: 0.2s; position: relative; }
+        .invoice-item:hover { background: #252630; border-color: #444; }
+        .inv-id { font-weight: bold; color: var(--accent); font-size: 14px; margin-bottom: 2px; }
+        .inv-client { font-weight: bold; font-size: 16px; color: white; margin-bottom: 2px; padding-right: 50px; }
+        .inv-author { font-size: 13px; color: #888; font-style: italic; margin-bottom: 8px; }
+        .inv-bottom-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .inv-status { display: inline-flex; align-items: center; }
+        .inv-date { color: #888; font-size: 13px; margin-left: auto; }
+        .inv-actions { position: absolute; top: 14px; right: 14px; display: flex; justify-content: flex-end; }
+        .btn-icon { background: rgba(255,77,77,0.12); border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--btn-red); }
+        .btn-delete { background: rgba(255,77,77,0.12); color: var(--btn-red); border: 1px solid transparent; }
         .btn-delete:hover { background: var(--btn-red); color: white; }
         #view-editor { display: none; flex-direction: column; height: 100%; }
         .top-bar { height: auto; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; background: rgba(30,31,38,0.95); border-bottom: 1px solid #333; z-index: 101; flex-wrap: wrap; }
@@ -164,15 +168,6 @@ export async function render(container) {
         #paper-progress .pp-spinner { width: 32px; height: 32px; margin: 0 auto 12px; border: 3px solid #444; border-top-color: #5bc0eb; border-radius: 50%; animation: pp-spin 0.8s linear infinite; }
         @keyframes pp-spin { to { transform: rotate(360deg); } }
         @media (max-width: 768px) {
-            #view-dashboard { padding: 15px; }
-            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
-            .dash-title { padding-right: 80px; width: 100%; }
-            .dash-header .action-btn { width: 100%; justify-content: center; font-size: 14px; }
-            .tabs-container { flex-direction: column; width: 100%; }
-            .btn-tab { width: 100%; justify-content: center; }
-            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; border-left: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
-            .inv-id { grid-area: id; } .inv-client { grid-area: client; } .inv-author { grid-area: author; } .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; }
-            .inv-actions { position: absolute; top: 16px; right: 16px; }
             .zoom-controls { display: none !important; }
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -207,10 +202,11 @@ export async function render(container) {
         <div id="view-dashboard">
             <div class="dash-header">
                 <div class="dash-title"><h1>Facturation</h1><p>Création et suivi comptable</p></div>
-                <button class="action-btn" id="btnNewInvoice">
-                    <svg viewBox="0 0 24 24"><use href="#fic-plus"/></svg> Nouvelle Facture
-                </button>
             </div>
+
+            <button class="btn-new-invoice-full" id="btnNewInvoice">
+                <svg viewBox="0 0 24 24"><use href="#fic-plus"/></svg> Nouvelle Facture
+            </button>
 
             <div class="tabs-container" id="invoice-tabs" style="display:none">
                 <button id="tab-mine" class="btn-tab active">
@@ -558,12 +554,14 @@ function renderInvoiceList(container, invoiceContainer) {
         const div = document.createElement('div')
         div.className = 'invoice-item'
         div.innerHTML = `
+            <div class="inv-actions">${actionsHTML}</div>
             <div class="inv-id">#${inv.id}</div>
             <div class="inv-client">${inv.client || ''}</div>
             <div class="inv-author">${inv.authorName || 'Inconnu'}</div>
-            <div class="inv-status">${badgeHTML}</div>
-            <div class="inv-date">${displayDate}</div>
-            <div class="inv-actions">${actionsHTML}</div>
+            <div class="inv-bottom-row">
+                <div class="inv-status">${badgeHTML}</div>
+                <div class="inv-date">${displayDate}</div>
+            </div>
         `
         div.addEventListener('click', e => { if (e.target.closest('[data-delete],[data-restore]')) return; openExistingInvoice(inv.id, container, invoiceContainer) })
         div.querySelector('[data-delete]')?.addEventListener('click', e => {
