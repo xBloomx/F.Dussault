@@ -165,11 +165,12 @@ export async function render(container) {
         @keyframes pp-spin { to { transform: rotate(360deg); } }
         @media (max-width: 768px) {
             #view-dashboard { padding: 15px; }
-            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .dash-header .action-btn { width: 100%; justify-content: center; }
+            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
+            .dash-title { padding-right: 80px; width: 100%; }
+            .dash-header .action-btn { width: 100%; justify-content: center; font-size: 14px; }
             .tabs-container { flex-direction: column; width: 100%; }
             .btn-tab { width: 100%; justify-content: center; }
-            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; position: relative; }
+            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; border-left: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
             .inv-id { grid-area: id; } .inv-client { grid-area: client; } .inv-author { grid-area: author; } .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; }
             .inv-actions { position: absolute; top: 16px; right: 16px; }
             .zoom-controls { display: none !important; }
