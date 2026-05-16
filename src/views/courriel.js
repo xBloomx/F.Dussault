@@ -90,7 +90,7 @@ export async function render(container) {
         @media (max-width: 900px) {
             .email-layout { flex-direction: column; }
             .email-folders { width: 100%; flex-direction: row; padding: 15px; border-right: none; border-bottom: 1px solid var(--border); overflow-x: auto; gap: 10px; }
-            .folder-item { padding: 8px 16px; border-left: none !important; background: #1e1f26; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+            .folder-item { padding: 8px 16px; border-left: none !important; background: #2b2c36; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
             .folder-item.active { background: var(--accent); color: black; }
             .email-list-col { width: 100%; border-right: none; flex: 1; }
             .email-view-col { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }

@@ -62,7 +62,7 @@ export async function render(container) {
         .btn-new-chat { background: var(--accent); color: black; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
         .btn-new-chat svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-new-chat:hover { transform: scale(1.1); background: #ffd66b; }
-        .sidebar-footer { padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; gap: 15px; align-items: center; background: var(--bg-panel); z-index: 10; }
+        .sidebar-footer { padding: 15px 20px; border-top: none; display: flex; gap: 15px; align-items: center; background: var(--bg-panel); z-index: 10; }
         .sidebar-footer .search-box { flex: 1; position: relative; display: flex; align-items: center; }
         .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid #444; color: white; padding: 12px 15px 12px 40px; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s;}
         .search-box input:focus { border-color: var(--accent); }

@@ -49,7 +49,7 @@ export async function render(container) {
             flex: 1; display: flex; flex-direction: column;
             background-color: var(--bg-dark); padding: 30px;
             max-width: 1400px; margin: 0 auto; width: 100%; gap: 20px;
-            min-height: 100%;
+            min-height: 100%; overflow-y: auto;
         }
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title-area { display: flex; flex-direction: column; gap: 5px; }

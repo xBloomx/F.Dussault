@@ -130,13 +130,13 @@ export async function render(container) {
                 <p>Gérez vos informations et votre sécurité</p>
             </div>
             <div class="header-actions">
-                <button class="btn-logout-header" id="btnLogout">
-                    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    <span>Déconnexion</span>
-                </button>
                 <button class="btn-main-save" id="btnSaveAll">
                     <svg viewBox="0 0 24 24" width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Sauvegarder
+                </button>
+                <button class="btn-logout-header" id="btnLogout">
+                    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span>Déconnexion</span>
                 </button>
             </div>
         </div>

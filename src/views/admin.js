@@ -55,7 +55,7 @@ export async function render(container) {
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
         .admin-main { flex: 1; display: flex; flex-direction: column; padding: 30px; max-width: 1200px; margin: 0 auto; width: 100%; overflow-y: auto; min-height: 100%; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .dash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
         .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }

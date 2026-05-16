@@ -37,12 +37,15 @@ export async function render(container) {
     <style>
         :root { --cal-grid-border: #444; --cal-header-bg: #333; }
         .cal-main { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .dash-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; flex-wrap: wrap; }
+        .dash-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
         .action-btn { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
         .action-btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
         .action-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .btn-new-event-full { width: 100%; background: var(--accent); color: black; border: none; padding: 14px 20px; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn-new-event-full:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn-new-event-full svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; }
         .tabs-container { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
         .btn-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -122,16 +125,17 @@ export async function render(container) {
                 <h1>Calendriers</h1>
                 <p>Personnel, Global et Équipes</p>
             </div>
-            <div style="display:flex;gap:10px">
-                <button class="action-btn" id="btnDeleteCal" style="display:none;background:var(--btn-red);color:white">
-                    <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    Effacer ce calendrier
-                </button>
-                <button class="action-btn" id="btnAddEvent">
-                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Événement
-                </button>
-            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center">
+            <button class="btn-new-event-full" id="btnAddEvent">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Événement
+            </button>
+            <button class="action-btn" id="btnDeleteCal" style="display:none;background:var(--btn-red);color:white;flex-shrink:0">
+                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Effacer ce calendrier
+            </button>
         </div>
 
         <div class="tabs-container" id="calTabsContainer"></div>
