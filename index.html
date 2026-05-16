@@ -157,7 +157,7 @@
 
         /* Responsive */
         @media (min-width: 769px) and (max-width: 1024px) {
-            .sidebar { position: relative; left: 0; width: 80px; }
+            .sidebar { position: relative; left: 0; width: 80px; flex-shrink: 0; }
             .menu-btn { display: none; }
         }
         @media (max-width: 768px) {
@@ -173,6 +173,7 @@
             }
             .sidebar.open { left: 0; }
             .menu-btn { display: flex; }
+            .main-content { width: 100%; }
         }
     </style>
     <!-- emoji-picker-element pour la messagerie -->
