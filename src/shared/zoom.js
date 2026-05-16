@@ -1,236 +1,218 @@
-// ── zoom.js — Zoom hybride : natif iOS + JS desktop ──────────────────────────
-// Sur iOS : zoom natif via overflow scroll (qualité Apple)
-// Sur desktop : Ctrl+molette, boutons +/-
-
+// ── zoom.js — Zoom qualité Apple PWA (Pointer Events + GPU + Elastic) ─────────
+// Sources: translate3d GPU, will-change, cubic-bezier elastic bounce
 export function createZoomController({
-    container,
-    scrollArea,
-    zoomDisplay,
-    minZoom = 0.3,
-    maxZoom = 3.0,
-    step = 0.1,
-    docWidthPx = 816
+    container, scrollArea, zoomDisplay,
+    minZoom = 0.3, maxZoom = 3.0, step = 0.1, docWidthPx = 816
 }) {
     let current = 1.0
     let _cleanupFns = []
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    const area = scrollArea || container.parentElement
 
-    function _clamp(z) {
-        return Math.round(Math.max(minZoom, Math.min(maxZoom, z)) * 100) / 100
+    // État zoom + pan
+    let scale     = current
+    let pointX    = 0
+    let pointY    = 0
+    let startX    = 0
+    let startY    = 0
+    let isPanning = false
+    let prevDiff  = -1
+    let evCache   = []
+
+    // ── GPU : forcer translate3d + will-change ────────────────────────────────
+    container.style.willChange      = 'transform'
+    container.style.transformOrigin = '0 0'
+    container.style.transform       = 'translate3d(0px, 0px, 0px) scale(1)'
+
+    function _clamp(z) { return Math.max(minZoom, Math.min(maxZoom, z)) }
+
+    function _updateTransform(animate = false) {
+        if (animate) {
+            // Effet élastique Apple : cubic-bezier(0.25, 1, 0.5, 1)
+            container.style.transition = 'transform 0.35s cubic-bezier(0.25, 1, 0.5, 1)'
+        } else {
+            container.style.transition = 'none'
+        }
+        container.style.transform = `translate3d(${pointX}px, ${pointY}px, 0px) scale(${scale})`
+        if (zoomDisplay) zoomDisplay.textContent = Math.round(scale * 100) + '%'
+        current = scale
     }
 
-    function _getArea() {
-        return scrollArea || container.parentElement
-    }
-
-    // ── Centrage desktop ──────────────────────────────────────────────────────
-    function _center() {
-        const area = _getArea()
+    // ── Centrage initial ──────────────────────────────────────────────────────
+    function _centerDoc() {
         if (!area) return
-        container.style.transformOrigin = 'top center'
-        container.style.marginLeft = ''
-        const scaledW = docWidthPx * current
         const areaW   = area.clientWidth
-        if (scaledW < areaW) {
-            container.style.marginLeft = `${(areaW - scaledW) / 2}px`
-            container.style.transformOrigin = 'top left'
+        const scaledW = docWidthPx * scale
+        pointX = scaledW < areaW ? (areaW - scaledW) / 2 : 0
+        pointY = 0
+    }
+
+    // ── Pointer Events (tactile + souris unifié) ──────────────────────────────
+    function onPointerDown(e) {
+        evCache.push(e)
+        container.setPointerCapture(e.pointerId)
+        if (evCache.length === 1) {
+            isPanning = true
+            startX = e.clientX - pointX
+            startY = e.clientY - pointY
+            container.style.transition = 'none'
         }
-        const docH = container.offsetHeight
-        container.style.marginBottom = current < 1.0
-            ? `${docH * current - docH + 60}px`
-            : current > 1.0 ? `${current * 400}px` : '100px'
     }
 
-    // ── Zoom desktop centré ───────────────────────────────────────────────────
-    function applyZoom(z) {
-        current = _clamp(z)
-        container.style.transform = `scale(${current})`
-        if (zoomDisplay) zoomDisplay.textContent = Math.round(current * 100) + '%'
-        _center()
-    }
+    function onPointerMove(e) {
+        const idx = evCache.findIndex(ev => ev.pointerId === e.pointerId)
+        if (idx === -1) return
+        evCache[idx] = e
 
-    // ── Fit to screen ─────────────────────────────────────────────────────────
-    function fitToScreen() {
-        const area = _getArea()
-        if (!area) return
-        const w = area.clientWidth
-        if (w === 0) { requestAnimationFrame(fitToScreen); return }
-        const padding = isIOS ? 10 : 30
-        const targetZoom = w < (docWidthPx + padding * 2)
-            ? Math.round(((w - padding * 2) / docWidthPx) * 100) / 100
-            : 1.0
-        applyZoom(targetZoom)
+        if (evCache.length === 2) {
+            // ── ZOOM PINCH ────────────────────────────────────────────────────
+            isPanning = false
+            container.style.transition = 'none'
 
-        if (isIOS) _setupIOSNativeZoom()
-    }
+            const curDiff = Math.hypot(
+                evCache[0].clientX - evCache[1].clientX,
+                evCache[0].clientY - evCache[1].clientY
+            )
 
-    function zoomIn()    { applyZoom(current + step) }
-    function zoomOut()   { applyZoom(current - step) }
-    function zoomReset() { fitToScreen() }
+            if (prevDiff > 0) {
+                // Point milieu entre les deux doigts
+                const midX = (evCache[0].clientX + evCache[1].clientX) / 2
+                const midY = (evCache[0].clientY + evCache[1].clientY) / 2
+                const rect = area.getBoundingClientRect()
+                const ox   = midX - rect.left
+                const oy   = midY - rect.top
 
-    // ── iOS : zoom natif via meta viewport dynamique ──────────────────────────
-    // On retire la restriction maximum-scale sur le container de la feuille
-    // et on laisse iOS gérer le pinch nativement sur la scroll-area
-    function _setupIOSNativeZoom() {
-        const area = _getArea()
-        if (!area) return
+                // Point dans le doc avant zoom
+                const docX = (ox - pointX) / scale
+                const docY = (oy - pointY) / scale
 
-        // Retirer transform — laisser iOS scroller nativement
-        container.style.transform = ''
-        container.style.transformOrigin = ''
-        container.style.marginLeft = ''
-        container.style.marginBottom = ''
-        container.style.width = `${docWidthPx}px`
+                const delta = (curDiff - prevDiff) * 0.012
+                scale = _clamp(scale + delta * scale)
 
-        // Configurer le scroll area pour zoom natif iOS
-        area.style.overflow = 'scroll'
-        area.style.webkitOverflowScrolling = 'touch'
+                // Repositionner pour garder le point sous les doigts
+                pointX = ox - docX * scale
+                pointY = oy - docY * scale
 
-        // Permettre le zoom sur ce container en modifiant le viewport temporairement
-        const viewport = document.querySelector('meta[name="viewport"]')
-        if (viewport) {
-            viewport.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover'
+                _updateTransform()
+            }
+            prevDiff = curDiff
+
+        } else if (evCache.length === 1 && isPanning) {
+            // ── PAN ───────────────────────────────────────────────────────────
+            pointX = e.clientX - startX
+            pointY = e.clientY - startY
+            _updateTransform()
         }
+    }
 
-        // Mettre le container en taille réelle — iOS zoom nativement
-        area.style.touchAction = 'pan-x pan-y pinch-zoom'
-        container.style.touchAction = 'pan-x pan-y pinch-zoom'
+    function onPointerUp(e) {
+        evCache = evCache.filter(ev => ev.pointerId !== e.pointerId)
+        try { container.releasePointerCapture(e.pointerId) } catch {}
 
-        if (zoomDisplay) zoomDisplay.textContent = 'Zoom natif'
+        if (evCache.length < 2) prevDiff = -1
+        if (evCache.length === 0) {
+            isPanning = false
+
+            // ── Effet rebond élastique Apple ──────────────────────────────────
+            let changed = false
+
+            // Snap si zoom trop petit
+            if (scale < minZoom + 0.05) {
+                scale = minZoom; changed = true
+            }
+            // Snap si zoom trop grand
+            if (scale > maxZoom - 0.05) {
+                scale = maxZoom; changed = true
+            }
+
+            // Recentrer si le doc est plus petit que la zone
+            if (area) {
+                const areaW   = area.clientWidth
+                const areaH   = area.clientHeight
+                const scaledW = docWidthPx * scale
+                const scaledH = container.offsetHeight * scale
+
+                if (scaledW < areaW) { pointX = (areaW - scaledW) / 2; changed = true }
+                else {
+                    if (pointX > 0) { pointX = 0; changed = true }
+                    if (pointX < areaW - scaledW) { pointX = areaW - scaledW; changed = true }
+                }
+                if (pointY > 0) { pointY = 0; changed = true }
+            }
+
+            _updateTransform(changed) // animate = true → cubic-bezier élastique
+        }
     }
 
     // ── Ctrl+Molette desktop ──────────────────────────────────────────────────
-    let _pinchStartDist = null
-    let _pinchStartZoom = 1.0
-
-    function _dist(e) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX
-        const dy = e.touches[0].clientY - e.touches[1].clientY
-        return Math.sqrt(dx * dx + dy * dy)
-    }
-
-    function _mid(e) {
-        return {
-            x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
-            y: (e.touches[0].clientY + e.touches[1].clientY) / 2
-        }
-    }
-
     function onWheel(e) {
         if (!e.ctrlKey && !e.metaKey) return
         e.preventDefault()
-        e.stopPropagation()
-        const area = _getArea()
         const rect = area.getBoundingClientRect()
-        const ox = e.clientX - rect.left
-        const oy = e.clientY - rect.top
-        const newZ = _clamp(current + (e.deltaY < 0 ? step : -step))
+        const ox   = e.clientX - rect.left
+        const oy   = e.clientY - rect.top
+        const docX = (ox - pointX) / scale
+        const docY = (oy - pointY) / scale
 
-        const scrollLeft = area.scrollLeft
-        const scrollTop  = area.scrollTop
-        const docX = (scrollLeft + ox) / current
-        const docY = (scrollTop  + oy) / current
-
-        current = newZ
-        container.style.transformOrigin = 'top left'
-        container.style.transform = `scale(${current})`
-        container.style.marginLeft = '0px'
-        if (zoomDisplay) zoomDisplay.textContent = Math.round(current * 100) + '%'
-
-        const docH = container.offsetHeight
-        container.style.marginBottom = current < 1.0
-            ? `${docH * current - docH + 60}px`
-            : current > 1.0 ? `${current * 400}px` : '100px'
-
-        area.scrollLeft = docX * current - ox
-        area.scrollTop  = docY * current - oy
+        scale  = _clamp(scale + (e.deltaY < 0 ? step : -step) * scale)
+        pointX = ox - docX * scale
+        pointY = oy - docY * scale
+        _updateTransform()
+        current = scale
+        if (zoomDisplay) zoomDisplay.textContent = Math.round(scale * 100) + '%'
     }
 
     function onKeyDown(e) {
         if (!e.ctrlKey && !e.metaKey) return
-        if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn() }
-        else if (e.key === '-' || e.key === '_') { e.preventDefault(); zoomOut() }
-        else if (e.key === '0') { e.preventDefault(); zoomReset() }
+        if (e.key === '=' || e.key === '+') { e.preventDefault(); applyZoom(scale + step) }
+        else if (e.key === '-')             { e.preventDefault(); applyZoom(scale - step) }
+        else if (e.key === '0')             { e.preventDefault(); fitToScreen() }
     }
 
-    // ── Pinch JS (fallback non-iOS) ───────────────────────────────────────────
-    function onTouchStart(e) {
-        if (isIOS) return // iOS gère nativement
-        if (e.touches.length === 2) {
-            e.preventDefault()
-            _pinchStartDist = _dist(e)
-            _pinchStartZoom = current
-        }
+    // ── API publique ──────────────────────────────────────────────────────────
+    function applyZoom(z) {
+        scale = _clamp(z)
+        _centerDoc()
+        _updateTransform(true)
+        current = scale
     }
 
-    function onTouchMove(e) {
-        if (isIOS) return
-        if (e.touches.length !== 2 || _pinchStartDist === null) return
-        e.preventDefault()
-        const area = _getArea()
-        const rect = area.getBoundingClientRect()
-        const mid  = _mid(e)
-        const ox   = mid.x - rect.left
-        const oy   = mid.y - rect.top
-        const newZ = _clamp(_pinchStartZoom * (_dist(e) / _pinchStartDist))
-
-        const scrollLeft = area.scrollLeft
-        const scrollTop  = area.scrollTop
-        const docX = (scrollLeft + ox) / current
-        const docY = (scrollTop  + oy) / current
-
-        current = newZ
-        container.style.transformOrigin = 'top left'
-        container.style.transform = `scale(${current})`
-        container.style.marginLeft = '0px'
-        if (zoomDisplay) zoomDisplay.textContent = Math.round(current * 100) + '%'
-
-        const docH = container.offsetHeight
-        container.style.marginBottom = current < 1.0
-            ? `${docH * current - docH + 60}px`
-            : current > 1.0 ? `${current * 400}px` : '100px'
-
-        area.scrollLeft = docX * current - ox
-        area.scrollTop  = docY * current - oy
+    function fitToScreen() {
+        if (!area) return
+        const w = area.clientWidth
+        if (w === 0) { requestAnimationFrame(fitToScreen); return }
+        scale = w < docWidthPx + 60 ? (w - 20) / docWidthPx : 1.0
+        scale = _clamp(scale)
+        _centerDoc()
+        _updateTransform(true)
+        current = scale
+        if (zoomDisplay) zoomDisplay.textContent = Math.round(scale * 100) + '%'
     }
 
-    function onTouchEnd(e) {
-        if (isIOS) return
-        if (e.touches.length < 2) _pinchStartDist = null
-    }
+    function zoomIn()    { applyZoom(scale + step) }
+    function zoomOut()   { applyZoom(scale - step) }
+    function zoomReset() { fitToScreen() }
 
-    // ── Attach ────────────────────────────────────────────────────────────────
     function attach() {
-        const area = _getArea()
-
-        area.addEventListener('wheel',      onWheel,      { passive: false })
+        container.addEventListener('pointerdown',   onPointerDown, { passive: false })
+        container.addEventListener('pointermove',   onPointerMove, { passive: false })
+        container.addEventListener('pointerup',     onPointerUp )
+        container.addEventListener('pointercancel', onPointerUp )
+        area.addEventListener('wheel', onWheel, { passive: false })
         document.addEventListener('keydown', onKeyDown)
-
-        if (!isIOS) {
-            area.addEventListener('touchstart', onTouchStart, { passive: false })
-            area.addEventListener('touchmove',  onTouchMove,  { passive: false })
-            area.addEventListener('touchend',   onTouchEnd,   { passive: false })
-        }
-
-        const onResize = () => fitToScreen()
-        window.addEventListener('resize', onResize)
+        window.addEventListener('resize', fitToScreen)
 
         _cleanupFns.push(
+            () => container.removeEventListener('pointerdown',   onPointerDown),
+            () => container.removeEventListener('pointermove',   onPointerMove),
+            () => container.removeEventListener('pointerup',     onPointerUp),
+            () => container.removeEventListener('pointercancel', onPointerUp),
             () => area.removeEventListener('wheel', onWheel),
             () => document.removeEventListener('keydown', onKeyDown),
-            () => area.removeEventListener('touchstart', onTouchStart),
-            () => area.removeEventListener('touchmove',  onTouchMove),
-            () => area.removeEventListener('touchend',   onTouchEnd),
-            () => window.removeEventListener('resize',   onResize)
+            () => window.removeEventListener('resize', fitToScreen)
         )
     }
 
     function destroy() {
-        // Restaurer viewport normal
-        const viewport = document.querySelector('meta[name="viewport"]')
-        if (viewport) {
-            viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
-        }
         _cleanupFns.forEach(fn => fn())
         _cleanupFns = []
     }
