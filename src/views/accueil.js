@@ -181,7 +181,7 @@ export async function render(container) {
             </div>
             <div class="header-actions">
                 <div class="date-text" id="todayDate"></div>
-                <button class="action-btn" id="btn-add-news" style="display:none">
+                <button class="action-btn" id="btn-add-news">
                     <svg width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><use href="#ic-plus"/></svg> Publier une annonce
                 </button>
             </div>
@@ -336,6 +336,8 @@ async function init() {
     // Bouton publier
     if (hasPermission('manage_news')) {
         document.getElementById('btn-add-news').style.display = 'flex'
+    } else {
+        document.getElementById('btn-add-news').style.display = 'none'
     }
 
     // Accès rapides
