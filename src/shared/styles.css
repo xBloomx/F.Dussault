@@ -210,6 +210,7 @@ a:focus-visible {
 
 /* ── Mobile — éviter zoom auto iOS sur les inputs ────────────────────────── */
 @media (max-width: 768px) {
+    input,
     input[type="text"],
     input[type="email"],
     input[type="password"],
@@ -217,11 +218,28 @@ a:focus-visible {
     input[type="date"],
     input[type="tel"],
     input[type="search"],
+    input[type="time"],
+    input[type="url"],
     textarea,
     select {
-        font-size: 16px;
+        font-size: 16px !important;
+        touch-action: manipulation;
     }
+}
+
+/* ── Empêcher zoom iOS sur TOUS les éléments interactifs ─────────────────── */
+input, select, textarea {
+    touch-action: manipulation;
 }
 
 /* ── Utilitaires ──────────────────────────────────────────────────────────── */
 .hidden { display: none !important; }
+
+/* ── Cacher les scrollbars globalement (style iOS/Android) ───────────────── */
+* {
+    scrollbar-width: none;        /* Firefox */
+    -ms-overflow-style: none;     /* IE / Edge */
+}
+*::-webkit-scrollbar {
+    display: none;                /* Chrome / Safari / mobile */
+}
