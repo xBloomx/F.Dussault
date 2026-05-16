@@ -188,8 +188,8 @@ export async function render(container) {
         .remove-attachment { position: absolute; top: -5px; right: -5px; background: var(--btn-red); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         @media (max-width: 900px) {
             #view-dashboard { padding: 15px; gap: 0; }
-            .chat-sidebar { width: 100%; border-radius: 12px; }
-            .chat-main { display: none; width: 100%; border-radius: 12px; }
+            .chat-sidebar { width: 100%; border-radius: 12px; flex: 1; }
+            .chat-main { display: none; width: 100%; border-radius: 12px; flex: 1; }
             #view-dashboard.show-chat .chat-sidebar { display: none; }
             #view-dashboard.show-chat .chat-main { display: flex; }
             .btn-back { display: flex; }

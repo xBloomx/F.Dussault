@@ -71,11 +71,16 @@ export async function render(container) {
         .btn-send { background: var(--btn-blue) !important; color: white !important; }
         .btn-convert { background: var(--btn-blue) !important; color: white !important; }
         .btn-unlock { background: var(--btn-orange) !important; color: white !important; }
-        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; touch-action: auto; }
+        @media (max-width: 1024px) {
+            .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+            .top-bar::-webkit-scrollbar { display: none; }
+            .top-bar .action-btn { flex-shrink: 0; width: auto; margin-bottom: 0; font-size: 11px; padding: 8px 15px; }
+        }
+        .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: flex; flex-direction: column; align-items: center; touch-action: auto; }
         .page { width: 8.5in; height: 11in; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 auto 20px; color: black; padding: 0.25in; flex-shrink: 0; }
         input { outline: none; border-radius: 0; }
         input:focus { background-color: transparent !important; border-bottom: 2px solid #000 !important; }
-        #quote-container { display: block; width: 8.5in; transform-origin: top left; transition: transform 0.1s ease-out; padding-bottom: 50px; }
+        #quote-container { display: block; width: 8.5in; transform-origin: top center; transition: transform 0.1s ease-out; padding-bottom: 50px; }
         .top-section { width: 100%; }
         .header-main { width: 100%; margin-top: -15px; margin-bottom: 0; text-align: center; }
         .header-main img { width: 100%; height: auto; display: block; }
@@ -127,11 +132,12 @@ export async function render(container) {
         .btn-modal-ok { background: var(--accent); color: black; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         @media (max-width: 768px) {
             #view-dashboard { padding: 15px; }
-            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .dash-header .action-btn { width: 100%; justify-content: center; }
+            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
+            .dash-title { padding-right: 80px; width: 100%; }
+            .dash-header .action-btn { width: 100%; justify-content: center; font-size: 14px; }
             .tabs-container { flex-direction: column; width: 100%; }
             .btn-tab { width: 100%; justify-content: center; }
-            .quote-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; position: relative; }
+            .quote-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; border-left: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
             .inv-id { grid-area: id; } .inv-client { grid-area: client; } .inv-author { grid-area: author; }
             .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; }
             .inv-actions { position: absolute; top: 16px; right: 16px; }
