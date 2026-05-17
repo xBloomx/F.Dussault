@@ -3,6 +3,7 @@
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
+import { sanitize } from '../shared/sanitize.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let myUserName = 'Employé'
@@ -24,16 +25,16 @@ export async function render(container) {
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .btn-action { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        .btn-action { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
         .btn-action:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
         .btn-action svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .toolbar { display: flex; gap: 15px; align-items: center; background-color: var(--bg-panel); padding: 15px; border-radius: 12px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
+        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
         .search-box input:focus { border-color: var(--accent); }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .section-title { font-size: 16px; color: var(--accent); text-transform: uppercase; margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .section-title { font-size: 16px; color: var(--accent); text-transform: uppercase; margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
         .tool-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px; }
         .tool-item { background-color: var(--bg-panel); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .tool-item.returned { border-left-color: var(--btn-green); opacity: 0.7; }
@@ -43,9 +44,9 @@ export async function render(container) {
         .tool-details { color: #aaa; font-size: 14px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-top: 5px; }
         .tool-details span { display: flex; align-items: center; gap: 5px; }
         .tool-details svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
-        .status-badge.out { background: rgba(252,202,70,0.2); color: var(--accent); border: 1px solid rgba(252,202,70,0.5); }
-        .status-badge.in { background: rgba(40,167,69,0.2); color: var(--btn-green); border: 1px solid rgba(40,167,69,0.5); }
+        .status-badge { font-size: 12px; padding: 3px 10px 3px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; white-space: nowrap; display: inline-flex; align-items: center; border-left: 4px solid; }
+        .status-badge.out { background: rgba(252,202,70,0.15); color: var(--accent);    border-left-color: var(--accent); }
+        .status-badge.in  { background: rgba(40,167,69,0.15);  color: var(--btn-green); border-left-color: var(--btn-green); }
         .tool-actions { display: flex; gap: 10px; margin-left: 20px; flex-wrap: wrap; }
         .btn-return { background: var(--btn-green); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
         .btn-return svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -57,7 +58,7 @@ export async function render(container) {
         .btn-delete-tool svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-delete-tool:hover { background: var(--btn-red); color: white; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
         .modal-card-basic { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 15px; text-align: center; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .modal-actions { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
@@ -66,12 +67,12 @@ export async function render(container) {
         .btn-modal-green { background: var(--btn-green); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-modal-red { background: var(--btn-red); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-        .custom-form-card { background: #252631; width: 90%; max-width: 400px; padding: 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); position: relative; border: 1px solid #444; max-height: 90vh; overflow-y: auto; }
+        .custom-form-card { background: var(--bg-panel); width: 90%; max-width: 400px; padding: 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); position: relative; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
         .modal-header-custom { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; color: white; font-size: 22px; font-weight: bold; }
         .modal-header-custom svg { width: 35px; height: 35px; stroke: currentColor; fill: none; stroke-width: 2; }
         .custom-group { margin-bottom: 22px; text-align: left; }
         .custom-group label { display: block; color: white; margin-bottom: 7px; font-size: 15px; font-weight: bold; }
-        .custom-group input, .custom-group select { width: 100%; padding: 12px 15px; background: #323443; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
+        .custom-group input, .custom-group select { width: 100%; padding: 12px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
         .custom-group input:focus, .custom-group select:focus { border-color: var(--accent); }
         .btn-custom-submit { background-color: var(--accent); color: black; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn-custom-submit:hover { background-color: var(--accent-hover); }
@@ -82,7 +83,7 @@ export async function render(container) {
             .outils-main { padding: 15px; }
             .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
             .dash-title { padding-right: 80px; width: 100%; }
-            .dash-header .btn-action { width: 100%; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+            .dash-header .btn-action { width: 100%; justify-content: center; }
             .tool-item { flex-direction: column; align-items: flex-start; gap: 15px; padding: 15px; }
             .tool-actions { align-self: stretch; margin-left: 0; width: 100%; }
             .btn-return, .btn-transfer { flex: 1; justify-content: center; }
@@ -389,7 +390,7 @@ function ajouterBoutonPlusOutils() {
     const btn = document.createElement('button')
     btn.id = 'btn-charger-plus-outils'
     btn.textContent = `Charger ${TOOLS_PAGE_SIZE} entrées de plus...`
-    btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:#2b2c36;color:#aaa;border:1px dashed #444;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
+    btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:var(--bg-panel);color:var(--text-muted);border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
     btn.addEventListener('click', chargerPlusOutils)
     histContainer.appendChild(btn)
 }
@@ -545,7 +546,7 @@ function openTransferModal(toolId) {
     sel.innerHTML = '<option value="" disabled selected hidden>Choisir un collègue...</option>'
     teamMembers.forEach(emp => {
         if (emp.prenom_nom && emp.prenom_nom !== t.assignee_nom) {
-            sel.innerHTML += `<option value="${emp.prenom_nom}">${emp.prenom_nom}</option>`
+            sel.innerHTML += `<option value="${sanitize(emp.prenom_nom)}">${sanitize(emp.prenom_nom)}</option>`
         }
     })
     document.getElementById('transferModal').classList.add('open')

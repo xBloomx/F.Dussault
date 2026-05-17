@@ -89,7 +89,7 @@ export async function loadSession() {
             }])
             sessionStorage.setItem('fd_login_logged', '1')
         }
-    } catch { /* silencieux */ }
+    } catch (e) { console.warn('[auth] Échec écriture log connexion:', e?.message) }
 
     return currentUser
 }

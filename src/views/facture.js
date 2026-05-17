@@ -3,6 +3,7 @@
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
+import { sanitize } from '../shared/sanitize.js'
 import { createAutosave } from '../shared/autosave.js'
 import { canArchive, canSeeAllArchives, canRestore, confirmAndArchive, confirmAndRestore } from '../shared/archive.js'
 import { openPdfPreview } from '../shared/pdfExport.js'
@@ -37,8 +38,12 @@ export async function render(container) {
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .fact-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        .badge-status { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; color: white; }
-        .b-brouillon { background: #444; } .b-envoye { background: #3498db; } .b-traite { background: var(--btn-purple); } .b-paye { background: #28a745; } .b-renvoye { background: #fd7e14; }
+        .badge-status { padding: 3px 10px 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; border-left: 4px solid; }
+        .b-brouillon { background: rgba(136,136,136,0.15); color: #888; border-left-color: #888; }
+        .b-envoye   { background: rgba(52,152,219,0.15);  color: var(--btn-blue);   border-left-color: var(--btn-blue); }
+        .b-traite   { background: rgba(156,39,176,0.15);  color: var(--btn-purple); border-left-color: var(--btn-purple); }
+        .b-paye     { background: rgba(40,167,69,0.15);   color: var(--btn-green);  border-left-color: var(--btn-green); }
+        .b-renvoye  { background: rgba(253,126,20,0.15);  color: var(--btn-orange); border-left-color: var(--btn-orange); }
         .b-paper { background: rgba(91,192,235,0.15); color: #5bc0eb; border: 1px solid rgba(91,192,235,0.4); }
         .badges-wrap { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
         #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
@@ -48,7 +53,7 @@ export async function render(container) {
         .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
         .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin: 1px 0; padding-left: 10px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
+        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
         .search-box input:focus { border-color: var(--accent); }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -70,7 +75,7 @@ export async function render(container) {
         .btn-delete:hover { background: var(--btn-red); color: white; }
         #view-editor { display: none; flex-direction: column; height: 100%; }
         .top-bar { height: auto; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; background: rgba(30,31,38,0.95); border-bottom: 1px solid #333; z-index: 101; flex-wrap: wrap; }
-        .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
         .action-btn:hover { background: var(--accent-hover); transform: translateY(-1px); background-color: var(--accent-hover);}
         .action-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-back { background: #6c757d !important; color: white !important; }
@@ -135,7 +140,7 @@ export async function render(container) {
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: rgba(30,31,38,0.95); padding: 5px 10px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: 1px solid #555; }
         .zoom-controls button { background: var(--accent); border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 18px; cursor: pointer; color: #1e1f26; display: flex; align-items: center; justify-content: center; }
         .zoom-controls span { color: white; font-size: 12px; font-weight: bold; min-width: 45px; text-align: center; }
-        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .custom-modal-overlay.open { display: flex; }
         .custom-modal-card { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 12px; border: 1px solid #555; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
         .custom-modal-title { font-size: 20px; color: var(--btn-red); margin-bottom: 15px; font-weight: bold; }
@@ -237,7 +242,7 @@ export async function render(container) {
                     <span class="search-icon"><svg viewBox="0 0 24 24"><use href="#fic-search"/></svg></span>
                     <input type="text" id="searchInput" placeholder="Rechercher (Client, N°...)">
                 </div>
-                <select id="statusFilter" style="display:none; background:#1e1f26; border:1px solid #444; color:white; padding:10px 12px; border-radius:8px; font-size:14px; outline:none; cursor:pointer; flex-shrink:0;">
+                <select id="statusFilter" style="display:none; background:var(--bg-dark); border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px; font-size:14px; outline:none; cursor:pointer; flex-shrink:0;">
                     <option value="">Tous les statuts</option>
                     <option value="envoye">Reçu (À traiter)</option>
                     <option value="traite">Traité</option>
@@ -337,7 +342,7 @@ export async function render(container) {
             <div class="custom-modal-title">↩️ Renvoyer pour correction</div>
             <div style="text-align:left;margin-bottom:15px">
                 <label style="color:#aaa;display:block;margin-bottom:10px;font-size:13px;font-weight:bold">Note pour l'employé :</label>
-                <textarea id="returnNote" placeholder="Ex: Il manque le tarif horaire..." style="width:100%;height:100px;background:#1e1f26;color:white;border:1px solid #555;padding:10px;border-radius:5px;font-family:sans-serif;outline:none;resize:none;box-sizing:border-box"></textarea>
+                <textarea id="returnNote" placeholder="Ex: Il manque le tarif horaire..." style="width:100%;height:100px;background:var(--bg-dark);color:white;border:1px solid var(--border);padding:10px;border-radius:5px;font-family:sans-serif;outline:none;resize:none;box-sizing:border-box"></textarea>
             </div>
             <div style="display:flex;justify-content:center;gap:10px;margin-top:15px">
                 <button class="btn-modal-cancel" id="btnCloseReturnModal">Annuler</button>
@@ -560,7 +565,7 @@ function renderInvoiceList(container, invoiceContainer) {
     filtered.forEach(inv => {
         let badgeHTML = ''
         const st = inv.status || 'brouillon'
-        if (inv.isArchived) { badgeHTML = `<span class="badge-status" style="background:#555">Archivé</span>` }
+        if (inv.isArchived) { badgeHTML = `<span class="badge-status" style="background:rgba(85,85,85,0.15);color:#777;border-left-color:#777">Archivé</span>` }
         else if (st === 'brouillon') { badgeHTML = `<span class="badge-status b-brouillon">Brouillon</span>` }
         else if (!isBureau) {
             if (st === 'envoye') badgeHTML = `<span class="badge-status b-envoye">Envoyé au bureau</span>`
@@ -589,9 +594,9 @@ function renderInvoiceList(container, invoiceContainer) {
         const div = document.createElement('div')
         div.className = 'invoice-item'
         div.innerHTML = `
-            <div class="inv-id">#${inv.id}</div>
-            <div class="inv-client">${inv.client || ''}</div>
-            <div class="inv-author">${inv.authorName || 'Inconnu'}</div>
+            <div class="inv-id">#${sanitize(inv.id)}</div>
+            <div class="inv-client">${sanitize(inv.client)}</div>
+            <div class="inv-author">${sanitize(inv.authorName) || 'Inconnu'}</div>
             <div class="inv-status">${badgeHTML}</div>
             <div class="inv-date">${displayDate}</div>
             <div class="inv-actions">${actionsHTML}</div>
@@ -611,7 +616,7 @@ function renderInvoiceList(container, invoiceContainer) {
     if (hasMore) {
         const btn = document.createElement('button')
         btn.textContent = `Charger ${PAGE_SIZE} factures de plus...`
-        btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:#2b2c36;color:#aaa;border:1px dashed #444;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
+        btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:var(--bg-panel);color:var(--text-muted);border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
         btn.addEventListener('click', async () => { currentPage++; await loadData(false, container) })
         listContainer.appendChild(btn)
     }
@@ -627,11 +632,17 @@ async function openNewInvoice(viewDash, viewEditor, invoiceContainer, zoomDispla
     invoiceContainer.innerHTML = ''
     invoiceContainer.appendChild(createInvoicePageHTML(invoiceContainer))
 
-    let nextNum = 'F-XXXX'
+    let nextNum = null
     try {
         const { data, error } = await supabase.rpc('next_facture_number')
-        if (!error && data) nextNum = data
-    } catch { nextNum = 'F-' + Date.now().toString().slice(-4) }
+        if (error || !data) throw new Error(error?.message || 'Numéro vide')
+        nextNum = data
+    } catch (e) {
+        console.error('[facture] Impossible d\'obtenir le numéro de facture:', e?.message)
+        viewDash.style.display = ''; viewEditor.style.display = 'none'
+        showAlertModal('Impossible de créer une nouvelle facture : connexion à la base de données échouée. Vérifiez votre connexion et réessayez.', container)
+        return
+    }
 
     currentInvoiceId = nextNum
     const numInput = invoiceContainer.querySelector('.red-invoice-input')
@@ -1005,7 +1016,17 @@ async function saveCurrentPaperInvoice(isSending, invoiceContainer, viewDash, vi
         const client = clientInp?.value.trim() || 'Facture papier'
         const date = dateInp?.value || new Date().toISOString().split('T')[0]
         let invoiceNum = numInp?.value.trim() || currentInvoiceId
-        if (!invoiceNum) { try { const { data } = await supabase.rpc('next_facture_number'); invoiceNum = data || ('F-' + Date.now().toString().slice(-4)) } catch { invoiceNum = 'F-' + Date.now().toString().slice(-4) } }
+        if (!invoiceNum) {
+            try {
+                const { data, error } = await supabase.rpc('next_facture_number')
+                if (error || !data) throw new Error(error?.message || 'Numéro vide')
+                invoiceNum = data
+            } catch (e) {
+                console.error('[facture papier] Impossible d\'obtenir le numéro:', e?.message)
+                showAlertModal('Impossible d\'enregistrer : connexion à la base de données échouée. Vérifiez votre connexion et réessayez.', container)
+                return
+            }
+        }
 
         const existing = invoicesData.find(inv => inv.id === currentInvoiceId || inv.id === invoiceNum)
         let currentStatus = existing?.status || 'brouillon'

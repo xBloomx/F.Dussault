@@ -57,7 +57,7 @@ export async function render(container) {
         .dash-title-area p { margin: 5px 0 0; color: #aaa; font-size: 14px; display: flex; align-items: center; gap: 8px; }
         .header-actions { display: flex; align-items: center; gap: 15px; }
         .date-text { font-size: 14px; color: #888; font-weight: 500; background: #1a1b23; padding: 10px 15px; border-radius: 8px; border: 1px solid #444; }
-        .action-btn { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        .action-btn { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
         .action-btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
 
         .dashboard-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 30px; align-items: start; }
@@ -115,7 +115,7 @@ export async function render(container) {
         .alert-certif-ok .alert-icon { color: var(--btn-green); }
 
         /* Modales */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
         .modal-card { background: var(--bg-panel); width: 90%; max-width: 550px; padding: 30px; border-radius: 15px; border: 1px solid #555; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         .modal-title { font-size: 22px; color: white; margin-top: 0; margin-bottom: 25px; font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 15px; }
@@ -131,8 +131,8 @@ export async function render(container) {
         .modal-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; }
         .btn-modal-cancel { background: #444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; }
         .btn-modal-cancel:hover { background: #555; }
-        .btn-modal-submit { background: var(--btn-blue); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
-        .btn-modal-submit:hover { background: #2980b9; }
+        .btn-modal-submit { background: var(--btn-green); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-modal-submit:hover { background: #218838; }
 
         @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
         @media (max-width: 768px) {
@@ -140,7 +140,7 @@ export async function render(container) {
             .dash-header { flex-direction: column; gap: 15px; align-items: flex-start; }
             .dash-title { padding-right: 80px; }
             .header-actions { width: 100%; flex-direction: column; align-items: stretch; gap: 10px; }
-            .action-btn { width: 100%; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+            .action-btn { width: 100%; justify-content: center; }
             .date-text { width: 100%; text-align: center; }
             .quick-action-card { min-height: 130px; padding: 25px 15px; }
         }

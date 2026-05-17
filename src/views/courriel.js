@@ -20,15 +20,15 @@ export async function render(container) {
         .dash-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .btn-compose { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn-compose { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-compose:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
         .btn-compose svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
 
         .email-layout { display: flex; flex: 1; gap: 0; overflow: hidden; background: var(--bg-panel); border-radius: 15px; border: 1px solid var(--border); box-shadow: 0 5px 15px rgba(0,0,0,0.2); min-height: 0; position: relative; }
         .email-folders { width: 220px; background: #22232c; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
         .folder-item { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; color: #aaa; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; font-weight: bold; font-size: 13px; }
-        .folder-item:hover { background: #2b2c36; color: white; }
-        .folder-item.active { background: #2b2c36; color: var(--accent); border-left-color: var(--accent); }
+        .folder-item:hover { background: var(--bg-panel); color: white; }
+        .folder-item.active { background: var(--bg-panel); color: var(--accent); border-left-color: var(--accent); }
         .folder-item-left { display: flex; align-items: center; gap: 12px; }
         .folder-item svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .badge-unread { background: var(--btn-red); color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
@@ -36,7 +36,7 @@ export async function render(container) {
         .email-list-col { width: 350px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-panel); flex-shrink: 0; overflow: hidden; }
         .email-toolbar { padding: 15px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; box-sizing: border-box; }
+        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; box-sizing: border-box; }
         .search-box input:focus { border-color: var(--accent); }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -73,9 +73,9 @@ export async function render(container) {
         .btn-mobile-back { display: flex; background: transparent; border: none; color: var(--accent); cursor: pointer; align-items: center; gap: 5px; font-weight: bold; padding: 0; margin-right: 15px; }
         .btn-mobile-back svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 5000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 5000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
-        .compose-card { background: var(--bg-panel); width: 90%; max-width: 600px; border-radius: 15px; border: 1px solid #555; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .compose-card { background: var(--bg-panel); width: 90%; max-width: 600px; border-radius: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         .compose-header { background: #22232c; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; }
         .compose-header h3 { margin: 0; color: white; font-size: 16px; }
         .btn-close { background: none; border: none; color: #888; font-size: 24px; cursor: pointer; line-height: 1; padding: 0; }
@@ -217,7 +217,7 @@ export async function render(container) {
 
     <!-- Modal confirmation -->
     <div class="modal-overlay" id="confirmModal">
-        <div style="background:#2b2c36;width:90%;max-width:350px;padding:25px;border-radius:15px;text-align:center;border:1px solid #555;box-shadow:0 10px 25px rgba(0,0,0,0.5)">
+        <div style="background:var(--bg-panel);width:90%;max-width:350px;padding:25px;border-radius:15px;text-align:center;border:1px solid var(--border);box-shadow:0 10px 25px rgba(0,0,0,0.5)">
             <div style="font-size:20px;color:var(--btn-red);font-weight:bold;margin-bottom:15px">Confirmation</div>
             <div style="color:#e0e0e0;margin-bottom:25px;line-height:1.4" id="confirmMsg">Êtes-vous sûr ?</div>
             <div style="display:flex;justify-content:center;gap:10px">

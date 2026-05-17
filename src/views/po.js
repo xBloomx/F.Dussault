@@ -22,12 +22,12 @@ export async function render(container) {
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .action-btn { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        .action-btn { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
         .action-btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
         .action-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .toolbar { display: flex; gap: 15px; align-items: center; background-color: var(--bg-panel); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);}
+        .toolbar { display: flex; gap: 15px; align-items: center; background-color: var(--bg-panel); padding: 15px; border-radius: 12px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
+        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
         .search-box input:focus { border-color: var(--accent); }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -35,7 +35,7 @@ export async function render(container) {
         .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
         .btn-tab svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
-        .section-title { font-size: 16px; color: var(--accent); text-transform: uppercase; margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .section-title { font-size: 16px; color: var(--accent); text-transform: uppercase; margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
         .po-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px; }
         .po-item { background-color: var(--bg-panel); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--btn-green); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .po-info { display: flex; flex-direction: column; gap: 5px; flex: 1; }
@@ -52,10 +52,10 @@ export async function render(container) {
         .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 40px; height: 40px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .btn-delete svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-delete:hover { background: var(--btn-red); color: white; }
-        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: bold; background: var(--btn-green); color: white; display: flex; align-items: center; gap: 4px; }
+        .status-badge { font-size: 12px; padding: 3px 10px 3px 8px; border-radius: 6px; font-weight: bold; background: rgba(40,167,69,0.15); color: var(--btn-green); display: inline-flex; align-items: center; gap: 4px; border-left: 4px solid var(--btn-green); }
         .status-badge svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
         .modal-card-basic { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 15px; text-align: center; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .modal-actions { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
@@ -89,7 +89,7 @@ export async function render(container) {
         @media (max-width: 768px) {
             .po-main { padding: 15px; }
             .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
-            .dash-header .action-btn { width: 100%; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+            .dash-header .action-btn { width: 100%; justify-content: center; }
             .tabs-container { flex-direction: column; width: 100%; }
             .btn-tab { width: 100%; justify-content: center; }
             .po-item { flex-direction: column; align-items: flex-start; gap: 15px; padding: 15px; }
@@ -436,7 +436,7 @@ function ajouterBoutonPlusPO() {
     const btn = document.createElement('button')
     btn.id = 'btn-charger-plus-po'
     btn.textContent = `Charger ${PO_PAGE_SIZE} bons de commande de plus...`
-    btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:#2b2c36;color:#aaa;border:1px dashed #444;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
+    btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:var(--bg-panel);color:var(--text-muted);border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
     btn.addEventListener('click', chargerPlusPO)
     container.appendChild(btn)
 }

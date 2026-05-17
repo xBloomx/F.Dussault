@@ -1,0 +1,10 @@
+// Échappe le contenu venant de la base de données avant insertion dans innerHTML
+export function sanitize(str) {
+    if (str === null || str === undefined) return ''
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+}

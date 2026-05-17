@@ -40,7 +40,7 @@ export async function render(container) {
         .dash-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; flex-wrap: wrap; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .action-btn { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        .action-btn { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap; }
         .action-btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
         .action-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .tabs-container { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -82,10 +82,10 @@ export async function render(container) {
         .modal-title { font-size: 20px; color: white; margin-bottom: 20px; font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: #1e1f26; border: 1px solid #555; color: white; border-radius: 5px; font-family: sans-serif; outline: none; transition: 0.2s; box-sizing: border-box; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 5px; font-family: sans-serif; outline: none; transition: 0.2s; box-sizing: border-box; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
         .form-group textarea { resize: vertical; min-height: 80px; }
-        .guest-list-container { background: #1e1f26; border: 1px solid #555; border-radius: 5px; padding: 10px; max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .guest-list-container { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 5px; padding: 10px; max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
         .guest-item { display: flex; align-items: center; gap: 10px; color: white; font-size: 14px; cursor: pointer; }
         .guest-item input { width: 16px; height: 16px; cursor: pointer; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
@@ -97,8 +97,8 @@ export async function render(container) {
         .view-row { margin-bottom: 12px; font-size: 14px; }
         .view-label { color: #aaa; font-size: 12px; font-weight: bold; margin-bottom: 4px; }
         .view-value { color: white; font-weight: bold; font-size: 16px; margin-top: 2px; }
-        .note-box { background: #1e1f26; padding: 12px; border-radius: 8px; border: 1px solid #444; font-weight: normal; font-size: 14px; white-space: pre-wrap; line-height: 1.4; }
-        .day-detail-item { padding: 12px; background: #1e1f26; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 4px; border: 1px solid #555; }
+        .note-box { background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-weight: normal; font-size: 14px; white-space: pre-wrap; line-height: 1.4; }
+        .day-detail-item { padding: 12px; background: var(--bg-dark); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border); }
         .day-detail-item:hover { background: #343542; border-color: var(--btn-blue); }
         @media (max-width: 768px) {
             .cal-main { padding: 15px; gap: 12px; }

@@ -3,12 +3,7 @@
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, hasPermission } from '../auth.js'
-
-// ── XSS ────────────────────────────────────────────────────────────────────
-function sanitize(str) {
-    if (!str) return ''
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
-}
+import { sanitize } from '../shared/sanitize.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let allLogs = []
@@ -82,7 +77,7 @@ export async function render(container) {
         .logs-table th { text-align: left; padding: 12px; color: #aaa; font-weight: bold; border-bottom: 1px solid #444; position: sticky; top: 0; background: #2b2c36; z-index: 10; }
         .logs-table td { padding: 12px; border-bottom: 1px dashed #333; vertical-align: top; }
         .logs-scroll-area { max-height: 250px; overflow-y: auto; overflow-x: auto; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
         .modal-card-basic { background: var(--bg-panel); width: 90%; max-width: 400px; padding: 25px; border-radius: 15px; text-align: left; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 15px; }
@@ -644,6 +639,9 @@ async function creerEmploye() {
     const email = document.getElementById('newUserEmail').value.trim()
     const password = document.getElementById('newUserPassword').value
     if (!nom || !email || !password || !role || role === 'A0') return
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('L\'adresse courriel n\'est pas valide.'); return }
+    if (password.length < 8) { showAlert('Le mot de passe doit contenir au moins 8 caractères.'); return }
+    if (nom.length > 100) { showAlert('Le nom ne peut pas dépasser 100 caractères.'); return }
 
     const { createClient } = await import('@supabase/supabase-js')
     const tempSup = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_KEY, { auth: { persistSession: false } })

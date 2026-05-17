@@ -3,19 +3,14 @@
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
-
-// ── XSS ────────────────────────────────────────────────────────────────────
-function sanitize(str) {
-    if (!str) return ''
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
-}
+import { sanitize } from '../shared/sanitize.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let clients = []
 let clientToDeleteId = null
 let hardDeleteId = null
 let clientsPage = 0
-const CLIENTS_PAGE_SIZE = 25
+const PAGE_SIZE = 25
 let clientsHasMore = false
 let currentViewingId = null
 
@@ -28,19 +23,19 @@ export async function render(container) {
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
         .header-actions { display: flex; align-items: center; gap: 15px; }
-        .btn-action { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        .btn-action { background-color: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
         .btn-action:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
         .btn-action svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-header-icon { background: #444; border: none; width: 38px; height: 38px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; color: #ccc; flex-shrink: 0; }
         .btn-header-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-header-icon:hover { background: var(--btn-red); color: white; }
-        .toolbar { display: flex; gap: 15px; align-items: center; background-color: var(--bg-panel); padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+        .toolbar { display: flex; gap: 15px; align-items: center; background-color: var(--bg-panel); padding: 15px; border-radius: 12px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
+        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
         .search-box input:focus { border-color: var(--accent); }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .filter-select { background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; min-width: 180px; font-family: inherit; }
+        .filter-select { background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; min-width: 180px; font-family: inherit; }
         .filter-select:focus { border-color: var(--accent); }
         .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin-top: 1px; margin-bottom: 1px; padding-left: 10px; }
         .client-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
@@ -70,20 +65,20 @@ export async function render(container) {
         .btn-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-icon:hover { background: var(--accent); color: black; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
-        .modal-overlay.z-high { z-index: 4500; background: rgba(0,0,0,0.85); }
+        .modal-overlay.z-high { z-index: 4500; background: rgba(0,0,0,0.7); }
         .modal-card { background: var(--bg-panel); width: 850px; padding: 30px; border-radius: 15px; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .modal-card.small-card { width: 350px; text-align: center; }
         .modal-title { font-size: 28px; color: white; margin-bottom: 20px; font-weight: bold; border-bottom: 2px solid var(--accent); padding-bottom: 10px; display: inline-block; }
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; background: #1e1f26; border: 1px solid #555; color: white; border-radius: 8px; font-family: sans-serif; font-size: 14px; outline: none; box-sizing: border-box; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-family: sans-serif; font-size: 14px; outline: none; box-sizing: border-box; }
         .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
         .form-row { display: flex; gap: 15px; }
-        .contacts-container { border: 1px solid #444; padding: 10px; border-radius: 8px; background: #1e1f26; margin-bottom: 15px; }
+        .contacts-container { border: 1px solid var(--border); padding: 10px; border-radius: 8px; background: var(--bg-dark); margin-bottom: 15px; }
         .contact-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-        .contact-row input { flex: 1; background: #1e1f26; border: 1px solid #555; color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; }
+        .contact-row input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; }
         .contact-row input:focus { border-color: var(--accent); }
         .btn-add-contact { background: #444; color: white; width: 100%; padding: 10px; border: 1px dashed #666; border-radius: 8px; cursor: pointer; font-size: 13px; margin-top: 5px; }
         .btn-add-contact:hover { background: #555; }
@@ -103,7 +98,7 @@ export async function render(container) {
         .gps-btn { text-decoration: none; font-size: 13px; padding: 6px 12px; border-radius: 6px; font-weight: bold; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 5px; flex: 1; }
         .gps-google { background: #4285F4; color: white; }
         .gps-apple { background: #ffffff; color: black; }
-        .box-note { background: #1e1f26; padding: 10px; border-radius: 8px; color: #ddd; font-style: italic; min-height: 40px; white-space: pre-wrap; border: 1px solid #444; }
+        .box-note { background: var(--bg-dark); padding: 10px; border-radius: 8px; color: #ddd; font-style: italic; min-height: 40px; white-space: pre-wrap; border: 1px solid var(--border); }
         .box-alert { background: rgba(255,77,77,0.1); border: 1px solid var(--btn-red); color: var(--btn-red); padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .box-alert svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .contact-item { background: #333; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -115,7 +110,7 @@ export async function render(container) {
             .clients-main { padding: 15px; }
             .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; }
             .header-actions { width: 100%; }
-            .btn-action { flex: 1; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s;}
+            .btn-action { flex: 1; justify-content: center; transition: 0.2s; }
             .discrete-stats { margin-top: -5px; margin-bottom: 0; text-align: center; padding-left: 0; }
             .toolbar { flex-direction: column; align-items: stretch; gap: 10px; width: 100%; }
             .filter-select { width: 100%; }
@@ -366,8 +361,8 @@ async function init() {
 // ── Chargement ──────────────────────────────────────────────────────────────
 async function loadClients(reset = true) {
     if (reset) { clientsPage = 0; clients = [] }
-    const from = clientsPage * CLIENTS_PAGE_SIZE
-    const to = from + CLIENTS_PAGE_SIZE - 1
+    const from = clientsPage * PAGE_SIZE
+    const to = from + PAGE_SIZE - 1
 
     const { data, error } = await supabase
         .from('clients')
@@ -377,8 +372,8 @@ async function loadClients(reset = true) {
 
     if (error) { console.error('Erreur chargement clients:', error); return }
 
-    clientsHasMore = (data || []).length > CLIENTS_PAGE_SIZE
-    const pageData = (data || []).slice(0, CLIENTS_PAGE_SIZE)
+    clientsHasMore = (data || []).length > PAGE_SIZE
+    const pageData = (data || []).slice(0, PAGE_SIZE)
     clients = reset ? pageData : [...clients, ...pageData]
 
     updateCorbeilleCount()
@@ -588,8 +583,8 @@ function ajouterBoutonChargerPlus() {
     if (!clientsHasMore || !container) return
     const btn = document.createElement('button')
     btn.id = 'btn-charger-plus-clients'
-    btn.textContent = `Charger ${CLIENTS_PAGE_SIZE} clients de plus...`
-    btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:#2b2c36;color:#aaa;border:1px dashed #444;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
+    btn.textContent = `Charger ${PAGE_SIZE} clients de plus...`
+    btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:var(--bg-panel);color:var(--text-muted);border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
     btn.addEventListener('click', chargerPlusClients)
     container.appendChild(btn)
 }
@@ -666,13 +661,18 @@ async function loadFacturesClient(clientNom) {
         return
     }
 
-    const statusColors = { 'brouillon': '#aaa', 'envoyee': '#3498db', 'approuvee': '#28a745', 'renvoye': '#ff4d4d', 'Convertie': '#9b59b6' }
-    list.innerHTML = factures.map(f => `
-        <div style="background:#1e1f26;border-radius:8px;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-left:3px solid ${statusColors[f.status] || '#aaa'}">
+    const statusColors = { 'brouillon': '#888', 'envoyee': 'var(--btn-blue)', 'approuvee': 'var(--btn-green)', 'renvoye': 'var(--btn-red)', 'Convertie': 'var(--btn-purple)' }
+    const statusBg = { 'brouillon': 'rgba(136,136,136,0.15)', 'envoyee': 'rgba(52,152,219,0.15)', 'approuvee': 'rgba(40,167,69,0.15)', 'renvoye': 'rgba(255,77,77,0.15)', 'Convertie': 'rgba(156,39,176,0.15)' }
+    list.innerHTML = factures.map(f => {
+        const color = statusColors[f.status] || '#888'
+        const bg = statusBg[f.status] || 'rgba(136,136,136,0.15)'
+        return `
+        <div style="background:var(--bg-dark);border-radius:8px;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid ${color}">
             <span style="color:white;font-weight:bold;font-family:monospace">${sanitize(f.id)}</span>
-            <span style="color:#aaa;font-size:13px">${sanitize(f.date || '')}</span>
-            <span style="font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,0.1);color:${statusColors[f.status] || '#aaa'}">${sanitize(f.status || '')}</span>
-        </div>`).join('')
+            <span style="color:var(--text-muted);font-size:13px">${sanitize(f.date || '')}</span>
+            <span style="font-size:12px;padding:3px 10px 3px 8px;border-radius:6px;background:${bg};color:${color};font-weight:bold;border-left:4px solid ${color}">${sanitize(f.status || '')}</span>
+        </div>`
+    }).join('')
 }
 
 // ── Modal édition ───────────────────────────────────────────────────────────

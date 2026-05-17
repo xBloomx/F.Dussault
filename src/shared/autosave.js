@@ -13,6 +13,7 @@ export function createAutosave(config) {
     let intervalTimer = null
     let isRunning = false
     let inputListener = null
+    let visibilityListener = null
     let lastSavedAt = 0
 
     function getStorageKey() {
@@ -41,6 +42,17 @@ export function createAutosave(config) {
         return true
     }
 
+    function isStorageNearFull() {
+        try {
+            let used = 0
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i)
+                used += (k?.length || 0) + (localStorage.getItem(k)?.length || 0)
+            }
+            return used > 4 * 1024 * 1024 // avertir à partir de 4 Mo (limite ~5 Mo)
+        } catch { return false }
+    }
+
     function save() {
         try {
             const state = captureCurrentState()
@@ -51,9 +63,19 @@ export function createAutosave(config) {
                 const parsed = JSON.parse(existing)
                 if (JSON.stringify(parsed.inputValues) === JSON.stringify(state.inputValues) && JSON.stringify(parsed.sigValues) === JSON.stringify(state.sigValues)) return
             }
+            if (isStorageNearFull()) {
+                console.warn('[autosave] localStorage presque plein — nettoyage des anciens brouillons')
+                cleanupOldDrafts(1)
+            }
             localStorage.setItem(key, JSON.stringify(state))
             lastSavedAt = Date.now()
-        } catch (e) { console.warn('[autosave] sauvegarde impossible:', e) }
+        } catch (e) {
+            if (e?.name === 'QuotaExceededError') {
+                console.warn('[autosave] localStorage plein — brouillon non sauvegardé')
+            } else {
+                console.warn('[autosave] sauvegarde impossible:', e)
+            }
+        }
     }
 
     function scheduleDebouncedSave() {
@@ -80,20 +102,20 @@ export function createAutosave(config) {
         try { localStorage.removeItem(getStorageKey()) } catch { /* silent */ }
     }
 
-    function cleanupOldDrafts() {
+    function cleanupOldDrafts(maxAgeDays = 7) {
         try {
-            const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+            const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000
             const now = Date.now()
             for (let i = localStorage.length - 1; i >= 0; i--) {
                 const k = localStorage.key(i)
                 if (k?.startsWith(STORAGE_PREFIX)) {
                     try {
                         const data = JSON.parse(localStorage.getItem(k))
-                        if (data.savedAt && (now - data.savedAt) > SEVEN_DAYS_MS) localStorage.removeItem(k)
+                        if (data.savedAt && (now - data.savedAt) > maxAgeMs) localStorage.removeItem(k)
                     } catch { localStorage.removeItem(k) }
                 }
             }
-        } catch { /* silent */ }
+        } catch { /* impossible de nettoyer */ }
     }
 
     function start() {
@@ -106,7 +128,8 @@ export function createAutosave(config) {
         container.addEventListener('change', inputListener, true)
         intervalTimer = setInterval(() => { if (Date.now() - lastSavedAt > FORCED_SAVE_MS) save() }, FORCED_SAVE_MS)
         window.addEventListener('beforeunload', save)
-        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save() })
+        visibilityListener = () => { if (document.visibilityState === 'hidden') save() }
+        document.addEventListener('visibilitychange', visibilityListener)
         cleanupOldDrafts()
     }
 
@@ -122,6 +145,7 @@ export function createAutosave(config) {
         }
         inputListener = null
         window.removeEventListener('beforeunload', save)
+        if (visibilityListener) { document.removeEventListener('visibilitychange', visibilityListener); visibilityListener = null }
     }
 
     return { start, stop, save, restore, clear, hasDraft }

@@ -3,6 +3,7 @@
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
+import { sanitize } from '../shared/sanitize.js'
 import { createAutosave } from '../shared/autosave.js'
 import { canArchive, canSeeAllArchives, canRestore, confirmAndArchive, confirmAndRestore } from '../shared/archive.js'
 import { openPdfPreview } from '../shared/pdfExport.js'
@@ -17,7 +18,7 @@ let quotesData = []
 let currentQuoteId = null
 let autosave = null
 let quotesPage = 0
-const QUOTES_PAGE_SIZE = 25
+const PAGE_SIZE = 25
 let quotesHasMore = false
 let confirmCallback = null
 let quotePageCount = 0
@@ -40,7 +41,7 @@ export async function render(container) {
         .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
         .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin: 1px 0; padding-left: 10px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
+        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
         .search-box input:focus { border-color: var(--accent); }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -55,17 +56,18 @@ export async function render(container) {
         .inv-client { font-weight: bold; font-size: 16px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .inv-author { font-size: 14px; color: #888; font-style: italic; }
         .inv-date { color: #aaa; font-size: 14px; text-align: right; }
-        .inv-status span { font-size: 12px; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
-        .status-attente { background: rgba(255,193,7,0.2); color: #ffc107; border: 1px solid rgba(255,193,7,0.5); }
-        .status-convertie { background: rgba(40,167,69,0.2); color: var(--btn-green); border: 1px solid rgba(40,167,69,0.5); }
-        .status-brouillon { background: #444; color: white; border: 1px solid #555; }
+        .inv-status span { font-size: 12px; padding: 3px 10px 3px 8px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; border-left: 4px solid; }
+        .status-attente   { background: rgba(255,193,7,0.15);  color: #ffc107;           border-left-color: #ffc107; }
+        .status-convertie { background: rgba(40,167,69,0.15);  color: var(--btn-green);  border-left-color: var(--btn-green); }
+        .status-brouillon { background: rgba(136,136,136,0.15); color: #888;             border-left-color: #888; }
+        .status-archivee  { background: rgba(85,85,85,0.15);   color: #777;             border-left-color: #777; }
         .inv-actions { display: flex; justify-content: flex-end; }
         .btn-icon { background: #444; border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; flex-shrink: 0; transition: 0.2s;}
         .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; }
         .btn-delete:hover { background: var(--btn-red); color: white; }
         #view-editor { display: none; flex-direction: column; height: 100%; }
         .top-bar { height: auto; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; background: rgba(30,31,38,0.95); border-bottom: 1px solid #333; z-index: 101; flex-wrap: wrap; }
-        .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
         .action-btn:hover { background: var(--accent-hover); transform: translateY(-1px); background-color: var(--accent-hover);}
         .action-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-back { background: #6c757d !important; color: white !important; }
@@ -123,7 +125,7 @@ export async function render(container) {
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: rgba(30,31,38,0.95); padding: 5px 10px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: 1px solid #555; }
         .zoom-controls button { background: var(--accent); border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1e1f26; }
         .zoom-controls span { color: white; font-size: 12px; font-weight: bold; min-width: 45px; text-align: center; }
-        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .custom-modal-overlay.open { display: flex; }
         .custom-modal-card { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 12px; border: 1px solid #555; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
         .custom-modal-title { font-size: 20px; color: var(--accent); margin-bottom: 15px; font-weight: bold; }
@@ -361,8 +363,8 @@ function cleanup() {
 // ── Données ─────────────────────────────────────────────────────────────────
 async function loadData(reset = true, container) {
     if (reset) { quotesPage = 0; quotesData = [] }
-    const from = quotesPage * QUOTES_PAGE_SIZE
-    const to = from + QUOTES_PAGE_SIZE - 1
+    const from = quotesPage * PAGE_SIZE
+    const to = from + PAGE_SIZE - 1
 
     let query = supabase.from('soumissions').select('*')
     if (currentQuoteTab === 'archives') {
@@ -376,10 +378,10 @@ async function loadData(reset = true, container) {
 
     const { data } = await query.order('created_at', { ascending: false }).range(from, to + 1)
     if (data) {
-        quotesHasMore = data.length > QUOTES_PAGE_SIZE
+        quotesHasMore = data.length > PAGE_SIZE
         quotesData = reset
-            ? data.slice(0, QUOTES_PAGE_SIZE).map(mapQuote)
-            : [...quotesData, ...data.slice(0, QUOTES_PAGE_SIZE).map(mapQuote)]
+            ? data.slice(0, PAGE_SIZE).map(mapQuote)
+            : [...quotesData, ...data.slice(0, PAGE_SIZE).map(mapQuote)]
     }
     renderQuoteList(container)
 }
@@ -423,7 +425,7 @@ function renderQuoteList(container) {
 
     baseList.forEach(q => {
         let statusHTML = ''
-        if (q.isArchived) statusHTML = `<span style="background:#555;color:#fff;padding:4px 10px;border-radius:6px">Archivée</span>`
+        if (q.isArchived) statusHTML = `<span class="inv-status status-archivee" style="display:inline-flex">Archivée</span>`
         else if (q.status === 'Convertie') statusHTML = `<span class="status-convertie">Convertie</span>`
         else if (q.status === 'brouillon') statusHTML = `<span class="status-brouillon">Brouillon</span>`
         else statusHTML = `<span class="status-attente">${!isBureau ? 'Envoyée' : 'En attente'}</span>`
@@ -469,7 +471,7 @@ function renderQuoteList(container) {
 
     if (quotesHasMore) {
         const btn = document.createElement('button')
-        btn.textContent = `Charger ${QUOTES_PAGE_SIZE} soumissions de plus...`
+        btn.textContent = `Charger ${PAGE_SIZE} soumissions de plus...`
         btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:#2b2c36;color:#aaa;border:1px dashed #444;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
         btn.addEventListener('click', async () => { quotesPage++; await loadData(false, container) })
         listContainer.appendChild(btn)
@@ -491,7 +493,7 @@ function filterQuotes(container) {
     filtered.forEach(q => {
         const div = document.createElement('div')
         div.className = 'quote-item'
-        div.innerHTML = `<div class="inv-id">${q.id}</div><div class="inv-client">${q.client}</div><div class="inv-author">${q.authorName || ''}</div><div class="inv-status"><span class="status-brouillon">${q.status}</span></div><div class="inv-date">${q.date}</div><div class="inv-actions"></div>`
+        div.innerHTML = `<div class="inv-id">${sanitize(q.id)}</div><div class="inv-client">${sanitize(q.client)}</div><div class="inv-author">${sanitize(q.authorName)}</div><div class="inv-status"><span class="status-brouillon">${sanitize(q.status)}</span></div><div class="inv-date">${sanitize(q.date)}</div><div class="inv-actions"></div>`
         div.addEventListener('click', () => openExistingQuote(q.id, container))
         listContainer.appendChild(div)
     })

@@ -34,8 +34,12 @@ export async function render(container) {
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .fdt-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        .badge-status { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; color: white; }
-        .b-brouillon { background: #444; } .b-envoye { background: #3498db; } .b-attente { background: #fcca46; color: black; } .b-paye { background: #28a745; } .b-renvoye { background: #ff4d4d; }
+        .badge-status { padding: 3px 10px 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; border-left: 4px solid; }
+        .b-brouillon { background: rgba(136,136,136,0.15); color: #888;             border-left-color: #888; }
+        .b-envoye    { background: rgba(52,152,219,0.15);  color: var(--btn-blue);  border-left-color: var(--btn-blue); }
+        .b-attente   { background: rgba(252,202,70,0.15);  color: var(--accent);    border-left-color: var(--accent); }
+        .b-paye      { background: rgba(40,167,69,0.15);   color: var(--btn-green); border-left-color: var(--btn-green); }
+        .b-renvoye   { background: rgba(255,77,77,0.15);   color: var(--btn-red);   border-left-color: var(--btn-red); }
         #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
@@ -46,7 +50,7 @@ export async function render(container) {
         .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
         .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
+        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
         .search-box input:focus { border-color: var(--accent); }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -65,7 +69,7 @@ export async function render(container) {
         #view-editor { display: none; flex-direction: column; height: 100%; }
         #note-refus-box { display: none; background: rgba(255,77,77,0.1); border: 1px solid var(--btn-red); border-radius: 8px; padding: 12px 16px; margin: 10px 20px 0; color: var(--btn-red); }
         .top-bar { height: auto; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; background: rgba(30,31,38,0.95); border-bottom: 1px solid #333; z-index: 101; flex-wrap: wrap; }
-        .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
         .action-btn:hover { background: var(--accent-hover); transform: translateY(-1px); background-color: var(--accent-hover);}
         .action-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-back { background: #6c757d !important; color: white !important; }
@@ -95,7 +99,7 @@ export async function render(container) {
         .temps-table th { border: 1px solid black; padding: 8px; font-size: 12px; text-align: center; background: #fff; color: black; font-weight: bold; }
         .temps-table td { border: 1px solid black; padding: 0; height: 28px; background: var(--blue-bg); }
         .cell-input { width: 100%; height: 100%; border: none !important; background: transparent; text-align: center; font-size: 13px; color: black; font-weight: bold; }
-        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .custom-modal-overlay.open { display: flex; }
         .custom-modal-card { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 12px; border: 1px solid #555; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
         .custom-modal-title { font-size: 20px; color: var(--btn-red); margin-bottom: 15px; font-weight: bold; }
@@ -243,7 +247,7 @@ export async function render(container) {
         <div class="custom-modal-card" style="width:420px;text-align:left">
             <div class="custom-modal-title">↩️ Renvoyer pour correction</div>
             <p style="color:#aaa;font-size:14px;margin-bottom:15px">Expliquez à l'employé ce qui doit être corrigé :</p>
-            <textarea id="refusNote" placeholder="Ex: Il manque les heures du mercredi 15..." style="width:100%;height:100px;background:#1e1f26;color:white;border:1px solid #555;padding:12px;border-radius:8px;font-family:sans-serif;font-size:14px;outline:none;resize:none;box-sizing:border-box"></textarea>
+            <textarea id="refusNote" placeholder="Ex: Il manque les heures du mercredi 15..." style="width:100%;height:100px;background:var(--bg-dark);color:white;border:1px solid var(--border);padding:12px;border-radius:8px;font-family:sans-serif;font-size:14px;outline:none;resize:none;box-sizing:border-box"></textarea>
             <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
                 <button style="background:#444;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer" id="btnCloseRefus">Annuler</button>
                 <button style="background:var(--btn-red);color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold" id="btnConfirmRefus">↩️ Renvoyer</button>
@@ -421,7 +425,7 @@ function renderTimesheetList(list, container) {
     if (tsHasMore) {
         const btn = document.createElement('button')
         btn.textContent = `Charger ${TS_PAGE_SIZE} feuilles de plus...`
-        btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:#2b2c36;color:#aaa;border:1px dashed #444;border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
+        btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:var(--bg-panel);color:var(--text-muted);border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
         btn.addEventListener('click', async () => { tsPage++; await loadData(false, container) })
         listContainer.appendChild(btn)
     }

@@ -4,12 +4,7 @@
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentProfil } from '../auth.js'
-
-// ── XSS ────────────────────────────────────────────────────────────────────
-function sanitize(str) {
-    if (!str) return ''
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
-}
+import { sanitize } from '../shared/sanitize.js'
 
 function sanitizeUrl(url) {
     if (!url || typeof url !== 'string') return '#'
@@ -145,17 +140,17 @@ export async function render(container) {
         .attach-icon { width: 22px; height: 22px; color: var(--accent); display: flex; align-items: center; justify-content: center; }
         .attach-icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 2; }
         .chat-input-area { padding: 15px 20px; display: flex; align-items: center; gap: 10px; }
-        .btn-attach { background: transparent; border: none; color: #888; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; padding: 2px; flex-shrink: 0; }
+        .btn-attach { background: transparent; border: none; color: #888; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; padding: 0; flex-shrink: 0; }
         .btn-attach:hover, .btn-attach.active { color: var(--accent); transform: scale(1.1);}
-        .btn-attach svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .message-input { flex: 1; background: var(--bg-dark); border: 1px solid #444; color: white; padding: 14px 20px; border-radius: 25px; font-size: 14px; outline: none; transition: 0.2s; min-width: 0; }
+        .btn-attach svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .message-input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 20px; border-radius: 25px; font-size: 14px; outline: none; transition: 0.2s; min-width: 0; }
         .message-input:focus { border-color: var(--accent); }
         .btn-send-msg { background: var(--accent); color: black; border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s; flex-shrink: 0; }
         .btn-send-msg svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.5; margin-left: -2px; }
         .btn-send-msg:hover { background: #ffd66b; transform: scale(1.1); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 5000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 5000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
-        .new-chat-card { background: var(--bg-panel); width: 90%; max-width: 450px; border-radius: 20px; border: 1px solid #444; box-shadow: 0 15px 35px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 85vh; overflow: hidden; }
+        .new-chat-card { background: var(--bg-panel); width: 90%; max-width: 450px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 15px 35px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 85vh; overflow: hidden; }
         .new-chat-header { padding: 20px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; background: #2e2f3a; }
         .new-chat-header h3 { margin: 0; color: white; font-size: 18px; }
         .new-chat-body { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 15px; }
