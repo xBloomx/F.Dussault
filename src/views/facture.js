@@ -46,8 +46,10 @@ export async function render(container) {
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
         .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin: 1px 0; padding-left: 10px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
         .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 12px 15px 12px 40px; border-radius: 8px; font-size: 16px; outline: none; }
+        .search-box input:focus { border-color: #444; outline: none; box-shadow: none; }
         .search-icon { position: absolute; left: 12px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
@@ -235,8 +237,15 @@ export async function render(container) {
                     <span class="search-icon"><svg viewBox="0 0 24 24"><use href="#fic-search"/></svg></span>
                     <input type="text" id="searchInput" placeholder="Rechercher (Client, N°...)">
                 </div>
+                <select id="statusFilter" style="display:none; background:#1e1f26; border:1px solid #444; color:white; padding:10px 12px; border-radius:8px; font-size:14px; outline:none; cursor:pointer; flex-shrink:0;">
+                    <option value="">Tous les statuts</option>
+                    <option value="envoye">Reçu (À traiter)</option>
+                    <option value="traite">Traité</option>
+                    <option value="attente">À corriger</option>
+                    <option value="paye">Facture payée</option>
+                </select>
             </div>
-            <div id="inv-compteur" style="color:#888;font-size:12px;padding:5px 10px"></div>
+            <div id="inv-compteur" class="discrete-stats"></div>
             <div class="invoice-list" id="invoiceListContainer"></div>
         </div>
 
@@ -383,6 +392,7 @@ async function init(container) {
     container.querySelector('#tab-all').addEventListener('click', () => switchTab('all', container))
     container.querySelector('#tab-archives').addEventListener('click', () => switchTab('archives', container))
     container.querySelector('#searchInput').addEventListener('keyup', () => renderInvoiceList(container, invoiceContainer))
+    container.querySelector('#statusFilter').addEventListener('change', () => renderInvoiceList(container, invoiceContainer))
 
     // Dashboard
     container.querySelector('#btnNewInvoice').addEventListener('click', () => openNewInvoice(viewDash, viewEditor, invoiceContainer, zoomDisplay, container))
@@ -511,6 +521,12 @@ function switchTab(tab, container) {
     currentInvTab = tab
     container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
     container.querySelector(`#tab-${tab}`)?.classList.add('active')
+    // Afficher le filtre statut seulement dans "Boîte de réception"
+    const statusFilter = container.querySelector('#statusFilter')
+    if (statusFilter) {
+        statusFilter.style.display = tab === 'all' ? 'block' : 'none'
+        statusFilter.value = ''
+    }
     loadData(true, container)
 }
 
@@ -519,13 +535,22 @@ function renderInvoiceList(container, invoiceContainer) {
     const listContainer = container.querySelector('#invoiceListContainer')
     listContainer.innerHTML = ''
     const searchText = container.querySelector('#searchInput')?.value.toLowerCase() || ''
+    const statusFilter = container.querySelector('#statusFilter')?.value || ''
     const isBureau = hasPermission('view_all_invoices')
 
     let base = currentInvTab === 'archives' ? invoicesData
         : (!isBureau || currentInvTab === 'mine') ? invoicesData.filter(inv => inv.authorId === currentUser.id)
         : invoicesData.filter(inv => inv.status !== 'brouillon')
 
-    const filtered = base.filter(inv => (inv.client || '').toLowerCase().includes(searchText) || String(inv.id).toLowerCase().includes(searchText))
+    let filtered = base.filter(inv =>
+        (inv.client || '').toLowerCase().includes(searchText) ||
+        String(inv.id).toLowerCase().includes(searchText)
+    )
+
+    // Filtre par statut (seulement dans Boîte de réception)
+    if (statusFilter && currentInvTab === 'all') {
+        filtered = filtered.filter(inv => inv.status === statusFilter)
+    }
 
     const compteur = container.querySelector('#inv-compteur')
     if (compteur) compteur.textContent = `${invoicesData.length} facture(s) chargée(s)${hasMore ? ' — il y en a plus' : ''}`
@@ -610,7 +635,7 @@ async function openNewInvoice(viewDash, viewEditor, invoiceContainer, zoomDispla
 
     currentInvoiceId = nextNum
     const numInput = invoiceContainer.querySelector('.red-invoice-input')
-    if (numInput) { numInput.value = nextNum; numInput.readOnly = true; numInput.style.backgroundColor = 'transparent' }
+    if (numInput) { numInput.value = nextNum; numInput.readOnly = false; numInput.style.backgroundColor = '' }
 
     applyEditorSecurity(null, invoiceContainer, container)
     zoomCtrl?.fitToScreen()
@@ -648,7 +673,7 @@ function openExistingInvoice(id, container, invoiceContainer) {
     invoiceContainer.querySelectorAll('.desc-textarea').forEach(autoResizeTextarea)
 
     const numInput = invoiceContainer.querySelector('.red-invoice-input')
-    if (numInput) { numInput.readOnly = true; numInput.style.backgroundColor = 'transparent' }
+    if (numInput) { numInput.readOnly = false; numInput.style.backgroundColor = '' }
 
     applyEditorSecurity(invoice, invoiceContainer, container)
     zoomCtrl?.fitToScreen()
@@ -771,8 +796,15 @@ async function saveCurrentInvoice(isSending, invoiceContainer, viewDash, viewEdi
     let dateVal = inputs[4]?.value.trim() || new Date().toISOString().split('T')[0]
 
     let invoiceNum = currentInvoiceId
+    const numInput = firstPage.querySelector('.red-invoice-input')
+    const typedNum = numInput?.value.trim()
+    if (typedNum && typedNum !== currentInvoiceId) {
+        // L'utilisateur a modifié le numéro manuellement
+        invoiceNum = typedNum
+    }
     if (!invoiceNum) {
         try { const { data } = await supabase.rpc('next_facture_number'); invoiceNum = data || ('F-' + Date.now().toString().slice(-4)) } catch { invoiceNum = 'F-' + Date.now().toString().slice(-4) }
+        if (numInput) numInput.value = invoiceNum
     }
 
     const inputValues = Array.from(invoiceContainer.querySelectorAll('input, textarea.desc-textarea')).map(i => i.value)
@@ -1021,13 +1053,15 @@ function exporterPDF(invoiceContainer, container) {
         // Pour les factures papier, on génère un PDF à partir des dataUrls des pages
         // On crée un container temporaire avec des images pour openPdfPreview
         const tempDiv = document.createElement('div')
+        const tempDiv = document.createElement('div')
+        tempDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:8.5in'
         paperPages.forEach(p => {
             const page = document.createElement('div')
             page.className = 'page'
-            page.style.cssText = 'display:flex;align-items:center;justify-content:center;padding:0;background:white'
+            page.style.cssText = 'width:8.5in;height:11in;display:flex;align-items:center;justify-content:center;padding:0.2in;background:white;box-sizing:border-box;overflow:hidden'
             const img = document.createElement('img')
             img.src = p.dataUrl || p.url
-            img.style.cssText = 'width:100%;height:100%;object-fit:contain'
+            img.style.cssText = 'max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block'
             page.appendChild(img)
             tempDiv.appendChild(page)
         })
