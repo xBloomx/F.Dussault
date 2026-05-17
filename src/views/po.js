@@ -264,7 +264,7 @@ async function loadData(reset = true) {
         .order('created_at', { ascending: false })
         .range(from, to + 1)
 
-    if (error) { console.error('Erreur chargement PO:', error); return }
+    if (error) { console.error('Erreur chargement PO:', error); showAlert('Erreur de chargement : ' + error.message); return }
 
     poHasMore = (data || []).length > PO_PAGE_SIZE
     const pageData = (data || []).slice(0, PO_PAGE_SIZE)
@@ -295,33 +295,45 @@ async function generatePO() {
     const dateReq = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : rawDate
     const hasPhoto = document.getElementById('inpPhoto').files.length > 0
 
-    if (!plumber || !supplier || !address || !dateReq) {
+    if (!plumber || !supplier || !address || !rawDate.trim()) {
         showAlert('Remplissez tous les champs obligatoires.')
         return
     }
+    if (plumber.length > 100 || supplier.length > 200 || address.length > 500) {
+        showAlert('Un ou plusieurs champs dépassent la longueur maximale autorisée.')
+        return
+    }
+
+    const btn = document.getElementById('btnGeneratePO')
+    if (btn?.disabled) return
+    if (btn) { btn.disabled = true; btn.textContent = 'Génération...' }
 
     const newPoNumber = generatePONumber(dateReq)
 
-    const { data, error } = await supabase.from('bons_de_commande').insert([{
-        numero: newPoNumber,
-        fournisseur: supplier,
-        description: address,
-        status: 'enregistre',
-        author_id: currentUser.id,
-        author_nom: plumber,
-        date_po: dateReq,
-        items: { hasPhoto }
-    }]).select().single()
+    try {
+        const { data, error } = await supabase.from('bons_de_commande').insert([{
+            numero: newPoNumber,
+            fournisseur: supplier,
+            description: address,
+            status: 'enregistre',
+            author_id: currentUser.id,
+            author_nom: plumber,
+            date_po: dateReq,
+            items: { hasPhoto }
+        }]).select().single()
 
-    if (error) { showAlert('Erreur lors de la sauvegarde : ' + error.message); return }
+        if (error) { showAlert('Erreur lors de la sauvegarde : ' + error.message); return }
 
-    poLog.unshift(data)
-    filterPO()
+        poLog.unshift(data)
+        filterPO()
 
-    document.getElementById('btnGeneratePO').style.display = 'none'
-    document.getElementById('displayNewPoNumber').textContent = newPoNumber
-    document.getElementById('poResultZone').style.display = 'block'
-    switchPoTab('mine')
+        document.getElementById('btnGeneratePO').style.display = 'none'
+        document.getElementById('displayNewPoNumber').textContent = newPoNumber
+        document.getElementById('poResultZone').style.display = 'block'
+        switchPoTab('mine')
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Générer le numéro' }
+    }
 }
 
 function generatePONumber(dateString) {

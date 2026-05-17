@@ -1141,7 +1141,7 @@ function onSwipeClick(e, container) {
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 function showAlert(msg, container) {
     const el = container.querySelector('#alertMessage')
-    if (el) el.innerHTML = msg
+    if (el) el.textContent = msg
     container.querySelector('#alertModal').classList.add('open')
 }
 

@@ -4,6 +4,7 @@
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
 import { showToast } from '../shared/toast.js'
+import { sanitize } from '../shared/sanitize.js'
 
 // ── Navigation locale (compatible index.html MODULE_MAP) ────────────────────
 // Traduit les anciennes clés router.js en data-view du MODULE_MAP réel
@@ -27,14 +28,6 @@ function navigateTo(key) {
     const viewName = NAV_ALIAS[key] || key
     const btn = document.querySelector(`.nav-btn[data-view="${viewName}"]`)
     if (btn && !btn.classList.contains('hidden')) btn.click()
-}
-
-// ── XSS ────────────────────────────────────────────────────────────────────
-function sanitize(str) {
-    if (!str) return ''
-    return String(str)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
 // ── État local ──────────────────────────────────────────────────────────────
@@ -498,18 +491,26 @@ async function saveNews() {
 
     if (!title || !body) { showToast('Veuillez remplir le titre et le message.', 'warning'); return }
 
+    const btn = document.getElementById('btnSaveNews')
+    if (btn?.disabled) return
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.6' }
+
     let authorName = currentProfil?.prenom_nom || 'Utilisateur'
     if (currentRole === 'A0') {
         try { const alias = localStorage.getItem('dussault_a0_alias'); if (alias === 'systeme') authorName = 'Système' } catch { /* localStorage indisponible */ }
     }
 
-    const { error } = await supabase.from('annonces').insert([{
-        type, titre: title, contenu: body, auteur: authorName, is_pinned: isPinned
-    }])
+    try {
+        const { error } = await supabase.from('annonces').insert([{
+            type, titre: title, contenu: body, auteur: authorName, is_pinned: isPinned
+        }])
 
-    if (error) { showToast('Erreur de publication : ' + error.message, 'error'); return }
-    await loadNews()
-    closeNewsModal()
+        if (error) { showToast('Erreur de publication : ' + error.message, 'error'); return }
+        await loadNews()
+        closeNewsModal()
+    } finally {
+        if (btn) { btn.disabled = false; btn.style.opacity = '' }
+    }
 }
 
 function deleteNews(id) {
@@ -526,14 +527,14 @@ async function loadDashboardStats() {
     if (!currentUser) return
     try {
         const [invRes, tsRes, toolsRes] = await Promise.all([
-            supabase.from('factures').select('id').eq('author_id', currentUser.id).in('status', ['brouillon', 'renvoye']),
-            supabase.from('feuilles_de_temps').select('id').eq('author_id', currentUser.id).eq('status', 'brouillon'),
-            supabase.from('outils').select('id').eq('assignee_nom', currentProfil?.prenom_nom).eq('status', 'active')
+            supabase.from('factures').select('*', { count: 'exact', head: true }).eq('author_id', currentUser.id).in('status', ['brouillon', 'renvoye']),
+            supabase.from('feuilles_de_temps').select('*', { count: 'exact', head: true }).eq('author_id', currentUser.id).eq('status', 'brouillon'),
+            supabase.from('outils').select('*', { count: 'exact', head: true }).eq('assignee_nom', currentProfil?.prenom_nom).eq('status', 'active')
         ])
 
-        const inv   = (invRes.data || []).length
-        const ts    = (tsRes.data || []).length
-        const tools = (toolsRes.data || []).length
+        const inv   = invRes.count ?? 0
+        const ts    = tsRes.count ?? 0
+        const tools = toolsRes.count ?? 0
 
         const itemInv   = document.getElementById('item-inv')
         const itemTs    = document.getElementById('item-ts')

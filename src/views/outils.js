@@ -255,7 +255,8 @@ async function init() {
 
 // ── Chargement ──────────────────────────────────────────────────────────────
 async function fetchTeamMembers() {
-    const { data } = await supabase.from('profils').select('prenom_nom, role').order('role')
+    const { data, error } = await supabase.from('profils').select('prenom_nom, role').order('role')
+    if (error) { console.warn('[outils] fetchTeamMembers:', error.message); return }
     if (data) teamMembers = data
 }
 

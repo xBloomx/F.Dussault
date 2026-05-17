@@ -4,6 +4,7 @@
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
 import { withRetry } from '../shared/withRetry.js'
+import { sanitize } from '../shared/sanitize.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let myUserName = ''
@@ -356,7 +357,8 @@ async function init() {
 
 // ── Chargement ──────────────────────────────────────────────────────────────
 async function fetchTeamMembers() {
-    const { data } = await supabase.from('profils').select('id, prenom_nom').order('role')
+    const { data, error } = await supabase.from('profils').select('id, prenom_nom').order('role')
+    if (error) { console.warn('[calendrier] fetchTeamMembers:', error.message); return }
     if (data) teamMembers = data
 }
 
@@ -508,7 +510,7 @@ function renderCalendar() {
         const urgEvent = events.find(e => e.cat_id === 'urgence' && dateStr >= e.start_date && dateStr <= e.end_date)
         if (urgEvent) {
             const letter = urgEvent.title ? urgEvent.title.trim().charAt(0).toUpperCase() : 'U'
-            html += `<div class="urgence-badge filled" data-urgid="${urgEvent.id}" title="Garde: ${urgEvent.title}">${letter}</div>`
+            html += `<div class="urgence-badge filled" data-urgid="${urgEvent.id}" title="Garde: ${sanitize(urgEvent.title)}">${letter}</div>`
         } else if (hasPermission('manage_calendar')) {
             html += `<div class="urgence-badge empty" data-urgdate="${dateStr}" title="Ajouter Garde d'urgence">
                 <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -521,7 +523,7 @@ function renderCalendar() {
             if (show) {
                 const cat = FIXED_CATEGORIES.find(c => c.id === sys.type) || { color: '#888' }
                 const textColor = ['#ffc107', '#ffffff'].includes(cat.color) ? 'black' : 'white'
-                html += `<div class="event-bar" data-sysid="${sys.id}" style="background:${cat.color};color:${textColor};font-weight:bold" title="${sys.t}">${sys.t}</div>`
+                html += `<div class="event-bar" data-sysid="${sys.id}" style="background:${cat.color};color:${textColor};font-weight:bold" title="${sanitize(sys.t)}">${sys.t}</div>`
             }
         })
 
@@ -537,7 +539,7 @@ function renderCalendar() {
             if (canSee) {
                 const cat = FIXED_CATEGORIES.find(c => c.id === evt.cat_id) || { color: '#333' }
                 const isMine = evt.author_id === currentUser.id
-                html += `<div class="event-bar ${isMine ? 'event-mine' : ''}" data-evtid="${evt.id}" style="background:${cat.color}" title="${evt.title}">${evt.title}</div>`
+                html += `<div class="event-bar ${isMine ? 'event-mine' : ''}" data-evtid="${evt.id}" style="background:${cat.color}" title="${sanitize(evt.title)}">${evt.title}</div>`
             }
         })
 

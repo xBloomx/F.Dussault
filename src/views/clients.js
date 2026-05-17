@@ -422,6 +422,13 @@ async function saveClient() {
 
     if (!hasPhone) { openAlertModal("Il faut ajouter au moins un numéro de téléphone valide."); return }
 
+    const phoneRe = /^[\d\s\(\)\-\+\.]{7,20}$/
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    for (const ct of contactsList) {
+        if (ct.phone && !phoneRe.test(ct.phone)) { openAlertModal(`Numéro de téléphone invalide : "${ct.phone}"`); return }
+        if (ct.email && !emailRe.test(ct.email)) { openAlertModal(`Adresse courriel invalide : "${ct.email}"`); return }
+    }
+
     const fullPayload = {
         nom: company || subcontractor || contact,
         type: status,
@@ -712,7 +719,9 @@ function openEditModal(id = null) {
         document.getElementById('edStatus').value = c.type || 'residentiel'
         document.getElementById('edNotes').value = extra.notes || c.notes || ''
         document.getElementById('edTarif').value = extra.tarif || ''
-        ;(extra.list || []).forEach(ct => addContactRow(ct))
+        const list = extra.list || []
+        list.forEach(ct => addContactRow(ct))
+        if (list.length === 0) addContactRow()
         toggleCommercialFields()
 
         if (hasPermission('delete_clients')) {

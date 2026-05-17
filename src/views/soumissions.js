@@ -562,7 +562,7 @@ function applyEditorSecurity(quote, container) {
     const status = quote?.status || 'brouillon'
     const isAuthor = quote ? (quote.authorId === currentUser.id || !quote.authorId) : true
     const isArchived = quote?.isArchived === true
-    let canEdit = !isBureau ? (status === 'brouillon') : (status === 'brouillon' && isAuthor)
+    let canEdit = status === 'brouillon' && isAuthor
     if (isArchived) canEdit = false
 
     const show = el => { if (el) el.style.display = canEdit ? 'flex' : 'none' }

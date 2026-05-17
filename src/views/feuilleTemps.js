@@ -341,7 +341,7 @@ async function loadData(reset = true, container) {
     const from = tsPage * TS_PAGE_SIZE
     const to = from + TS_PAGE_SIZE - 1
 
-    let query = supabase.from('feuilles_de_temps').select('*')
+    let query = supabase.from('feuilles_de_temps').select('id, employe_nom, periode, status, total_heures, author_id, author_name, return_note, is_archived')
     if (currentInvTab === 'archives') {
         query = query.eq('is_archived', true)
         if (!canSeeAllArchives(currentRole)) query = query.eq('author_id', currentUser.id)
@@ -356,7 +356,7 @@ async function loadData(reset = true, container) {
         tsHasMore = data.length > TS_PAGE_SIZE
         const mapped = data.slice(0, TS_PAGE_SIZE).map(db => ({
             id: db.id, employe: db.employe_nom, periode: db.periode, status: db.status,
-            pagesData: db.pages_data || [], total_heures: db.total_heures || 0,
+            pagesData: [], total_heures: db.total_heures || 0,
             authorId: db.author_id, authorName: db.author_name, return_note: db.return_note,
             isArchived: db.is_archived === true
         }))
@@ -456,7 +456,7 @@ function openNewTimesheet(viewDash, viewEditor, wrapper, zoomDisplay, container)
     startAutosave(wrapper)
 }
 
-function openExistingTimesheet(id, container) {
+async function openExistingTimesheet(id, container) {
     const sheet = timesheetsData.find(s => s.id === id)
     if (!sheet) return
     currentSheetId = id
@@ -470,8 +470,12 @@ function openExistingTimesheet(id, container) {
     viewEditor.style.display = 'flex'
     wrapper.innerHTML = ''
 
-    if (sheet.pagesData?.length) {
-        sheet.pagesData.forEach(pageData => {
+    // Load pages_data on demand (excluded from list query for performance)
+    const { data: fullRow } = await supabase.from('feuilles_de_temps').select('pages_data').eq('id', id).single()
+    const pagesData = fullRow?.pages_data || []
+
+    if (pagesData.length) {
+        pagesData.forEach(pageData => {
             const newPage = createTimePageHTML()
             wrapper.appendChild(newPage)
             setupInputLogic(newPage)
