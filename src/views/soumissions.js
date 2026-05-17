@@ -180,14 +180,14 @@ export async function render(container) {
                     <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                     <input type="text" id="searchInput" placeholder="Rechercher (Client, N°...)">
                 </div>
-                <select id="statusFilter" style="display:none; background:#1e1f26; border:1px solid #444; color:white; padding:10px 12px; border-radius:8px; font-size:14px; outline:none; cursor:pointer; flex-shrink:0;">
-                    <option value="">Tous les statuts</option>
-                    <option value="envoye">Envoyé au bureau</option>
-                    <option value="traite">Traité</option>
-                    <option value="attente">À corriger</option>
-                    <option value="paye">Approuvé</option>
-                </select>
             </div>
+            <select id="statusFilter" style="display:none; background:var(--bg-dark); border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px; font-size:14px; outline:none; cursor:pointer; align-self:flex-start;">
+                <option value="">Tous les statuts</option>
+                <option value="envoye">Envoyé au bureau</option>
+                <option value="traite">Traité</option>
+                <option value="attente">À corriger</option>
+                <option value="paye">Approuvé</option>
+            </select>
             <div id="quote-compteur" class="discrete-stats"></div>
             <div class="quote-list" id="quoteListContainer"></div>
         </div>
