@@ -65,27 +65,20 @@ async function generatePdfBlob(container) {
                     c.style.marginBottom = '0'
                 })
 
-                // Remplacer TOUTES les couleurs bleues par blanc — universel
-                clonedDoc.querySelectorAll('.page *').forEach(el => {
-                    const bg = window.getComputedStyle(el).backgroundColor
-                    // Détecter toute couleur bleue (rgb approximatif du --blue-bg #d1e9ff et variantes)
-                    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-                        const match = bg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
-                        if (match) {
-                            const [, r, g, b] = match.map(Number)
-                            // Bleu clair : b > r et b > g et b > 150
-                            if (b > r && b > g && b > 150) {
-                                el.style.background = 'white'
-                                el.style.backgroundColor = 'white'
-                            }
-                        }
-                    }
+                // Enlever TOUT le bleu — cibler toutes les classes avec var(--blue-bg)
+                clonedDoc.querySelectorAll(
+                    '.field input, .field, td, .input-box, .input-box input, ' +
+                    '.display-sig, .red-invoice-input, .red-quote-input, ' +
+                    '.ts-field input, .ts-field, .sig-area'
+                ).forEach(el => {
+                    el.style.setProperty('background', 'white', 'important')
+                    el.style.setProperty('background-color', 'white', 'important')
                 })
 
-                // Inputs/textarea transparents
+                // Inputs/textarea transparents par-dessus le fond blanc
                 clonedDoc.querySelectorAll('input, textarea, select').forEach(f => {
-                    f.style.background = 'transparent'
-                    f.style.backgroundColor = 'transparent'
+                    f.style.setProperty('background', 'transparent', 'important')
+                    f.style.setProperty('background-color', 'transparent', 'important')
                     f.style.color = '#000'
                     f.style.boxShadow = 'none'
                     if (!f.value && f.placeholder) f.placeholder = ''
