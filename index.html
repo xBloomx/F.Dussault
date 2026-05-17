@@ -25,7 +25,7 @@
             background-color: var(--bg-dark);
             color: var(--text-main);
             margin: 0; padding: 0;
-            height: 100dvh;
+            height: calc(var(--app-height, 100dvh));
             display: flex;
             overflow: hidden;
             padding-top: env(safe-area-inset-top, 0px);
@@ -538,6 +538,16 @@ async function boot() {
 }
 
 boot()
+</script>
+
+<script>
+// ── Fix hauteur Safari iOS — barre navigation variable ────────────────────────
+function setAppHeight() {
+    document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px')
+}
+setAppHeight()
+window.addEventListener('resize', setAppHeight)
+window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 100))
 </script>
 </body>
 </html>

@@ -7,7 +7,7 @@
 
     <link rel="apple-touch-icon" href="/assets/logo_app.png">
     <link rel="icon" type="image/png" href="/assets/logo_app.png">
-    <link rel="manifest" href="/assets/manifest-LThmKfCU.json">
+    <link rel="manifest" href="/manifest.json">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -15,6 +15,7 @@
     <meta name="apple-mobile-web-app-title" content="F.Dussault">
     <meta name="theme-color" content="#1e1f26">
 
+    <link rel="stylesheet" href="/src/shared/styles.css">
 
     <style>
         *, *::before, *::after { box-sizing: border-box; }
@@ -24,7 +25,7 @@
             background-color: var(--bg-dark);
             color: var(--text-main);
             margin: 0; padding: 0;
-            height: 100dvh;
+            height: calc(var(--app-height, 100dvh));
             display: flex;
             overflow: hidden;
             padding-top: env(safe-area-inset-top, 0px);
@@ -176,13 +177,6 @@
     </style>
     <!-- emoji-picker-element pour la messagerie -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-  <script type="module" crossorigin src="/assets/main-Bgr73E7O.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-Cf3xff8G.js">
-  <link rel="modulepreload" crossorigin href="/assets/preload-helper-Dd-HcVz_.js">
-  <link rel="modulepreload" crossorigin href="/assets/dist-DIBucx4m.js">
-  <link rel="modulepreload" crossorigin href="/assets/supabase-BHP_DPH_.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-BoJf8KxA.js">
-  <link rel="stylesheet" crossorigin href="/assets/main-Be26CCXf.css">
 </head>
 <body>
 
@@ -277,5 +271,283 @@
 <div id="overlay"></div>
 <div id="toast-container"></div>
 
+<script type="module">
+import { installConsoleFilter } from '/src/shared/consoleFilter.js'
+import { loadSession, currentUser, currentRole, currentProfil, hasPermission, invalidateRolesCache, reloadRolesConfig } from '/src/auth.js'
+import { supabase } from '/src/supabase.js'
+
+installConsoleFilter()
+
+// ── Modules lazy ────────────────────────────────────────────────────────────
+const MODULE_MAP = {
+    accueil:      () => import('/src/views/accueil.js'),
+    facture:      () => import('/src/views/facture.js'),
+    soumissions:  () => import('/src/views/soumissions.js'),
+    feuilleTemps: () => import('/src/views/feuilleTemps.js'),
+    messagerie:   () => import('/src/views/messagerie.js'),
+    courriel:     () => import('/src/views/courriel.js'),
+    calendrier:   () => import('/src/views/calendrier.js'),
+    clients:      () => import('/src/views/clients.js'),
+    outils:       () => import('/src/views/outils.js'),
+    po:           () => import('/src/views/po.js'),
+    admin:        () => import('/src/views/admin.js'),
+    profil:       () => import('/src/views/profil.js'),
+}
+
+// ── État ────────────────────────────────────────────────────────────────────
+let currentView = 'accueil'
+let currentCleanup = null
+const appContainer = document.getElementById('app-container')
+const appLoader = document.getElementById('app-loader')
+const mainLoader = document.getElementById('security-loader')
+const sidebar = document.getElementById('sidebar')
+const menuBtn = document.getElementById('menu-toggle')
+const overlay = document.getElementById('overlay')
+
+// ── Router ──────────────────────────────────────────────────────────────────
+async function navigateTo(viewName) {
+    if (!MODULE_MAP[viewName]) return
+
+    // Cleanup module précédent
+    if (currentCleanup) { try { currentCleanup() } catch {} currentCleanup = null }
+
+    appLoader.classList.remove('hidden')
+    appContainer.innerHTML = ''
+    appContainer.style.opacity = '0'
+
+    try {
+        const mod = await MODULE_MAP[viewName]()
+        const cleanup = await mod.render(appContainer)
+        if (typeof cleanup === 'function') currentCleanup = cleanup
+    } catch (e) {
+        console.error('[Router] Erreur chargement module', viewName, e)
+        appContainer.innerHTML = `<div style="color:#ff4d4d;padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
+    }
+
+    currentView = viewName
+    appLoader.classList.add('hidden')
+
+    // Fade-in — reproduit l'animation opacity 0.18s de l'ancienne version
+    requestAnimationFrame(() => {
+        appContainer.style.transition = 'opacity 0.18s ease'
+        appContainer.style.opacity = '1'
+    })
+}
+
+// ── Sidebar nav ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const view = btn.dataset.view
+
+        // Badge messagerie
+        if (view === 'messagerie') {
+            const badge = document.getElementById('badge-messagerie')
+            if (badge) { badge.textContent = '0'; badge.classList.remove('visible') }
+        }
+
+        // Highlight actif
+        document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+
+        // Fermer sidebar mobile
+        if (window.innerWidth <= 768) {
+            sidebar.classList.remove('open')
+            overlay.classList.remove('active')
+            menuBtn.classList.remove('hide')
+        }
+
+        navigateTo(view)
+    })
+})
+
+// ── Menu hamburger ───────────────────────────────────────────────────────────
+menuBtn.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active'); menuBtn.classList.add('hide') })
+overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); menuBtn.classList.remove('hide') })
+
+// ── Badge messagerie via événement DOM ──────────────────────────────────────
+window.addEventListener('new_message_notif', () => {
+    if (currentView !== 'messagerie') {
+        const badge = document.getElementById('badge-messagerie')
+        if (badge) { badge.textContent = (parseInt(badge.textContent) || 0) + 1; badge.classList.add('visible') }
+    }
+})
+
+// ── Permissions sidebar ──────────────────────────────────────────────────────
+function appliquerPermissions() {
+    const btnAdmin = document.getElementById('btn-nav-admin')
+    const btnPo = document.getElementById('btn-nav-po')
+    const btnSoumissions = document.getElementById('btn-nav-soumissions')
+    const btnCourriel = document.getElementById('btn-nav-courriel')
+    if (btnAdmin) btnAdmin.classList.toggle('hidden', !hasPermission('view_admin'))
+    if (btnPo) btnPo.classList.toggle('hidden', !hasPermission('access_po_tab'))
+    if (btnSoumissions) btnSoumissions.classList.toggle('hidden', !hasPermission('access_soumissions_tab'))
+    if (btnCourriel) btnCourriel.classList.toggle('hidden', !hasPermission('access_courriel_tab'))
+}
+
+// ── Permissions updated (admin) ──────────────────────────────────────────────
+window.addEventListener('permissions_updated', async () => {
+    // Invalider le cache des rôles et le recharger depuis la DB
+    await reloadRolesConfig()
+    appliquerPermissions()
+})
+
+// ── PWA shortcuts (?view=factures) ──────────────────────────────────────────
+function handlePWAShortcut() {
+    const v = new URLSearchParams(window.location.search).get('view')
+    if (!v) return
+    const map = {
+        factures: 'facture', soumissions: 'soumissions', temps: 'feuilleTemps',
+        feuilles: 'feuilleTemps', messagerie: 'messagerie', courriel: 'courriel',
+        calendrier: 'calendrier', clients: 'clients', client: 'clients',
+        po: 'po', outils: 'outils', admin: 'admin', profil: 'profil', parametres: 'profil'
+    }
+    const target = map[v.toLowerCase()]
+    if (!target) return
+    const btn = document.querySelector(`.nav-btn[data-view="${target}"]`)
+    if (btn && !btn.classList.contains('hidden')) btn.click()
+}
+
+// ── Toast global ─────────────────────────────────────────────────────────────
+window.showToast = function(msg, type = 'info', duration = 3000) {
+    // Conserver le comportement original : seuls error et warning sont affichés
+    if (type !== 'error' && type !== 'warning') return
+    const tc = document.getElementById('toast-container')
+    const t = document.createElement('div')
+    t.className = `shared-toast ${type}`
+    t.textContent = msg
+    tc.appendChild(t)
+    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')))
+    setTimeout(() => {
+        t.classList.remove('show')
+        setTimeout(() => t.remove(), 300)
+    }, duration)
+}
+
+// ── Toggle hamburger mobile depuis les modules (modales ouvertes/fermées) ────
+// Reproduit le comportement postMessage({ type: 'toggle_menu' }) de l'ancienne version
+window.addEventListener('toggle_menu', (e) => {
+    if (window.innerWidth > 768) return  // desktop : hamburger n'existe pas
+    if (e.detail?.action === 'hide') {
+        menuBtn.style.display = 'none'
+    } else {
+        menuBtn.style.display = ''
+    }
+})
+
+// MutationObserver : cache/montre automatiquement le hamburger quand une modale
+// plein-écran s'ouvre/ferme dans un module (classe .open sur .modal-overlay)
+const _modalObserver = new MutationObserver(() => {
+    if (window.innerWidth > 768) return
+    const hasOpenModal = document.querySelector(
+        '.modal-overlay.open, .custom-modal-overlay.open, #sig-fd-modal.show'
+    )
+    menuBtn.style.display = hasOpenModal ? 'none' : ''
+})
+_modalObserver.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] })
+
+// ── Connexion online/offline ─────────────────────────────────────────────────
+const connIndicator = document.getElementById('conn-indicator')
+const connText = document.getElementById('conn-text')
+let connTimer = null
+function showConnStatus(online) {
+    if (connTimer) clearTimeout(connTimer)
+    connIndicator.className = online ? 'show' : 'offline show'
+    connText.textContent = online ? 'Connecté' : 'Hors ligne'
+    if (online) connTimer = setTimeout(() => connIndicator.classList.remove('show'), 2000)
+}
+window.addEventListener('online', () => showConnStatus(true))
+window.addEventListener('offline', () => showConnStatus(false))
+
+// ── Mode maintenance live (admin toggle → tous les users connectés) ───────────
+window.addEventListener('toggle_maintenance', (e) => {
+    const active = e.detail?.active
+    const maintenanceScreen = document.getElementById('maintenance-screen')
+    if (!maintenanceScreen) return
+    if (active) {
+        // A0 n'est jamais bloqué par la maintenance
+        if (currentRole === 'A0') return
+        maintenanceScreen.style.display = 'flex'
+        menuBtn.style.display = 'none'
+    } else {
+        maintenanceScreen.style.display = 'none'
+        if (window.innerWidth <= 768) menuBtn.style.display = 'flex'
+    }
+})
+
+// ── Cascade formations (Profil → Accueil + Calendrier rechargent) ─────────────
+window.addEventListener('formations_updated', () => {
+    // Si l'accueil ou le calendrier est actuellement affiché, forcer un rechargement
+    const view = currentView
+    if (view === 'accueil' || view === 'calendrier') {
+        navigateTo(view)
+    }
+})
+
+// ── Mode signature plein écran (modules → index.html) ─────────────────────────
+window.addEventListener('signature_mode', (e) => {
+    const action = e.detail?.action
+    if (action === 'enter') {
+        document.body.classList.add('signature-mode-active')
+        menuBtn.classList.add('hide')
+    } else {
+        document.body.classList.remove('signature-mode-active')
+        menuBtn.classList.remove('hide')
+    }
+})
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function boot() {
+    try {
+        // Vérifier la session SANS appeler getUser() qui peut causer des locks
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+            window.location.replace('/login.html')
+            return
+        }
+
+        const user = await loadSession()
+        if (!user) {
+            window.location.replace('/login.html')
+            return
+        }
+
+        // Vérifier maintenance
+        if (currentRole !== 'A0') {
+            const { data: param } = await supabase.from('parametres_globaux').select('valeur').eq('cle', 'mode_maintenance').maybeSingle()
+            if (param?.valeur === 'true') {
+                document.getElementById('maintenance-screen').style.display = 'flex'
+                menuBtn.style.display = 'none'
+                mainLoader.style.opacity = '0'
+                setTimeout(() => mainLoader.style.display = 'none', 400)
+                return
+            }
+        }
+
+        appliquerPermissions()
+
+        mainLoader.style.opacity = '0'
+        setTimeout(() => mainLoader.style.display = 'none', 400)
+
+        handlePWAShortcut()
+        if (currentView === 'accueil') await navigateTo('accueil')
+
+    } catch (e) {
+        console.error('[Boot] Erreur critique:', e)
+        // NE PAS rediriger ici — évite la boucle infinie
+    }
+}
+
+boot()
+</script>
+
+<script>
+// ── Fix hauteur Safari iOS — barre navigation variable ────────────────────────
+function setAppHeight() {
+    document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px')
+}
+setAppHeight()
+window.addEventListener('resize', setAppHeight)
+window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 100))
+</script>
 </body>
 </html>
