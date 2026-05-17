@@ -230,6 +230,22 @@ a:focus-visible {
 /* ── Empêcher zoom iOS sur TOUS les éléments interactifs ─────────────────── */
 input, select, textarea {
     touch-action: manipulation;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Fix barre de recherche Safari iOS — enlever bordure bleue système ───── */
+.search-box input,
+.search-box input:focus,
+.search-box input:active {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: #444 !important;
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 /* ── Utilitaires ──────────────────────────────────────────────────────────── */
