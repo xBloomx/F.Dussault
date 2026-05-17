@@ -550,12 +550,11 @@ function openTransferModal(toolId) {
 
     document.getElementById('transferToolName').textContent = t.nom
     const sel = document.getElementById('inpTransferTo')
-    sel.innerHTML = '<option value="" disabled selected hidden>Choisir un collègue...</option>'
-    teamMembers.forEach(emp => {
-        if (emp.prenom_nom && emp.prenom_nom !== t.assignee_nom) {
-            sel.innerHTML += `<option value="${sanitize(emp.prenom_nom)}">${sanitize(emp.prenom_nom)}</option>`
-        }
-    })
+    const opts = teamMembers
+        .filter(emp => emp.prenom_nom && emp.prenom_nom !== t.assignee_nom)
+        .map(emp => `<option value="${sanitize(emp.prenom_nom)}">${sanitize(emp.prenom_nom)}</option>`)
+        .join('')
+    sel.innerHTML = '<option value="" disabled selected hidden>Choisir un collègue...</option>' + opts
     document.getElementById('transferModal').classList.add('open')
 }
 

@@ -245,8 +245,11 @@ async function init() {
     document.getElementById('btnCloseAlert').addEventListener('click', () => closeModal('alertModal'))
     document.getElementById('btnCancelConfirm').addEventListener('click', closeConfirmModal)
     document.getElementById('btnYesConfirm').addEventListener('click', async () => {
-        if (confirmCallback) await confirmCallback()
-        closeConfirmModal()
+        const btn = document.getElementById('btnYesConfirm')
+        if (btn?.disabled) return
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6' }
+        try { if (confirmCallback) await confirmCallback() }
+        finally { if (btn) { btn.disabled = false; btn.style.opacity = '' }; closeConfirmModal() }
     })
 
     await loadData()

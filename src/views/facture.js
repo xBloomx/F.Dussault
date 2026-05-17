@@ -617,7 +617,13 @@ function renderInvoiceList(container, invoiceContainer) {
         const btn = document.createElement('button')
         btn.textContent = `Charger ${PAGE_SIZE} factures de plus...`
         btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:var(--bg-panel);color:var(--text-muted);border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
-        btn.addEventListener('click', async () => { currentPage++; await loadData(false, container) })
+        btn.addEventListener('click', async () => {
+            if (btn.disabled) return
+            btn.disabled = true; btn.textContent = 'Chargement...'
+            currentPage++
+            try { await loadData(false, container) }
+            catch (e) { console.error('[facture] Erreur pagination:', e?.message); currentPage--; btn.disabled = false; btn.textContent = `Charger ${PAGE_SIZE} factures de plus...` }
+        })
         listContainer.appendChild(btn)
     }
 }

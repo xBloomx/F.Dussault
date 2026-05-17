@@ -3,6 +3,7 @@
 
 import { supabase } from '../supabase.js'
 import { currentUser } from '../auth.js'
+import { sanitize } from '../shared/sanitize.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let myUserEmail = ''
@@ -286,17 +287,29 @@ async function chargerCourriels() {
     if (error) { console.error('Erreur chargement courriels:', error); return }
 
     emailsData = (data || []).map(dbMail => {
-        const folder = dbMail.expediteur.toLowerCase() === myUserEmail ? 'sent' : 'inbox'
+        const folder = dbMail.folder ||
+            (dbMail.expediteur?.toLowerCase() === myUserEmail ? 'sent' : 'inbox')
         const dateObj = new Date(dbMail.created_at)
         const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.getHours() + ':' + String(dateObj.getMinutes()).padStart(2, '0')
         return {
             id: dbMail.id, folder,
-            sender: dbMail.expediteur,
-            emailAddress: dbMail.expediteur,
-            subject: dbMail.sujet || '(Sans objet)',
-            body: dbMail.contenu || '',
+            // Champs internes
+            sender: dbMail.expediteur || dbMail.from_address || '',
+            emailAddress: dbMail.expediteur || dbMail.from_address || '',
+            subject: dbMail.sujet || dbMail.subject || '(Sans objet)',
+            body: dbMail.contenu || dbMail.body_text || '',
             date: dateStr, fullDate: dateStr,
-            unread: !dbMail.est_lu && folder === 'inbox'
+            unread: !dbMail.est_lu && folder === 'inbox',
+            // Champs étendus — prêts pour intégration email externe
+            fromName: dbMail.from_name || '',           // Nom affiché de l'expéditeur
+            bodyPlain: dbMail.body_text || dbMail.contenu || '', // Texte brut
+            // bodyHtml: dbMail.body_html || null,       // HTML (affiché dans iframe sandboxée)
+            threadId: dbMail.thread_id || null,         // Pour regrouper les conversations
+            providerId: dbMail.provider_message_id || null, // ID chez Gmail/Outlook/IMAP
+            provider: dbMail.provider || 'internal',    // 'internal' | 'gmail' | 'outlook' | 'imap'
+            // attachments: dbMail.attachments || [],    // [{ name, size, url }]
+            // cc: dbMail.cc || [],
+            // replyTo: dbMail.reply_to || null,
         }
     })
 
@@ -325,14 +338,38 @@ function renderEmailList() {
         const div = document.createElement('div')
         div.className = `email-item ${email.id === currentEmailId ? 'active' : ''} ${email.unread ? 'unread' : ''}`
         div.innerHTML = `
-            <div class="email-sender">${email.sender}</div>
-            <div class="email-subject">${email.subject}</div>
-            <div class="email-preview-text">${email.body.substring(0, 50)}...</div>
-            <div class="email-date">${email.date}</div>
+            <div class="email-sender">${sanitize(email.fromName || email.sender)}</div>
+            <div class="email-subject">${sanitize(email.subject)}</div>
+            <div class="email-preview-text">${sanitize((email.bodyPlain || email.body).substring(0, 50))}...</div>
+            <div class="email-date">${sanitize(email.date)}</div>
         `
         div.addEventListener('click', () => openEmail(email.id))
         container.appendChild(div)
     })
+}
+
+// ── Rendu corps de courriel (texte brut + liens cliquables, sans innerHTML) ──
+function renderEmailBody(el, text) {
+    el.textContent = ''
+    if (!text) return
+    const urlRe = /(https?:\/\/[^\s]+)/g
+    let last = 0, match
+    while ((match = urlRe.exec(text)) !== null) {
+        if (match.index > last) el.appendChild(document.createTextNode(text.slice(last, match.index)))
+        try {
+            const parsed = new URL(match[0])
+            if (['https:', 'http:'].includes(parsed.protocol)) {
+                const a = document.createElement('a')
+                a.href = match[0]
+                a.textContent = match[0]
+                a.target = '_blank'
+                a.rel = 'noopener noreferrer'
+                el.appendChild(a)
+            } else { el.appendChild(document.createTextNode(match[0])) }
+        } catch { el.appendChild(document.createTextNode(match[0])) }
+        last = match.index + match[0].length
+    }
+    if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)))
 }
 
 // ── Ouverture courriel ──────────────────────────────────────────────────────
@@ -350,11 +387,11 @@ async function openEmail(id) {
     renderEmailList()
 
     document.getElementById('readSubject').textContent = email.subject
-    document.getElementById('readSender').textContent = email.sender
+    document.getElementById('readSender').textContent = email.fromName || email.sender
     document.getElementById('readEmailAddress').textContent = email.emailAddress
     document.getElementById('readDate').textContent = email.fullDate
-    document.getElementById('readBody').innerHTML = email.body.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')
-    document.getElementById('readAvatar').textContent = email.sender.charAt(0).toUpperCase()
+    renderEmailBody(document.getElementById('readBody'), email.bodyPlain || email.body)
+    document.getElementById('readAvatar').textContent = (email.fromName || email.sender).charAt(0).toUpperCase()
 
     document.getElementById('emptyView').style.display = 'none'
     document.getElementById('readingPane').style.display = 'flex'

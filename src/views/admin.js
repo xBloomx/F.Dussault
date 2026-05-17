@@ -114,6 +114,10 @@ export async function render(container) {
                 <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 Utilisateurs
             </button>
+            <button class="btn-tab" data-tab="email" id="tab-email" style="display:none">
+                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Boîte Email (A0)
+            </button>
             <button class="btn-tab" data-tab="maintenance" id="tab-dev" style="display:none">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                 Permissions & Système (A0)
@@ -203,6 +207,67 @@ export async function render(container) {
                 <p style="color:#aaa;font-size:13px;margin-bottom:15px;line-height:1.4">Supprime <b>définitivement</b> les documents archivés depuis plus d'un an.</p>
                 <div id="archivesExpiredCount" style="font-size:13px;color:#aaa;margin-bottom:10px">Chargement…</div>
                 <button id="btnCleanArchives" style="width:100%;padding:12px;background:transparent;border:2px solid #ff9800;color:#ff9800;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.2s">Nettoyer</button>
+            </div>
+
+        </div>
+
+        <!-- Section Boîte Email Externe (A0) -->
+        <div class="settings-grid admin-section" id="sec-email" style="grid-template-columns:1fr">
+
+            <div class="settings-card" style="border-color:var(--btn-blue)">
+                <div class="card-header" style="color:var(--btn-blue)">
+                    <div class="header-with-icon">
+                        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        Connexion Boîte Email Externe
+                    </div>
+                </div>
+                <p style="color:#aaa;font-size:13px;margin-bottom:20px;line-height:1.5">
+                    Connectez la boîte courriel de la compagnie pour que les vrais emails apparaissent dans l'onglet Courriel.<br>
+                    Chaque employé avec accès verra les messages dans l'interface web.
+                </p>
+
+                <!-- Statut actuel -->
+                <div id="emailProviderStatus" style="display:flex;align-items:center;gap:10px;padding:12px 15px;background:#1a1b23;border-radius:8px;border:1px solid #444;margin-bottom:20px">
+                    <div style="width:10px;height:10px;border-radius:50%;background:#666;flex-shrink:0" id="emailStatusDot"></div>
+                    <span style="color:#aaa;font-size:14px" id="emailStatusText">Non connectée</span>
+                </div>
+
+                <!-- Formulaire de configuration -->
+                <div style="display:flex;flex-direction:column;gap:15px">
+                    <div>
+                        <label style="display:block;color:white;font-size:13px;font-weight:bold;margin-bottom:6px">Type de fournisseur</label>
+                        <select id="emailProviderType" style="width:100%;padding:12px;background:#2b2c36;border:1px solid #555;color:white;border-radius:6px;outline:none;font-size:14px">
+                            <option value="">-- Choisir --</option>
+                            <option value="gmail">Gmail / Google Workspace</option>
+                            <option value="outlook">Outlook / Microsoft 365</option>
+                            <option value="imap">IMAP / SMTP (autre)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;color:white;font-size:13px;font-weight:bold;margin-bottom:6px">Adresse email de la compagnie</label>
+                        <input type="email" id="emailProviderAddress" placeholder="ex: info@fdussault.com" style="width:100%;padding:12px;background:#2b2c36;border:1px solid #555;color:white;border-radius:6px;outline:none;font-size:14px;box-sizing:border-box">
+                    </div>
+                    <div id="imapFields" style="display:none;flex-direction:column;gap:10px">
+                        <div>
+                            <label style="display:block;color:white;font-size:13px;font-weight:bold;margin-bottom:6px">Serveur IMAP</label>
+                            <input type="text" id="emailImapHost" placeholder="ex: mail.fdussault.com" style="width:100%;padding:12px;background:#2b2c36;border:1px solid #555;color:white;border-radius:6px;outline:none;font-size:14px;box-sizing:border-box">
+                        </div>
+                        <div>
+                            <label style="display:block;color:white;font-size:13px;font-weight:bold;margin-bottom:6px">Mot de passe / App Password</label>
+                            <input type="password" id="emailImapPass" placeholder="••••••••" style="width:100%;padding:12px;background:#2b2c36;border:1px solid #555;color:white;border-radius:6px;outline:none;font-size:14px;box-sizing:border-box">
+                        </div>
+                    </div>
+                    <button id="btnConnectEmail" style="padding:12px 20px;background:var(--btn-blue);color:white;border:none;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:0.2s;opacity:0.5;pointer-events:none" disabled>
+                        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        Connecter — disponible prochainement
+                    </button>
+                </div>
+
+                <div style="margin-top:20px;padding:12px;background:rgba(52,152,219,0.08);border:1px dashed var(--btn-blue);border-radius:8px">
+                    <p style="color:#aaa;font-size:12px;margin:0;line-height:1.6">
+                        <strong style="color:var(--btn-blue)">Comment ça fonctionne :</strong> Une fois connectée, une Edge Function Supabase récupère les nouveaux courriels toutes les 5 minutes et les stocke dans la table <code style="background:#1a1b23;padding:2px 5px;border-radius:3px">courriels</code>. Les employés avec accès les voient instantanément. Les réponses envoyées depuis l'app passent par le serveur SMTP de la compagnie.
+                    </p>
+                </div>
             </div>
 
         </div>
@@ -406,9 +471,12 @@ async function init() {
     document.getElementById('btnUpdateUser').addEventListener('click', updateEmploye)
     document.getElementById('btnCloseAlert').addEventListener('click', () => closeModal('alertModal'))
     document.getElementById('btnCancelConfirmAdmin').addEventListener('click', closeConfirmAdminModal)
-    document.getElementById('btnYesConfirmAdmin').addEventListener('click', () => {
-        if (confirmAdminCallback) confirmAdminCallback()
-        closeConfirmAdminModal()
+    document.getElementById('btnYesConfirmAdmin').addEventListener('click', async () => {
+        const btn = document.getElementById('btnYesConfirmAdmin')
+        if (btn?.disabled) return
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.6' }
+        try { if (confirmAdminCallback) await confirmAdminCallback() }
+        finally { if (btn) { btn.disabled = false; btn.style.opacity = '' }; closeConfirmAdminModal() }
     })
 
     // Fournisseurs
@@ -425,6 +493,13 @@ async function init() {
     // A0 uniquement
     if (currentRole === 'A0') {
         document.getElementById('tab-dev').style.display = 'flex'
+        document.getElementById('tab-email').style.display = 'flex'
+        document.getElementById('emailProviderType').addEventListener('change', e => {
+            document.getElementById('imapFields').style.display = e.target.value === 'imap' ? 'flex' : 'none'
+            const btn = document.getElementById('btnConnectEmail')
+            if (e.target.value) { btn.disabled = false; btn.style.opacity = ''; btn.style.pointerEvents = '' }
+            else { btn.disabled = true; btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none' }
+        })
         document.getElementById('btnOpenNewRole').addEventListener('click', openCustomRoleModal)
         document.getElementById('btnCloseNewRole').addEventListener('click', () => closeModal('newCustomRoleModal'))
         document.getElementById('btnCreateRole').addEventListener('click', createNewCustomRole)
@@ -501,11 +576,10 @@ function updateRoleSelects() {
     ;['roleSelect', 'newUserRole', 'editUserRole'].forEach(sid => {
         const el = document.getElementById(sid)
         if (!el) return
-        el.innerHTML = ''
-        for (const [id, data] of Object.entries(roleDefinitions)) {
-            if (id === 'A0' && !isA0) continue
-            el.innerHTML += `<option value="${sanitize(id)}">${sanitize(data.name)}</option>`
-        }
+        el.innerHTML = Object.entries(roleDefinitions)
+            .filter(([id]) => id !== 'A0' || isA0)
+            .map(([id, data]) => `<option value="${sanitize(id)}">${sanitize(data.name)}</option>`)
+            .join('')
     })
 }
 

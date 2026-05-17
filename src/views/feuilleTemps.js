@@ -426,7 +426,13 @@ function renderTimesheetList(list, container) {
         const btn = document.createElement('button')
         btn.textContent = `Charger ${TS_PAGE_SIZE} feuilles de plus...`
         btn.style.cssText = 'width:100%;padding:14px;margin-top:10px;background:var(--bg-panel);color:var(--text-muted);border:1px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;font-weight:bold'
-        btn.addEventListener('click', async () => { tsPage++; await loadData(false, container) })
+        btn.addEventListener('click', async () => {
+            if (btn.disabled) return
+            btn.disabled = true; btn.textContent = 'Chargement...'
+            tsPage++
+            try { await loadData(false, container) }
+            catch (e) { console.error('[feuilleTemps] Erreur pagination:', e?.message); tsPage--; btn.disabled = false; btn.textContent = `Charger ${TS_PAGE_SIZE} feuilles de plus...` }
+        })
         listContainer.appendChild(btn)
     }
 }
