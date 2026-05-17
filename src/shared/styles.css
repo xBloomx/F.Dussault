@@ -234,6 +234,7 @@ input, select, textarea {
     -moz-appearance: none;
     appearance: none;
     -webkit-tap-highlight-color: transparent;
+    -webkit-focus-ring-color: transparent;
 }
 
 /* ── Fix barre de recherche Safari iOS — enlever bordure bleue système ───── */
