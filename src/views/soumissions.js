@@ -38,8 +38,10 @@ export async function render(container) {
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
         .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin: 1px 0; padding-left: 10px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
         .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 12px 15px 12px 40px; border-radius: 8px; font-size: 16px; outline: none; }
+        .search-box input:focus { border-color: #444; outline: none; box-shadow: none; }
         .search-icon { position: absolute; left: 12px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
@@ -176,8 +178,15 @@ export async function render(container) {
                     <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                     <input type="text" id="searchInput" placeholder="Rechercher (Client, N°...)">
                 </div>
+                <select id="statusFilter" style="display:none; background:#1e1f26; border:1px solid #444; color:white; padding:10px 12px; border-radius:8px; font-size:14px; outline:none; cursor:pointer; flex-shrink:0;">
+                    <option value="">Tous les statuts</option>
+                    <option value="envoye">Envoyé au bureau</option>
+                    <option value="traite">Traité</option>
+                    <option value="attente">À corriger</option>
+                    <option value="paye">Approuvé</option>
+                </select>
             </div>
-            <div id="quote-compteur" style="color:#888;font-size:12px;padding:5px 10px"></div>
+            <div id="quote-compteur" class="discrete-stats"></div>
             <div class="quote-list" id="quoteListContainer"></div>
         </div>
 
@@ -282,6 +291,7 @@ async function init(container) {
     container.querySelector('#tab-all').addEventListener('click', () => switchTab('all', container))
     container.querySelector('#tab-archives').addEventListener('click', () => switchTab('archives', container))
     container.querySelector('#searchInput').addEventListener('keyup', () => filterQuotes(container))
+    container.querySelector('#statusFilter').addEventListener('change', () => filterQuotes(container))
 
     // Boutons dashboard
     container.querySelector('#btnNewQuote').addEventListener('click', () => openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay))
@@ -388,6 +398,8 @@ function switchTab(tab, container) {
     container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
     const tabEl = container.querySelector(`#tab-${tab}`)
     if (tabEl) tabEl.classList.add('active')
+    const statusFilter = container.querySelector('#statusFilter')
+    if (statusFilter) { statusFilter.style.display = tab === 'all' ? 'block' : 'none'; statusFilter.value = '' }
     loadData(true, container)
 }
 
@@ -466,11 +478,13 @@ function renderQuoteList(container) {
 
 function filterQuotes(container) {
     const term = container.querySelector('#searchInput').value.toLowerCase()
+    const statusFilter = container.querySelector('#statusFilter')?.value || ''
     const isBureau = hasPermission('view_all_quotes')
     let baseList = currentQuoteTab === 'archives' ? quotesData
         : (!isBureau || currentQuoteTab === 'mine') ? quotesData.filter(q => q.authorId === currentUser.id || !q.authorId)
         : quotesData.filter(q => q.status !== 'brouillon')
-    const filtered = baseList.filter(q => q.client.toLowerCase().includes(term) || String(q.id).toLowerCase().includes(term))
+    let filtered = baseList.filter(q => q.client.toLowerCase().includes(term) || String(q.id).toLowerCase().includes(term))
+    if (statusFilter && currentQuoteTab === 'all') filtered = filtered.filter(q => q.status === statusFilter)
     const listContainer = container.querySelector('#quoteListContainer')
     listContainer.innerHTML = ''
     if (filtered.length === 0) { listContainer.innerHTML = '<div style="color:#888;text-align:center;padding:20px;font-style:italic">Aucun résultat.</div>'; return }
