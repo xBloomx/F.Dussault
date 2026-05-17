@@ -48,7 +48,7 @@ export async function render(container) {
         .main-content {
             flex: 1; display: flex; flex-direction: column;
             background-color: var(--bg-dark); padding: 30px;
-            max-width: 1400px; margin: 0 auto; width: 100%; gap: 20px;
+            width: 100%; gap: 20px;
             min-height: 100%; overflow-y: auto;
         }
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
@@ -63,7 +63,6 @@ export async function render(container) {
         .dashboard-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 30px; align-items: start; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .section-title { font-size: 20px; color: white; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-
         /* News */
         .news-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
         .news-card { background-color: var(--bg-panel); padding: 25px; border-radius: 15px; border: 1px solid #333; position: relative; transition: transform 0.2s; }
@@ -140,9 +139,10 @@ export async function render(container) {
             .main-content { padding: 15px; }
             .dash-header { flex-direction: column; gap: 15px; align-items: flex-start; }
             .dash-title { padding-right: 80px; }
-            .header-actions { width: 100%; flex-direction: column; align-items: stretch; gap: 10px; }
-            .action-btn { width: 100%; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+            .header-actions { width: 100%; }
             .date-text { width: 100%; text-align: center; }
+            .section-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .section-header .action-btn { width: 100%; justify-content: center; }
             .quick-action-card { min-height: 130px; padding: 25px 15px; }
         }
     </style>
@@ -181,9 +181,6 @@ export async function render(container) {
             </div>
             <div class="header-actions">
                 <div class="date-text" id="todayDate"></div>
-                <button class="action-btn" id="btn-add-news">
-                    <svg width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><use href="#ic-plus"/></svg> Publier une annonce
-                </button>
             </div>
         </div>
 
@@ -195,6 +192,9 @@ export async function render(container) {
                         <svg width="24" height="24" style="stroke:var(--accent);fill:none;stroke-width:2"><use href="#ic-megaphone"/></svg>
                         Tableau d'affichage
                     </div>
+                    <button class="action-btn" id="btn-add-news" style="display:none">
+                        <svg width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><use href="#ic-plus"/></svg> Publier une annonce
+                    </button>
                 </div>
                 <div class="news-container" id="newsList"></div>
             </div>
