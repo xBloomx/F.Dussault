@@ -42,7 +42,7 @@ export async function render(container) {
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .filter-select { background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; min-width: 180px; font-family: inherit; }
         .filter-select:focus { border-color: var(--accent); }
-        .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin-top: 5px; margin-bottom: 5px; padding-left: 10px; }
+        .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin-top: 2px; margin-bottom: 2px; padding-left: 10px; }
         .client-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
         .client-item { background-color: var(--bg-panel); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; cursor: pointer; border-left: 5px solid transparent; }
         .client-item:hover { transform: translateY(-3px); background-color: #343542; }
