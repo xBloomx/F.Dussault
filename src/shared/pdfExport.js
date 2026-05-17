@@ -65,6 +65,20 @@ async function generatePdfBlob(container) {
                     f.style.backgroundColor = 'transparent'
                     f.style.color = '#000'
                     f.style.boxShadow = 'none'
+                    // Cacher les placeholders (ex: JJ/MM/AAAA) si champ vide
+                    if (!f.value && f.placeholder) {
+                        f.placeholder = ''
+                    }
+                })
+                // Enlever le fond bleu des cellules de table et input-box
+                clonedDoc.querySelectorAll('td, .input-box, .display-sig').forEach(el => {
+                    el.style.background = 'white'
+                    el.style.backgroundColor = 'white'
+                })
+                // Enlever le fond bleu des champs de formulaire header
+                clonedDoc.querySelectorAll('.field input, .red-invoice-input').forEach(el => {
+                    el.style.background = 'white'
+                    el.style.backgroundColor = 'white'
                 })
             }
         })
