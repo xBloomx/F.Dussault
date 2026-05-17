@@ -32,7 +32,7 @@ let _longPressStartXY = null
 let _editingMsgId = null
 let _currentlySwipedItem = null
 let _swipeState = null
-let quickReactions = JSON.parse(localStorage.getItem('dussault_quick_reacts')) || ['❤️', '👍', '😂', '😮', '😢', '🙏']
+let quickReactions = (() => { try { return JSON.parse(localStorage.getItem('dussault_quick_reacts')) || ['❤️', '👍', '😂', '😮', '😢', '🙏'] } catch { return ['❤️', '👍', '😂', '😮', '😢', '🙏'] } })()
 
 const conversationsData = { 'global': { name: 'Équipe (Général)', isGroup: true, messages: [] } }
 
@@ -512,7 +512,7 @@ function ecouterNouveauxMessages(container) {
 
             if (hiddenChatIds.has(cId)) {
                 hiddenChatIds.delete(cId)
-                try { await supabase.from('chats_caches').delete().eq('user_id', myUserId).eq('chat_id', cId) } catch {}
+                try { await supabase.from('chats_caches').delete().eq('user_id', myUserId).eq('chat_id', cId) } catch (e) { console.warn('[messagerie] Impossible de supprimer le cache chat:', e?.message) }
             }
 
             if (currentChatId === cId) renderMessages(conversationsData[cId].messages, true, container)
@@ -567,9 +567,11 @@ function notifierNouveauMessage(senderName, chatId, container) {
 // ── Envoi messages ───────────────────────────────────────────────────────────
 async function sendMessage(container) {
     const messageInput = container.querySelector('#messageInput')
+    const btnSend = container.querySelector('#btnSendMsg')
     const text = messageInput.value.trim()
     const hasFiles = selectedFiles.length > 0
     if ((!text && !hasFiles) || !currentChatId) return
+    if (btnSend?.disabled) return
 
     if (_editingMsgId) {
         if (!text) { showAlert("Le message ne peut pas être vide.", container); return }
@@ -578,35 +580,41 @@ async function sendMessage(container) {
         return
     }
 
-    const activeChat = conversationsData[currentChatId]
-    const now = new Date()
-    const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0')
+    if (btnSend) { btnSend.disabled = true; btnSend.style.opacity = '0.5' }
+    try {
+        const activeChat = conversationsData[currentChatId]
+        const now = new Date()
+        const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0')
 
-    if (hasFiles) {
-        const files = [...selectedFiles]; selectedFiles = []; renderPreviews(container)
-        for (const file of files) {
-            const fileExt = file.name.split('.').pop()
-            const filePath = `${myUserId}/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`
-            const { error: uploadError } = await supabase.storage.from('pieces_jointes').upload(filePath, file)
-            if (uploadError) { showAlert("Erreur d'envoi.", container); continue }
-            const { data: { publicUrl } } = supabase.storage.from('pieces_jointes').getPublicUrl(filePath)
-            const isImg = file.type.startsWith('image/')
-            const fileSizeTxt = Math.round(file.size / 1024) + ' KB'
-            const contenu = isImg ? `IMG|||${publicUrl}` : `FILE|||${publicUrl}|||${file.name}|||${fileSizeTxt}`
-            activeChat.messages.push({ id: Date.now(), sender: myUserName, time: timeStr, isMine: true, reaction: null, type: isImg ? 'image' : 'file', text: '', url: publicUrl, fileName: file.name, fileSize: fileSizeTxt })
-            renderMessages(activeChat.messages, true, container)
-            await supabase.from('message').insert([{ contenu, expediteur_id: myUserId, chat_id: currentChatId }])
+        if (hasFiles) {
+            const files = [...selectedFiles]; selectedFiles = []; renderPreviews(container)
+            for (const file of files) {
+                const fileExt = file.name.split('.').pop()
+                const filePath = `${myUserId}/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`
+                if (btnSend) btnSend.title = `Envoi de ${file.name}...`
+                const { error: uploadError } = await supabase.storage.from('pieces_jointes').upload(filePath, file)
+                if (uploadError) { showAlert("Erreur d'envoi du fichier : " + uploadError.message, container); continue }
+                const { data: { publicUrl } } = supabase.storage.from('pieces_jointes').getPublicUrl(filePath)
+                const isImg = file.type.startsWith('image/')
+                const fileSizeTxt = Math.round(file.size / 1024) + ' KB'
+                const contenu = isImg ? `IMG|||${publicUrl}` : `FILE|||${publicUrl}|||${file.name}|||${fileSizeTxt}`
+                activeChat.messages.push({ id: Date.now(), sender: myUserName, time: timeStr, isMine: true, reaction: null, type: isImg ? 'image' : 'file', text: '', url: publicUrl, fileName: file.name, fileSize: fileSizeTxt })
+                renderMessages(activeChat.messages, true, container)
+                await supabase.from('message').insert([{ contenu, expediteur_id: myUserId, chat_id: currentChatId }])
+            }
         }
-    }
 
-    if (text) {
-        activeChat.messages.push({ id: Date.now(), sender: myUserName, text, time: timeStr, isMine: true, type: 'text', reaction: null })
-        messageInput.value = ''
-        renderMessages(activeChat.messages, true, container)
-        const { error } = await supabase.from('message').insert([{ contenu: text, expediteur_id: myUserId, chat_id: currentChatId }])
-        if (error) showAlert('❌ Le message n\'a pas pu être envoyé : ' + error.message, container)
+        if (text) {
+            activeChat.messages.push({ id: Date.now(), sender: myUserName, text, time: timeStr, isMine: true, type: 'text', reaction: null })
+            messageInput.value = ''
+            renderMessages(activeChat.messages, true, container)
+            const { error } = await supabase.from('message').insert([{ contenu: text, expediteur_id: myUserId, chat_id: currentChatId }])
+            if (error) showAlert('❌ Le message n\'a pas pu être envoyé : ' + error.message, container)
+        }
+        renderContactList(container)
+    } finally {
+        if (btnSend) { btnSend.disabled = false; btnSend.style.opacity = ''; btnSend.title = '' }
     }
-    renderContactList(container)
 }
 
 // ── Rendu ────────────────────────────────────────────────────────────────────
@@ -766,7 +774,7 @@ async function createNewChat(container) {
     if (!conversationsData[newChatId]) conversationsData[newChatId] = newChat
     if (hiddenChatIds.has(newChatId)) {
         hiddenChatIds.delete(newChatId)
-        try { await supabase.from('chats_caches').delete().eq('user_id', myUserId).eq('chat_id', newChatId) } catch {}
+        try { await supabase.from('chats_caches').delete().eq('user_id', myUserId).eq('chat_id', newChatId) } catch (e) { console.warn('[messagerie] Impossible de supprimer le cache chat:', e?.message) }
     }
 
     closeModal('newChatModal', container)
@@ -927,7 +935,7 @@ async function selectReaction(emoji, container) {
     if (msg) {
         msg.reaction = emoji
         renderMessages(chat.messages, false, container)
-        try { await supabase.from('message').update({ reaction: emoji }).eq('id', currentReactMsgId) } catch {}
+        try { await supabase.from('message').update({ reaction: emoji }).eq('id', currentReactMsgId) } catch (e) { console.warn('[messagerie] Impossible de sauvegarder la réaction:', e?.message) }
     }
     document.getElementById('reactionPicker').style.display = 'none'
 }

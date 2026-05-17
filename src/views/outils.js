@@ -292,7 +292,13 @@ async function chargerPlusOutils() {
     const btn = document.getElementById('btn-charger-plus-outils')
     if (btn) { btn.disabled = true; btn.textContent = 'Chargement...' }
     toolsPage++
-    await loadTools(false)
+    try {
+        await loadTools(false)
+    } catch (e) {
+        console.error('[outils] Erreur chargement page suivante:', e?.message)
+        toolsPage--
+        if (btn) { btn.disabled = false; btn.textContent = `Charger ${TOOLS_PAGE_SIZE} entrées de plus...` }
+    }
 }
 
 // ── Rendu ───────────────────────────────────────────────────────────────────

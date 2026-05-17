@@ -500,8 +500,7 @@ async function saveNews() {
 
     let authorName = currentProfil?.prenom_nom || 'Utilisateur'
     if (currentRole === 'A0') {
-        const alias = localStorage.getItem('dussault_a0_alias')
-        if (alias === 'systeme') authorName = 'Système'
+        try { const alias = localStorage.getItem('dussault_a0_alias'); if (alias === 'systeme') authorName = 'Système' } catch { /* localStorage indisponible */ }
     }
 
     const { error } = await supabase.from('annonces').insert([{
@@ -568,18 +567,18 @@ async function checkCertifications() {
 
         if (diffDays < 0) {
             hasAlerts = true
-            container.innerHTML += `
+            container.insertAdjacentHTML('beforeend', `
                 <div class="alert-item alert-danger">
                     <span class="alert-icon"><svg width="24" height="24" style="stroke:currentColor;fill:none;stroke-width:2"><use href="#ic-alert-triangle"/></svg></span>
                     <div><b>${nom}</b> est expirée !</div>
-                </div>`
+                </div>`)
         } else if (diffDays <= 30) {
             hasAlerts = true
-            container.innerHTML += `
+            container.insertAdjacentHTML('beforeend', `
                 <div class="alert-item alert-warning">
                     <span class="alert-icon"><svg width="24" height="24" style="stroke:currentColor;fill:none;stroke-width:2"><use href="#ic-clock"/></svg></span>
                     <div><b>${nom}</b> expire dans ${diffDays}j.</div>
-                </div>`
+                </div>`)
         }
     })
 

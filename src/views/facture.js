@@ -814,7 +814,7 @@ async function saveCurrentInvoice(isSending, invoiceContainer, viewDash, viewEdi
         invoiceNum = typedNum
     }
     if (!invoiceNum) {
-        try { const { data } = await supabase.rpc('next_facture_number'); invoiceNum = data || ('F-' + Date.now().toString().slice(-4)) } catch { invoiceNum = 'F-' + Date.now().toString().slice(-4) }
+        try { const { data, error } = await supabase.rpc('next_facture_number'); if (error) throw error; invoiceNum = data || ('F-' + Date.now().toString().slice(-4)) } catch (e) { console.warn('[facture] Impossible d\'obtenir le numéro (mode papier):', e?.message); invoiceNum = 'F-' + Date.now().toString().slice(-4) }
         if (numInput) numInput.value = invoiceNum
     }
 

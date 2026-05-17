@@ -384,7 +384,13 @@ async function chargerPlusClients() {
     const btn = document.getElementById('btn-charger-plus-clients')
     if (btn) { btn.disabled = true; btn.textContent = 'Chargement...' }
     clientsPage++
-    await loadClients(false)
+    try {
+        await loadClients(false)
+    } catch (e) {
+        console.error('[clients] Erreur chargement page suivante:', e?.message)
+        clientsPage--
+        if (btn) { btn.disabled = false; btn.textContent = `Charger ${PAGE_SIZE} clients de plus...` }
+    }
 }
 
 // ── Sauvegarde ──────────────────────────────────────────────────────────────
@@ -455,6 +461,7 @@ async function executeDeleteClient() {
     if (!data || data.length === 0) { openAlertModal("La suppression a été bloquée par les permissions de la base de données."); return }
     closeModal('editModal')
     await loadClients()
+    showToast('✓ Client déplacé dans la corbeille')
 }
 
 async function restaurerClient(id) {
@@ -462,6 +469,7 @@ async function restaurerClient(id) {
     if (error) { openAlertModal('Erreur lors de la restauration : ' + (error.message || 'inconnue')); return }
     if (!data || data.length === 0) { openAlertModal("La restauration a été bloquée par les permissions."); return }
     await loadClients()
+    showToast('✓ Client restauré')
     openCorbeille()
 }
 
@@ -632,7 +640,7 @@ function openViewModal(id) {
     contactsList.forEach(ct => {
         const phoneLink = ct.phone ? `<a href="tel:${sanitize(ct.phone)}" style="color:white;text-decoration:none;font-weight:bold" onclick="event.stopPropagation()">${sanitize(ct.phone)}</a>` : '---'
         const emailLink = ct.email ? `<a href="mailto:${sanitize(ct.email)}" style="color:#aaa;font-size:11px;text-decoration:none" onclick="event.stopPropagation()">${sanitize(ct.email)}</a>` : ''
-        contList.innerHTML += `<div class="contact-item"><div><div class="ci-name">${sanitize(ct.name)}</div>${ct.role ? `<div class="ci-role" style="margin-top:4px">${sanitize(ct.role)}</div>` : ''}</div><div style="text-align:right"><div>${phoneLink}</div><div>${emailLink}</div></div></div>`
+        contList.insertAdjacentHTML('beforeend', `<div class="contact-item"><div><div class="ci-name">${sanitize(ct.name)}</div>${ct.role ? `<div class="ci-role" style="margin-top:4px">${sanitize(ct.role)}</div>` : ''}</div><div style="text-align:right"><div>${phoneLink}</div><div>${emailLink}</div></div></div>`)
     })
 
     const nomClient = extra.company || c.nom || ''
@@ -787,6 +795,14 @@ function openCorbeille() {
         }))
     }
     document.getElementById('corbeilleModal').classList.add('open')
+}
+
+function showToast(msg, color = 'var(--btn-green)') {
+    const t = document.createElement('div')
+    t.textContent = msg
+    t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${color};color:white;padding:10px 22px;border-radius:8px;font-weight:bold;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.4);pointer-events:none;transition:opacity 0.4s`
+    document.body.appendChild(t)
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 400) }, 2500)
 }
 
 // ── Utilitaires ─────────────────────────────────────────────────────────────

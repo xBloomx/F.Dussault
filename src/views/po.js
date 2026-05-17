@@ -276,7 +276,13 @@ async function chargerPlusPO() {
     const btn = document.getElementById('btn-charger-plus-po')
     if (btn) { btn.disabled = true; btn.textContent = 'Chargement...' }
     poPage++
-    await loadData(false)
+    try {
+        await loadData(false)
+    } catch (e) {
+        console.error('[po] Erreur chargement page suivante:', e?.message)
+        poPage--
+        if (btn) { btn.disabled = false; btn.textContent = `Charger ${PO_PAGE_SIZE} bons de commande de plus...` }
+    }
 }
 
 // ── Génération PO ───────────────────────────────────────────────────────────
