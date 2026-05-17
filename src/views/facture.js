@@ -239,7 +239,7 @@ export async function render(container) {
 
             <div class="toolbar">
                 <div class="search-box">
-                    <span class="search-icon"><svg viewBox="0 0 24 24"><use href="#fic-search"/></svg></span>
+                    <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                     <input type="text" id="searchInput" placeholder="Rechercher (Client, N°...)">
                 </div>
             </div>
