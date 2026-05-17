@@ -64,9 +64,9 @@ export async function render(container) {
         .btn-new-chat:hover { transform: scale(1.1); background: #ffd66b; }
         .sidebar-footer { padding: 15px 20px; border-top: none; display: flex; gap: 15px; align-items: center; background: var(--bg-panel); z-index: 10; }
         .sidebar-footer .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid #444; color: white; padding: 12px 15px 12px 40px; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s;}
+        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid #444; color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s;}
         .search-box input:focus { border-color: var(--accent); }
-        .search-icon { position: absolute; left: 12px; color: #888; pointer-events: none; display: flex; align-items: center; }
+        .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .contact-list { flex: 1; overflow-y: auto; padding: 10px 0; }
         .contact-wrapper { position: relative; background: var(--btn-red); overflow: hidden; border-bottom: 1px solid var(--border-color); }

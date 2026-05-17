@@ -54,6 +54,9 @@ export async function render(container) {
     <style>
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
+        .search-box { flex: 1; position: relative; display: flex; align-items: center; }
+        .search-box input:focus { border-color: var(--accent) !important; }
+        .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .admin-main { flex: 1; display: flex; flex-direction: column; padding: 30px; max-width: 1200px; margin: 0 auto; width: 100%; overflow-y: auto; min-height: 100%; }
         .dash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
@@ -276,7 +279,10 @@ export async function render(container) {
                         </div>
                     </div>
                     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-                        <input type="text" id="logSearch" placeholder="Rechercher..." style="flex:1;min-width:180px;background:#1a1b23;border:1px solid #444;color:white;padding:10px;border-radius:6px;font-size:13px;outline:none">
+                        <div class="search-box" style="flex:1;min-width:180px;">
+                            <span class="search-icon"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+                            <input type="text" id="logSearch" placeholder="Rechercher..." style="width:100%;background:#1a1b23;border:1px solid #444;color:white;padding:14px 15px 14px 45px;border-radius:8px;font-size:16px;outline:none;transition:0.2s;box-sizing:border-box">
+                        </div>
                         <select id="logActionFilter" style="background:#1a1b23;border:1px solid #444;color:white;padding:10px;border-radius:6px;font-size:13px;outline:none">
                             <option value="">Toutes actions</option>
                             <option value="creation">Création</option>

@@ -35,9 +35,11 @@ export async function render(container) {
 
         .email-list-col { width: 350px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg-panel); flex-shrink: 0; overflow: hidden; }
         .email-toolbar { padding: 15px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .search-box { position: relative; }
-        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 10px 10px 10px 35px; border-radius: 8px; outline: none; box-sizing: border-box; }
-        .search-box svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #888; width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .search-box { flex: 1; position: relative; display: flex; align-items: center; }
+        .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; box-sizing: border-box; }
+        .search-box input:focus { border-color: var(--accent); }
+        .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
+        .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .email-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
         .email-item { padding: 15px; border-bottom: 1px solid #333; cursor: pointer; transition: 0.2s; position: relative; border-left: 3px solid transparent; }
         .email-item:hover { background: #343542; }
@@ -139,7 +141,7 @@ export async function render(container) {
             <div class="email-list-col">
                 <div class="email-toolbar">
                     <div class="search-box">
-                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                         <input type="text" id="emailSearch" placeholder="Rechercher...">
                     </div>
                 </div>
