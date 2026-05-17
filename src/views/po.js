@@ -52,7 +52,7 @@ export async function render(container) {
         .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 40px; height: 40px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .btn-delete svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-delete:hover { background: var(--btn-red); color: white; }
-        .status-badge { font-size: 12px; padding: 3px 10px 3px 8px; border-radius: 6px; font-weight: bold; background: rgba(40,167,69,0.15); color: var(--btn-green); display: inline-flex; align-items: center; gap: 4px; border-left: 4px solid var(--btn-green); }
+        .status-badge { font-size: 12px; padding: 3px 10px; border-radius: 6px; font-weight: bold; background: rgba(40,167,69,0.15); color: var(--btn-green); display: inline-flex; align-items: center; gap: 4px; }
         .status-badge svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }

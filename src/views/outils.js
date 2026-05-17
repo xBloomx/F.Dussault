@@ -44,9 +44,9 @@ export async function render(container) {
         .tool-details { color: #aaa; font-size: 14px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-top: 5px; }
         .tool-details span { display: flex; align-items: center; gap: 5px; }
         .tool-details svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .status-badge { font-size: 12px; padding: 3px 10px 3px 8px; border-radius: 6px; font-weight: bold; text-transform: uppercase; white-space: nowrap; display: inline-flex; align-items: center; border-left: 4px solid; }
-        .status-badge.out { background: rgba(252,202,70,0.15); color: var(--accent);    border-left-color: var(--accent); }
-        .status-badge.in  { background: rgba(40,167,69,0.15);  color: var(--btn-green); border-left-color: var(--btn-green); }
+        .status-badge { font-size: 12px; padding: 3px 10px; border-radius: 6px; font-weight: bold; text-transform: uppercase; white-space: nowrap; display: inline-flex; align-items: center; }
+        .status-badge.out { background: rgba(252,202,70,0.15); color: var(--accent); }
+        .status-badge.in  { background: rgba(40,167,69,0.15);  color: var(--btn-green); }
         .tool-actions { display: flex; gap: 10px; margin-left: 20px; flex-wrap: wrap; }
         .btn-return { background: var(--btn-green); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
         .btn-return svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }

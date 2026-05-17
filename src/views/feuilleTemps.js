@@ -34,12 +34,12 @@ export async function render(container) {
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .fdt-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        .badge-status { padding: 3px 10px 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; border-left: 4px solid; }
-        .b-brouillon { background: rgba(136,136,136,0.15); color: #888;             border-left-color: #888; }
-        .b-envoye    { background: rgba(52,152,219,0.15);  color: var(--btn-blue);  border-left-color: var(--btn-blue); }
-        .b-attente   { background: rgba(252,202,70,0.15);  color: var(--accent);    border-left-color: var(--accent); }
-        .b-paye      { background: rgba(40,167,69,0.15);   color: var(--btn-green); border-left-color: var(--btn-green); }
-        .b-renvoye   { background: rgba(255,77,77,0.15);   color: var(--btn-red);   border-left-color: var(--btn-red); }
+        .badge-status { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        .b-brouillon { background: rgba(136,136,136,0.15); color: #888; }
+        .b-envoye    { background: rgba(52,152,219,0.15);  color: var(--btn-blue); }
+        .b-attente   { background: rgba(252,202,70,0.15);  color: var(--accent); }
+        .b-paye      { background: rgba(40,167,69,0.15);   color: var(--btn-green); }
+        .b-renvoye   { background: rgba(255,77,77,0.15);   color: var(--btn-red); }
         #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }

@@ -38,12 +38,12 @@ export async function render(container) {
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .fact-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        .badge-status { padding: 3px 10px 3px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; border-left: 4px solid; }
-        .b-brouillon { background: rgba(136,136,136,0.15); color: #888; border-left-color: #888; }
-        .b-envoye   { background: rgba(52,152,219,0.15);  color: var(--btn-blue);   border-left-color: var(--btn-blue); }
-        .b-traite   { background: rgba(156,39,176,0.15);  color: var(--btn-purple); border-left-color: var(--btn-purple); }
-        .b-paye     { background: rgba(40,167,69,0.15);   color: var(--btn-green);  border-left-color: var(--btn-green); }
-        .b-renvoye  { background: rgba(253,126,20,0.15);  color: var(--btn-orange); border-left-color: var(--btn-orange); }
+        .badge-status { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+        .b-brouillon { background: rgba(136,136,136,0.15); color: #888; }
+        .b-envoye   { background: rgba(52,152,219,0.15);  color: var(--btn-blue); }
+        .b-traite   { background: rgba(156,39,176,0.15);  color: var(--btn-purple); }
+        .b-paye     { background: rgba(40,167,69,0.15);   color: var(--btn-green); }
+        .b-renvoye  { background: rgba(253,126,20,0.15);  color: var(--btn-orange); }
         .b-paper { background: rgba(91,192,235,0.15); color: #5bc0eb; border: 1px solid rgba(91,192,235,0.4); }
         .badges-wrap { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
         #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
@@ -565,7 +565,7 @@ function renderInvoiceList(container, invoiceContainer) {
     filtered.forEach(inv => {
         let badgeHTML = ''
         const st = inv.status || 'brouillon'
-        if (inv.isArchived) { badgeHTML = `<span class="badge-status" style="background:rgba(85,85,85,0.15);color:#777;border-left-color:#777">Archivé</span>` }
+        if (inv.isArchived) { badgeHTML = `<span class="badge-status" style="background:rgba(85,85,85,0.15);color:#777">Archivé</span>` }
         else if (st === 'brouillon') { badgeHTML = `<span class="badge-status b-brouillon">Brouillon</span>` }
         else if (!isBureau) {
             if (st === 'envoye') badgeHTML = `<span class="badge-status b-envoye">Envoyé au bureau</span>`

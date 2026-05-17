@@ -56,11 +56,11 @@ export async function render(container) {
         .inv-client { font-weight: bold; font-size: 16px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .inv-author { font-size: 14px; color: #888; font-style: italic; }
         .inv-date { color: #aaa; font-size: 14px; text-align: right; }
-        .inv-status span { font-size: 12px; padding: 3px 10px 3px 8px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; border-left: 4px solid; }
-        .status-attente   { background: rgba(255,193,7,0.15);  color: #ffc107;           border-left-color: #ffc107; }
-        .status-convertie { background: rgba(40,167,69,0.15);  color: var(--btn-green);  border-left-color: var(--btn-green); }
-        .status-brouillon { background: rgba(136,136,136,0.15); color: #888;             border-left-color: #888; }
-        .status-archivee  { background: rgba(85,85,85,0.15);   color: #777;             border-left-color: #777; }
+        .inv-status span { font-size: 12px; padding: 3px 10px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; }
+        .status-attente   { background: rgba(255,193,7,0.15);  color: #ffc107; }
+        .status-convertie { background: rgba(40,167,69,0.15);  color: var(--btn-green); }
+        .status-brouillon { background: rgba(136,136,136,0.15); color: #888; }
+        .status-archivee  { background: rgba(85,85,85,0.15);   color: #777; }
         .inv-actions { display: flex; justify-content: flex-end; }
         .btn-icon { background: #444; border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; flex-shrink: 0; transition: 0.2s;}
         .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; }

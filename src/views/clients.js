@@ -670,7 +670,7 @@ async function loadFacturesClient(clientNom) {
         <div style="background:var(--bg-dark);border-radius:8px;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid ${color}">
             <span style="color:white;font-weight:bold;font-family:monospace">${sanitize(f.id)}</span>
             <span style="color:var(--text-muted);font-size:13px">${sanitize(f.date || '')}</span>
-            <span style="font-size:12px;padding:3px 10px 3px 8px;border-radius:6px;background:${bg};color:${color};font-weight:bold;border-left:4px solid ${color}">${sanitize(f.status || '')}</span>
+            <span style="font-size:12px;padding:3px 10px;border-radius:6px;background:${bg};color:${color};font-weight:bold">${sanitize(f.status || '')}</span>
         </div>`
     }).join('')
 }
