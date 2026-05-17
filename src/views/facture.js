@@ -1051,8 +1051,6 @@ function exporterPDF(invoiceContainer, container) {
         const dateVal = invoiceContainer.querySelector('.paper-date-input')?.value.trim() || new Date().toISOString().split('T')[0]
         const invoiceNum = invoiceContainer.querySelector('.paper-numero-input')?.value.trim() || currentInvoiceId || ''
         // Pour les factures papier, on génère un PDF à partir des dataUrls des pages
-        // On crée un container temporaire avec des images pour openPdfPreview
-        const tempDiv = document.createElement('div')
         const tempDiv = document.createElement('div')
         tempDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:8.5in'
         paperPages.forEach(p => {

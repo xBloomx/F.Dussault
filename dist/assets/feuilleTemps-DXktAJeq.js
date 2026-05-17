@@ -1,4 +1,4 @@
-import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-DoYTDaKy.js";var m=`Employé`,h=`mine`,g=[],_=null,v=null,y=0,b=25,x=!1,S=null,C=null,w=null;function T(){return t(`view_all_timesheets`)||t(`approve_timesheets`)}async function E(e){return m=i?.prenom_nom||`Employé`,e.innerHTML=`
+import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-BzSbrhJS.js";var m=`Employé`,h=`mine`,g=[],_=null,v=null,y=0,b=25,x=!1,S=null,C=null,w=null;function T(){return t(`view_all_timesheets`)||t(`approve_timesheets`)}async function E(e){return m=i?.prenom_nom||`Employé`,e.innerHTML=`
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .fdt-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
@@ -13,6 +13,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         .btn-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
         .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin: 1px 0; padding-left: 10px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
         .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 12px 15px 12px 40px; border-radius: 8px; font-size: 16px; outline: none; }
         .search-icon { position: absolute; left: 12px; color: #888; pointer-events: none; display: flex; align-items: center; }
@@ -124,7 +125,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
                     <option value="paye">Approuvé</option>
                 </select>
             </div>
-            <div id="ts-compteur" style="color:#888;font-size:12px;padding:5px 10px"></div>
+            <div id="ts-compteur" class="discrete-stats"></div>
             <div class="invoice-list" id="timesheetListContainer"></div>
         </div>
 

@@ -1,4 +1,4 @@
-import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-DoYTDaKy.js";import{n as m,r as h,t as g}from"./signature-B2p-Whyr.js";var _=`Employé`,v=`mine`,y=[],b=null,x=null,S=0,C=25,w=!1,T=null,E=0,D=0,O=null,k=null;async function A(e){return _=i?.prenom_nom||`Employé`,e.innerHTML=`
+import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-BoJf8KxA.js";import{t as a}from"./withRetry-ilQ6RSHM.js";import{a as o,c as s,i as c,n as l,o as u,r as d,s as f,t as p}from"./zoom-BzSbrhJS.js";import{n as m,r as h,t as g}from"./signature-B2p-Whyr.js";var _=`Employé`,v=`mine`,y=[],b=null,x=null,S=0,C=25,w=!1,T=null,E=0,D=0,O=null,k=null;async function A(e){return _=i?.prenom_nom||`Employé`,e.innerHTML=`
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
         .soum-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
@@ -7,8 +7,10 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
         .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin: 1px 0; padding-left: 10px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
         .search-box input { width: 100%; background: #1e1f26; border: 1px solid #444; color: white; padding: 12px 15px 12px 40px; border-radius: 8px; font-size: 16px; outline: none; }
+        .search-box input:focus { border-color: #444; outline: none; box-shadow: none; }
         .search-icon { position: absolute; left: 12px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
@@ -153,7 +155,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{i as t,n,r,t as i}from"./auth-
                     <option value="paye">Approuvé</option>
                 </select>
             </div>
-            <div id="quote-compteur" style="color:#888;font-size:12px;padding:5px 10px"></div>
+            <div id="quote-compteur" class="discrete-stats"></div>
             <div class="quote-list" id="quoteListContainer"></div>
         </div>
 
