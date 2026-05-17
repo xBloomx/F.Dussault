@@ -41,7 +41,7 @@ async function generatePdfBlob(container) {
 
     for (let i = 0; i < pages.length; i++) {
         const canvas = await html2canvas(pages[i], {
-            scale: 2,
+            scale: window.devicePixelRatio > 2 ? 2 : window.devicePixelRatio || 2,
             useCORS: true,
             allowTaint: false,
             backgroundColor: '#ffffff',
@@ -49,6 +49,10 @@ async function generatePdfBlob(container) {
             height: PAGE_HEIGHT_PX,
             windowWidth: PAGE_WIDTH_PX,
             windowHeight: PAGE_HEIGHT_PX,
+            x: 0,
+            y: 0,
+            scrollX: 0,
+            scrollY: 0,
             onclone: (clonedDoc) => {
                 clonedDoc.querySelectorAll('.page').forEach(p => {
                     p.style.transform = 'none'
@@ -60,25 +64,31 @@ async function generatePdfBlob(container) {
                     c.style.marginLeft = '0'
                     c.style.marginBottom = '0'
                 })
+
+                // Remplacer TOUTES les couleurs bleues par blanc — universel
+                clonedDoc.querySelectorAll('.page *').forEach(el => {
+                    const bg = window.getComputedStyle(el).backgroundColor
+                    // Détecter toute couleur bleue (rgb approximatif du --blue-bg #d1e9ff et variantes)
+                    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+                        const match = bg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/)
+                        if (match) {
+                            const [, r, g, b] = match.map(Number)
+                            // Bleu clair : b > r et b > g et b > 150
+                            if (b > r && b > g && b > 150) {
+                                el.style.background = 'white'
+                                el.style.backgroundColor = 'white'
+                            }
+                        }
+                    }
+                })
+
+                // Inputs/textarea transparents
                 clonedDoc.querySelectorAll('input, textarea, select').forEach(f => {
                     f.style.background = 'transparent'
                     f.style.backgroundColor = 'transparent'
                     f.style.color = '#000'
                     f.style.boxShadow = 'none'
-                    // Cacher les placeholders (ex: JJ/MM/AAAA) si champ vide
-                    if (!f.value && f.placeholder) {
-                        f.placeholder = ''
-                    }
-                })
-                // Enlever le fond bleu des cellules de table et input-box
-                clonedDoc.querySelectorAll('td, .input-box, .display-sig').forEach(el => {
-                    el.style.background = 'white'
-                    el.style.backgroundColor = 'white'
-                })
-                // Enlever le fond bleu des champs de formulaire header
-                clonedDoc.querySelectorAll('.field input, .red-invoice-input').forEach(el => {
-                    el.style.background = 'white'
-                    el.style.backgroundColor = 'white'
+                    if (!f.value && f.placeholder) f.placeholder = ''
                 })
             }
         })
