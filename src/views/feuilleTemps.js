@@ -7,6 +7,7 @@ import { createAutosave } from '../shared/autosave.js'
 import { canArchive, canSeeAllArchives, canRestore, confirmAndArchive, confirmAndRestore } from '../shared/archive.js'
 import { openPdfPreview } from '../shared/pdfExport.js'
 import { withRetry } from '../shared/withRetry.js'
+import { enqueueOfflineSave } from '../shared/offlineQueue.js'
 import { createZoomController } from '../shared/zoom.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
@@ -612,6 +613,11 @@ async function saveCurrentTimesheet(isSending, wrapper, viewDash, viewEditor, co
     if (btnSave) { btnSave.disabled = false; btnSave.innerHTML = origHTML }
 
     if (error) {
+        if (error.offline) {
+            enqueueOfflineSave('feuilles_de_temps', payload)
+            showAlertModal('Hors ligne — la feuille sera synchronisée automatiquement à la reconnexion.', container)
+            return
+        }
         const msg = (error.message || '').toLowerCase()
         showAlertModal(msg.includes('lock broken') ? '❌ Réessayez dans 2 secondes.' : '❌ Erreur : ' + error.message, container)
         return

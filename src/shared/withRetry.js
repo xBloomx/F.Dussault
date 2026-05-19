@@ -15,6 +15,7 @@ function isTransientError(error) {
 }
 
 export async function withRetry(operation, options = {}) {
+    if (!navigator.onLine) return { error: { message: 'Hors ligne — vos données sont sauvegardées localement.', offline: true } }
     const delay = options.delay || 600
     const maxAttempts = options.maxAttempts || 2
 

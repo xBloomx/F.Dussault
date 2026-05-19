@@ -9,6 +9,7 @@ import { canArchive, canSeeAllArchives, canRestore, confirmAndArchive, confirmAn
 import { openPdfPreview } from '../shared/pdfExport.js'
 import { attachAll, watchContainer, refreshIndicators } from '../shared/signature.js'
 import { withRetry } from '../shared/withRetry.js'
+import { enqueueOfflineSave } from '../shared/offlineQueue.js'
 import { createZoomController } from '../shared/zoom.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ let quotePageCount = 0
 let globalSigCount = 0
 let zoomCtrl = null
 let _onResizeSoum = null
+let clientNameList = []
 
 // ── Render principal ────────────────────────────────────────────────────────
 export async function render(container) {
@@ -521,6 +523,7 @@ function openExistingQuote(id, container) {
     quotePageCount = 0; globalSigCount = 0
 
     for (let i = 0; i < (quote.pageCount || 1); i++) quoteContainer.appendChild(createQuotePageHTML())
+    loadClientNames().then(injectClientDatalist)
 
     const allInputs = quoteContainer.querySelectorAll('input, textarea.desc-textarea')
     if (quote.inputValues) allInputs.forEach((inp, idx) => { if (quote.inputValues[idx] !== undefined) inp.value = quote.inputValues[idx] })
@@ -545,6 +548,7 @@ function openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay) {
     quoteContainer.innerHTML = ''
     quotePageCount = 0; globalSigCount = 0
     quoteContainer.appendChild(createQuotePageHTML())
+    loadClientNames().then(injectClientDatalist)
     const numInput = quoteContainer.querySelector('.red-quote-input')
     if (numInput) numInput.value = 'S-' + Date.now().toString().slice(-4)
 
@@ -645,11 +649,13 @@ async function saveCurrentQuote(isSending, quoteContainer, container) {
     if (btnSave) { btnSave.disabled = false; btnSave.innerHTML = origHTML }
 
     if (error) {
+        if (error.offline) {
+            enqueueOfflineSave('soumissions', payload)
+            showAlertModal('Hors ligne — la soumission sera synchronisée automatiquement à la reconnexion.', container)
+            return false
+        }
         const msg = (error.message || '').toLowerCase()
-        let userMsg = msg.includes('lock broken') ? '❌ Réessayez dans 2 secondes.'
-            : msg.includes('failed to fetch') ? '❌ Pas de connexion internet.'
-            : '❌ Erreur : ' + error.message
-        showAlertModal(userMsg, container)
+        showAlertModal(msg.includes('lock broken') ? '❌ Réessayez dans 2 secondes.' : '❌ Erreur : ' + error.message, container)
         return false
     }
 
@@ -705,12 +711,28 @@ function exportPdf(quoteContainer) {
     openPdfPreview({ container: quoteContainer, docType: 'soumission', docNumber: currentQuoteId || numInput?.value.trim(), clientName, date: dateVal })
 }
 
+// ── Autocomplétion client ────────────────────────────────────────────────────
+async function loadClientNames() {
+    if (clientNameList.length) return
+    try {
+        const { data } = await supabase.from('clients').select('nom').neq('est_supprime', true).order('nom')
+        if (data) clientNameList = data.map(c => c.nom).filter(Boolean)
+    } catch {}
+}
+
+function injectClientDatalist() {
+    let dl = document.getElementById('soum-client-datalist')
+    if (!dl) { dl = document.createElement('datalist'); dl.id = 'soum-client-datalist'; document.body.appendChild(dl) }
+    dl.innerHTML = clientNameList.map(n => `<option value="${sanitize(n)}">`).join('')
+}
+
 // ── Page HTML ────────────────────────────────────────────────────────────────
 function createQuotePageHTML() {
     quotePageCount++; globalSigCount++
     const page = document.createElement('div')
     page.className = 'page quote-style'
     const inputAttrs = `type="text" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"`
+    const clientAttrs = `type="text" autocorrect="off" autocapitalize="sentences" spellcheck="false" list="soum-client-datalist"`
     const taAttrs = `autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" rows="1"`
     let rows = ''
     for (let i = 0; i < 20; i++) {
@@ -724,7 +746,7 @@ function createQuotePageHTML() {
             </div>
             <div class="info-section">
                 <div class="info-column">
-                    <div class="field"><label>M.</label><input ${inputAttrs}></div>
+                    <div class="field"><label>M.</label><input ${clientAttrs}></div>
                     <div class="field"><input ${inputAttrs}></div>
                     <div class="field"><label>Po client:</label><input ${inputAttrs}></div>
                     <div class="field"><label>Tél:</label><input ${inputAttrs}></div>

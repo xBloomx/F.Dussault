@@ -1,4 +1,4 @@
-import{t as e}from"./supabase-BHP_DPH_.js";import{o as t,r as n}from"./auth-BoJf8KxA.js";var r=[],i=null,a,o,s,c;async function l(e){return e.innerHTML=`
+import{t as e}from"./supabase-BHP_DPH_.js";import{o as t,r as n}from"./auth-wlrJYOzK.js";var r=[],i=null,a,o,s,c;async function l(e){return e.innerHTML=`
     <style>
         ::-webkit-scrollbar { display: none; }
         * { -ms-overflow-style: none; scrollbar-width: none; }
@@ -89,7 +89,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{o as t,r as n}from"./auth-BoJf
         .btn-update-pwd svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-update-pwd:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
         .modal-card-basic { background: var(--bg-panel); width: 90%; max-width: 400px; padding: 25px; border-radius: 15px; text-align: center; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .modal-actions { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
@@ -121,7 +121,7 @@ import{t as e}from"./supabase-BHP_DPH_.js";import{o as t,r as n}from"./auth-BoJf
                     Sauvegarder
                 </button>
                 <button class="btn-logout-header" id="btnLogout">
-                    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <svg viewBox="0 0 24 24" width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                     <span>Déconnexion</span>
                 </button>
             </div>

@@ -9,6 +9,7 @@ import { canArchive, canSeeAllArchives, canRestore, confirmAndArchive, confirmAn
 import { openPdfPreview } from '../shared/pdfExport.js'
 import { attachAll, watchContainer, refreshIndicators } from '../shared/signature.js'
 import { withRetry } from '../shared/withRetry.js'
+import { enqueueOfflineSave } from '../shared/offlineQueue.js'
 import { createZoomController } from '../shared/zoom.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ let globalSigCount = 0
 // Références aux window listeners pour cleanup propre
 let _onResizeFact = null
 let _onClickFact = null
+let clientNameList = []
 
 // ── Render principal ────────────────────────────────────────────────────────
 export async function render(container) {
@@ -637,6 +639,7 @@ async function openNewInvoice(viewDash, viewEditor, invoiceContainer, zoomDispla
     viewDash.style.display = 'none'; viewEditor.style.display = 'flex'
     invoiceContainer.innerHTML = ''
     invoiceContainer.appendChild(createInvoicePageHTML(invoiceContainer))
+    loadClientNames().then(injectClientDatalist)
 
     let nextNum = null
     try {
@@ -681,6 +684,7 @@ function openExistingInvoice(id, container, invoiceContainer) {
     }
 
     for (let i = 0; i < (invoice.pageCount || 1); i++) invoiceContainer.appendChild(createInvoicePageHTML(invoiceContainer))
+    loadClientNames().then(injectClientDatalist)
 
     const allInputs = invoiceContainer.querySelectorAll('input, textarea.desc-textarea')
     if (invoice.inputValues) allInputs.forEach((inp, idx) => { if (invoice.inputValues[idx] !== undefined) inp.value = invoice.inputValues[idx] })
@@ -831,17 +835,26 @@ async function saveCurrentInvoice(isSending, invoiceContainer, viewDash, viewEdi
     let currentStatus = existing?.status || 'brouillon'
     if (isSending) currentStatus = 'envoye'
 
-    const { error } = await withRetry(() => supabase.from('factures').upsert({
+    const facturePayload = {
         id: invoiceNum, client: clientName, date: dateVal, input_values: inputValues, sig_values: sigValues,
         page_count: pageCount, status: currentStatus,
         author_id: existing ? existing.authorId : currentUser.id,
         author_name: existing ? existing.authorName : myUserName,
         return_note: existing ? existing.returnNote : ''
-    }))
+    }
+    const { error } = await withRetry(() => supabase.from('factures').upsert(facturePayload))
 
     if (btnSave) { btnSave.disabled = false; btnSave.innerHTML = origHTML }
 
-    if (error) { showAlertModal('❌ Erreur : ' + error.message, container); return }
+    if (error) {
+        if (error.offline) {
+            enqueueOfflineSave('factures', facturePayload)
+            showAlertModal('Hors ligne — la facture sera synchronisée automatiquement à la reconnexion.', container)
+            return
+        }
+        showAlertModal('❌ Erreur : ' + error.message, container)
+        return
+    }
 
     currentInvoiceId = invoiceNum
     clearAutosaveCurrent()
@@ -921,12 +934,13 @@ function renderPaperEditor(invoiceContainer, container) {
     const savedNumero = currentInvoiceId || ''
     const savedDate = new Date().toISOString().split('T')[0]
     invoiceContainer.innerHTML = ''
+    loadClientNames().then(injectClientDatalist)
 
     const wrap = document.createElement('div')
     wrap.className = 'paper-mode-container'
     wrap.innerHTML = `
         <div class="paper-mode-header">
-            <div class="pmh-field"><label>Client</label><input type="text" class="paper-client-input" placeholder="Nom du client"></div>
+            <div class="pmh-field"><label>Client</label><input type="text" class="paper-client-input" placeholder="Nom du client" list="fact-client-datalist"></div>
             <div class="pmh-field"><label>Date</label><input type="date" class="paper-date-input" value="${savedDate}"></div>
             <div class="pmh-field"><label>No. facture</label><input type="text" class="paper-numero-input red-invoice-input" value="${savedNumero}"></div>
         </div>
@@ -1105,12 +1119,28 @@ function exporterPDF(invoiceContainer, container) {
     openPdfPreview({ container: invoiceContainer, docType: 'facture', docNumber: invoiceNum, clientName, date: dateVal })
 }
 
+// ── Autocomplétion client ────────────────────────────────────────────────────
+async function loadClientNames() {
+    if (clientNameList.length) return
+    try {
+        const { data } = await supabase.from('clients').select('nom').neq('est_supprime', true).order('nom')
+        if (data) clientNameList = data.map(c => c.nom).filter(Boolean)
+    } catch {}
+}
+
+function injectClientDatalist() {
+    let dl = document.getElementById('fact-client-datalist')
+    if (!dl) { dl = document.createElement('datalist'); dl.id = 'fact-client-datalist'; document.body.appendChild(dl) }
+    dl.innerHTML = clientNameList.map(n => `<option value="${sanitize(n)}">`).join('')
+}
+
 // ── Page HTML ────────────────────────────────────────────────────────────────
 function createInvoicePageHTML(invoiceContainer) {
     invoicePageCount++; globalSigCount++
     const page = document.createElement('div')
     page.className = 'page invoice-style'
     const inputAttrs = `type="text" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"`
+    const clientAttrs = `type="text" autocorrect="off" autocapitalize="sentences" spellcheck="false" list="fact-client-datalist"`
     const taAttrs = `autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" rows="1"`
     let rows = ''
     for (let i = 0; i < 20; i++) rows += `<tr><td><input ${inputAttrs}></td><td><textarea class="desc-textarea" ${taAttrs}></textarea></td><td><input ${inputAttrs}></td><td><input ${inputAttrs}></td></tr>`
@@ -1119,7 +1149,7 @@ function createInvoicePageHTML(invoiceContainer) {
             <div class="header-main"><img src="/assets/logo_dussault.png" alt="F. Dussault" onerror="this.style.display='none'"></div>
             <div class="info-section">
                 <div class="info-column">
-                    <div class="field"><label>M.</label><input ${inputAttrs}></div>
+                    <div class="field"><label>M.</label><input ${clientAttrs}></div>
                     <div class="field"><input ${inputAttrs}></div>
                     <div class="field"><label>Po client:</label><input ${inputAttrs}></div>
                     <div class="field"><label>Tél:</label><input ${inputAttrs}></div>

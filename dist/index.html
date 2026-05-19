@@ -112,6 +112,19 @@
         #conn-indicator.show { opacity: 1; }
         #conn-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
+        /* Bannière hors ligne persistante */
+        #offline-banner {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0;
+            background: rgba(192,57,43,0.97);
+            color: white; padding: 7px 16px;
+            font-size: 13px; font-weight: 500;
+            text-align: center; z-index: 9998;
+            align-items: center; justify-content: center; gap: 8px;
+        }
+        #offline-banner.show { display: flex; }
+        #offline-banner svg { flex-shrink: 0; }
+
         /* Menu hamburger mobile */
         .menu-btn {
             display: none;
@@ -176,14 +189,15 @@
     </style>
     <!-- emoji-picker-element pour la messagerie -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-  <script type="module" crossorigin src="/assets/main-DEBPWId9.js"></script>
+  <script type="module" crossorigin src="/assets/main-wCr3GAJ8.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-Cf3xff8G.js">
-  <link rel="modulepreload" crossorigin href="/assets/preload-helper-Dd-HcVz_.js">
+  <link rel="modulepreload" crossorigin href="/assets/preload-helper-DgFuoWHe.js">
   <link rel="modulepreload" crossorigin href="/assets/dist-DIBucx4m.js">
   <link rel="modulepreload" crossorigin href="/assets/supabase-BHP_DPH_.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-BoJf8KxA.js">
+  <link rel="modulepreload" crossorigin href="/assets/auth-wlrJYOzK.js">
+  <link rel="modulepreload" crossorigin href="/assets/offlineQueue-DvhPUZVs.js">
   <link rel="stylesheet" crossorigin href="/assets/main-CG-zuUfs.css">
-</head>
+<script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 <body>
 
 <!-- Loader initial -->
@@ -276,6 +290,16 @@
 
 <div id="overlay"></div>
 <div id="toast-container"></div>
+
+<!-- Bannière hors ligne -->
+<div id="offline-banner">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="1" y1="1" x2="23" y2="23"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M8.53 16.11a6 6 0 0 1 6.95 0"/>
+        <line x1="12" y1="20" x2="12.01" y2="20"/>
+    </svg>
+    <span id="offline-text">Hors ligne — les modifications sont sauvegardées localement</span>
+</div>
 
 
 <script>

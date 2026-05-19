@@ -113,6 +113,19 @@
         #conn-indicator.show { opacity: 1; }
         #conn-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
+        /* Bannière hors ligne persistante */
+        #offline-banner {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0;
+            background: rgba(192,57,43,0.97);
+            color: white; padding: 7px 16px;
+            font-size: 13px; font-weight: 500;
+            text-align: center; z-index: 9998;
+            align-items: center; justify-content: center; gap: 8px;
+        }
+        #offline-banner.show { display: flex; }
+        #offline-banner svg { flex-shrink: 0; }
+
         /* Menu hamburger mobile */
         .menu-btn {
             display: none;
@@ -271,10 +284,21 @@
 <div id="overlay"></div>
 <div id="toast-container"></div>
 
+<!-- Bannière hors ligne -->
+<div id="offline-banner">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="1" y1="1" x2="23" y2="23"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M8.53 16.11a6 6 0 0 1 6.95 0"/>
+        <line x1="12" y1="20" x2="12.01" y2="20"/>
+    </svg>
+    <span id="offline-text">Hors ligne — les modifications sont sauvegardées localement</span>
+</div>
+
 <script type="module">
 import { installConsoleFilter } from '/src/shared/consoleFilter.js'
 import { loadSession, currentUser, currentRole, currentProfil, hasPermission, invalidateRolesCache, reloadRolesConfig } from '/src/auth.js'
 import { supabase } from '/src/supabase.js'
+import { hasPendingOfflineSaves, getPendingCount, flushOfflineQueue } from '/src/shared/offlineQueue.js'
 
 installConsoleFilter()
 
@@ -320,6 +344,15 @@ async function navigateTo(viewName) {
         const cleanup = await mod.render(appContainer)
         if (typeof cleanup === 'function') currentCleanup = cleanup
     } catch (e) {
+        // Module introuvable = SW périmé après déploiement → recharger une seule fois
+        if (e instanceof TypeError && e.message.includes('Failed to fetch dynamically imported module')) {
+            if (!sessionStorage.getItem('sw_reload_attempted')) {
+                sessionStorage.setItem('sw_reload_attempted', '1')
+                window.location.reload()
+                return
+            }
+        }
+        sessionStorage.removeItem('sw_reload_attempted')
         console.error('[Router] Erreur chargement module', viewName, e)
         appContainer.innerHTML = `<div style="color:#ff4d4d;padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
     }
@@ -409,8 +442,7 @@ function handlePWAShortcut() {
 
 // ── Toast global ─────────────────────────────────────────────────────────────
 window.showToast = function(msg, type = 'info', duration = 3000) {
-    // Conserver le comportement original : seuls error et warning sont affichés
-    if (type !== 'error' && type !== 'warning') return
+    if (type !== 'error' && type !== 'warning' && type !== 'success') return
     const tc = document.getElementById('toast-container')
     const t = document.createElement('div')
     t.className = `shared-toast ${type}`
@@ -448,14 +480,35 @@ _modalObserver.observe(document.body, { subtree: true, attributes: true, attribu
 // ── Connexion online/offline ─────────────────────────────────────────────────
 const connIndicator = document.getElementById('conn-indicator')
 const connText = document.getElementById('conn-text')
+const offlineBanner = document.getElementById('offline-banner')
+const offlineText = document.getElementById('offline-text')
 let connTimer = null
+
 function showConnStatus(online) {
     if (connTimer) clearTimeout(connTimer)
     connIndicator.className = online ? 'show' : 'offline show'
-    connText.textContent = online ? 'Connecté' : 'Hors ligne'
-    if (online) connTimer = setTimeout(() => connIndicator.classList.remove('show'), 2000)
+    connText.textContent = online ? 'Reconnecté' : 'Hors ligne'
+    if (online) {
+        offlineBanner?.classList.remove('show')
+        connTimer = setTimeout(() => connIndicator.classList.remove('show'), 2000)
+    } else {
+        offlineBanner?.classList.add('show')
+    }
 }
-window.addEventListener('online', () => showConnStatus(true))
+
+window.addEventListener('online', async () => {
+    if (!hasPendingOfflineSaves()) { showConnStatus(true); return }
+    const n = getPendingCount()
+    if (offlineText) offlineText.textContent = `Reconnecté — synchronisation de ${n} document(s)...`
+    const { flushed, failed } = await flushOfflineQueue(
+        async (table, payload) => supabase.from(table).upsert(payload)
+    )
+    showConnStatus(true)
+    if (flushed > 0) window.showToast(`${flushed} document(s) synchronisé(s) avec succès.`, 'success', 4000)
+    if (failed > 0) window.showToast(`${failed} synchronisation(s) échouée(s). Ouvrez et sauvegardez manuellement.`, 'error', 6000)
+    if (offlineText) offlineText.textContent = 'Hors ligne — les modifications sont sauvegardées localement'
+})
+
 window.addEventListener('offline', () => showConnStatus(false))
 
 // ── Mode maintenance live (admin toggle → tous les users connectés) ───────────
@@ -525,6 +578,8 @@ async function boot() {
 
         appliquerPermissions()
 
+        if (!navigator.onLine) showConnStatus(false)
+
         mainLoader.style.opacity = '0'
         setTimeout(() => mainLoader.style.display = 'none', 400)
 
@@ -538,6 +593,16 @@ async function boot() {
 }
 
 boot()
+
+// Nouveau service worker activé → recharger pour utiliser les nouveaux assets
+if ('serviceWorker' in navigator) {
+    let swInitialized = false
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!swInitialized) { swInitialized = true; return } // ignorer l'activation initiale
+        window.location.reload()
+    })
+    navigator.serviceWorker.ready.then(() => { swInitialized = true })
+}
 </script>
 
 <script>

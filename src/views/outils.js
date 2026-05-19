@@ -36,7 +36,8 @@ export async function render(container) {
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .section-title { font-size: 16px; color: var(--accent); text-transform: uppercase; margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
         .tool-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px; }
-        .tool-item { background-color: var(--bg-panel); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .tool-item { background-color: var(--bg-panel); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
+        .tool-item.has-delete { padding-right: 58px; }
         .tool-item.returned { border-left-color: var(--btn-green); opacity: 0.7; }
         .tool-info { display: flex; flex-direction: column; gap: 5px; flex: 1; }
         .tool-name { font-size: 18px; font-weight: bold; color: white; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -54,7 +55,7 @@ export async function render(container) {
         .btn-transfer { background: var(--btn-blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
         .btn-transfer svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-transfer:hover { background: #2980b9; }
-        .btn-delete-tool { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 40px; height: 40px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .btn-delete-tool { position: absolute; top: 12px; right: 12px; background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; }
         .btn-delete-tool svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-delete-tool:hover { background: var(--btn-red); color: white; }
 
@@ -74,6 +75,9 @@ export async function render(container) {
         .custom-group label { display: block; color: white; margin-bottom: 7px; font-size: 15px; font-weight: bold; }
         .custom-group input, .custom-group select { width: 100%; padding: 12px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
         .custom-group input:focus, .custom-group select:focus { border-color: var(--accent); }
+        .custom-group select { -webkit-appearance: none; appearance: none; padding-right: 42px; cursor: pointer; }
+        .select-wrap { position: relative; }
+        .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .btn-custom-submit { background-color: var(--accent); color: black; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn-custom-submit:hover { background-color: var(--accent-hover); }
         .btn-close-modal { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #888; font-size: 30px; cursor: pointer; }
@@ -85,6 +89,7 @@ export async function render(container) {
             .dash-title { padding-right: 80px; width: 100%; }
             .dash-header .btn-action { width: 100%; justify-content: center; }
             .tool-item { flex-direction: column; align-items: flex-start; gap: 15px; padding: 15px; }
+            .tool-item.has-delete { padding-right: 58px; }
             .tool-actions { align-self: stretch; margin-left: 0; width: 100%; }
             .btn-return, .btn-transfer { flex: 1; justify-content: center; }
         }
@@ -130,10 +135,13 @@ export async function render(container) {
             </div>
             <div class="custom-group">
                 <label>Outil</label>
-                <select id="inpOutil">
-                    <option value="" disabled selected hidden>Sélectionner une machine...</option>
-                    <option value="Autre...">Autre (Préciser en note)</option>
-                </select>
+                <div class="select-wrap">
+                    <select id="inpOutil">
+                        <option value="" disabled selected hidden>Sélectionner une machine...</option>
+                        <option value="Autre...">Autre (Préciser en note)</option>
+                    </select>
+                    <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
             </div>
             <div class="custom-group" id="grpOutilAutre" style="display:none">
                 <label>Préciser l'outil <span style="color:var(--btn-red)">*</span></label>
@@ -164,9 +172,12 @@ export async function render(container) {
             </div>
             <div class="custom-group">
                 <label>Nouveau responsable (Plombier)</label>
-                <select id="inpTransferTo">
-                    <option value="" disabled selected hidden>Choisir un collègue...</option>
-                </select>
+                <div class="select-wrap">
+                    <select id="inpTransferTo">
+                        <option value="" disabled selected hidden>Choisir un collègue...</option>
+                    </select>
+                    <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
             </div>
             <button class="btn-custom-submit" id="btnExecuteTransfer" style="background:var(--btn-blue);color:white">Confirmer le transfert</button>
         </div>
@@ -331,6 +342,10 @@ function renderTools(list = toolsLog) {
             badge += ` <span class="status-badge" style="background:rgba(91,192,235,0.15);color:var(--btn-blue);border:1px solid rgba(91,192,235,0.4)">↗ Transfert en attente : ${t.pending_transfer_to}</span>`
         }
 
+        const deleteBtn = canManage ? `<button class="btn-delete-tool" data-delete="${t.id}">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>` : ''
+
         let actionsHTML = ''
         if (t.status === 'active') {
             const isMyTool = (t.assignee_nom || '').trim() === (myUserName || '').trim()
@@ -348,15 +363,10 @@ function renderTools(list = toolsLog) {
                         Transférer</button>`
                 }
             }
-            if (canManage) actionsHTML += `<button class="btn-delete-tool" data-delete="${t.id}">
-                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>`
-        } else {
-            if (canManage) actionsHTML = `<button class="btn-delete-tool" data-delete="${t.id}">
-                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>`
         }
 
         const card = document.createElement('div')
-        card.className = `tool-item ${t.status === 'returned' ? 'returned' : ''}`
+        card.className = `tool-item ${t.status === 'returned' ? 'returned' : ''} ${canManage ? 'has-delete' : ''}`
         card.innerHTML = `
             <div class="tool-info">
                 <div class="tool-name">
@@ -369,7 +379,8 @@ function renderTools(list = toolsLog) {
                     <span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Emprunté le ${formatDateFR(t.date_transfert)}</span>
                 </div>
             </div>
-            <div class="tool-actions">${actionsHTML}</div>
+            ${actionsHTML ? `<div class="tool-actions">${actionsHTML}</div>` : ''}
+            ${deleteBtn}
         `
 
         const target = t.status === 'active' ? activeContainer : historyContainer
