@@ -70,6 +70,9 @@ export async function render(container) {
         .custom-group label { display: block; color: white; margin-bottom: 7px; font-size: 14px; }
         .custom-group input, .custom-group select { width: 100%; padding: 12px 15px; background: #323443; border: 1px solid transparent; color: white; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; box-sizing: border-box; }
         .custom-group input:focus, .custom-group select:focus { border-color: var(--accent); }
+        .select-wrap { position: relative; display: block; }
+        .select-wrap select { -webkit-appearance: none; appearance: none; padding-right: 42px; cursor: pointer; }
+        .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .file-upload-btn { background: #1a1b23; border: 1px dashed #888; color: #ccc; padding: 12px; text-align: center; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; font-size: 14px; }
         .file-upload-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .file-upload-btn:hover { border-color: var(--accent); color: white; }
@@ -147,9 +150,12 @@ export async function render(container) {
                 </div>
                 <div class="custom-group">
                     <label>Fournisseur</label>
-                    <select id="selFournisseur">
-                        <option value="">-- Choisir un fournisseur --</option>
-                    </select>
+                    <div class="select-wrap">
+                        <select id="selFournisseur">
+                            <option value="">-- Choisir un fournisseur --</option>
+                        </select>
+                        <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
                     <input type="text" id="inpFournisseurAutre" placeholder="Nom du fournisseur" style="display:none;margin-top:8px">
                     <input type="hidden" id="inpFournisseur">
                 </div>
