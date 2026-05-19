@@ -77,12 +77,17 @@ export async function render(container) {
         .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
         .form-row { display: flex; gap: 15px; }
         .contacts-container { border: 1px solid var(--border); padding: 10px; border-radius: 8px; background: var(--bg-dark); margin-bottom: 15px; }
-        .contact-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
-        .contact-row input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; }
-        .contact-row input:focus { border-color: var(--accent); }
+        .contact-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+        .contact-inputs { display: flex; gap: 8px; }
+        .contact-inputs input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; }
+        .contact-inputs input:focus { border-color: var(--accent); }
+        .contact-row-actions { display: flex; justify-content: flex-end; }
         .btn-add-contact { background: #444; color: white; width: 100%; padding: 10px; border: 1px dashed #666; border-radius: 8px; cursor: pointer; font-size: 13px; margin-top: 5px; }
         .btn-add-contact:hover { background: #555; }
         .btn-remove-row { background: transparent; border: none; color: #ff4d4d; cursor: pointer; font-weight: bold; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+        .select-wrap { position: relative; display: block; }
+        .select-wrap select { -webkit-appearance: none; appearance: none; padding-right: 42px; cursor: pointer; }
+        .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
         .modal-actions.center { justify-content: center; }
         .btn-cancel { background: #444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
@@ -122,7 +127,6 @@ export async function render(container) {
             .cli-actions { align-self: flex-end; margin-left: 0; margin-top: -35px; }
             .modal-card { width: 95% !important; padding: 20px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
             .form-row { flex-direction: column; gap: 0; }
-            .contact-row { flex-wrap: wrap; }
         }
     </style>
 
@@ -221,11 +225,14 @@ export async function render(container) {
                 </div>
                 <div class="form-group" style="flex:1">
                     <label>Statut</label>
-                    <select id="edStatus">
-                        <option value="residentiel">Résidentiel</option>
-                        <option value="commercial">Commercial</option>
-                        <option value="prospect">Prospect / Inconnu</option>
-                    </select>
+                    <div class="select-wrap">
+                        <select id="edStatus">
+                            <option value="residentiel">Résidentiel</option>
+                            <option value="commercial">Commercial</option>
+                            <option value="prospect">Prospect / Inconnu</option>
+                        </select>
+                        <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
                 </div>
             </div>
             <div class="form-group" id="grpSubcontractor" style="display:none">
@@ -762,11 +769,15 @@ function addContactRow(data = { name: '', role: '', phone: '', email: '' }) {
     const div = document.createElement('div')
     div.className = 'contact-row'
     div.innerHTML = `
-        <input type="text" placeholder="Nom" class="inp-name" value="${sanitize(data.name || '')}">
-        <input type="text" placeholder="Poste" class="inp-role" value="${sanitize(data.role || '')}">
-        <input type="text" placeholder="Tél" class="inp-phone" value="${sanitize(data.phone || '')}">
-        <input type="email" placeholder="Email" class="inp-email" value="${sanitize(data.email || '')}">
-        <button class="btn-remove-row">×</button>
+        <div class="contact-inputs">
+            <input type="text" placeholder="Nom" class="inp-name" value="${sanitize(data.name || '')}">
+            <input type="text" placeholder="Poste" class="inp-role" value="${sanitize(data.role || '')}">
+            <input type="text" placeholder="Tél" class="inp-phone" value="${sanitize(data.phone || '')}">
+            <input type="email" placeholder="Email" class="inp-email" value="${sanitize(data.email || '')}">
+        </div>
+        <div class="contact-row-actions">
+            <button class="btn-remove-row">×</button>
+        </div>
     `
     div.querySelector('.btn-remove-row').addEventListener('click', () => div.remove())
     div.querySelector('.inp-phone').addEventListener('keyup', e => formatPhone(e.target))
