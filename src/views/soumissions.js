@@ -40,7 +40,11 @@ export async function render(container) {
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        .toolbar { display: flex; flex-direction: column; gap: 10px; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        .select-wrap { position: relative; display: block; }
+        .select-wrap select { width: 100%; -webkit-appearance: none; appearance: none; padding: 14px 42px 14px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; font-family: inherit; }
+        .select-wrap select:focus { border-color: var(--accent); }
+        .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin: 1px 0; padding-left: 10px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
         .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
@@ -180,16 +184,19 @@ export async function render(container) {
             <div class="toolbar">
                 <div class="search-box">
                     <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-                    <input type="text" id="searchInput" placeholder="Rechercher (Client, N°...)">
+                    <input type="text" id="searchInput" placeholder="Rechercher (Nom, Tél, Adresse...)">
+                </div>
+                <div class="select-wrap" id="statusFilterWrap" style="display:none">
+                    <select id="statusFilter">
+                        <option value="">Tous les statuts</option>
+                        <option value="envoye">Envoyé au bureau</option>
+                        <option value="traite">Traité</option>
+                        <option value="attente">À corriger</option>
+                        <option value="paye">Approuvé</option>
+                    </select>
+                    <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
             </div>
-            <select id="statusFilter" style="display:none; background:var(--bg-dark); border:1px solid var(--border); color:white; padding:10px 12px; border-radius:8px; font-size:14px; outline:none; cursor:pointer; align-self:flex-start;">
-                <option value="">Tous les statuts</option>
-                <option value="envoye">Envoyé au bureau</option>
-                <option value="traite">Traité</option>
-                <option value="attente">À corriger</option>
-                <option value="paye">Approuvé</option>
-            </select>
             <div id="quote-compteur" class="discrete-stats"></div>
             <div class="quote-list" id="quoteListContainer"></div>
         </div>
@@ -402,8 +409,8 @@ function switchTab(tab, container) {
     container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
     const tabEl = container.querySelector(`#tab-${tab}`)
     if (tabEl) tabEl.classList.add('active')
-    const statusFilter = container.querySelector('#statusFilter')
-    if (statusFilter) { statusFilter.style.display = tab === 'all' ? 'block' : 'none'; statusFilter.value = '' }
+    const statusFilterWrap = container.querySelector('#statusFilterWrap')
+    if (statusFilterWrap) { statusFilterWrap.style.display = tab === 'all' ? 'block' : 'none'; container.querySelector('#statusFilter').value = '' }
     loadData(true, container)
 }
 
