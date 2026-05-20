@@ -96,8 +96,9 @@ export async function render(container) {
         .btn-modal-green { background: var(--btn-green); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-modal-red   { background: var(--btn-red); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-modal-orange { background: var(--btn-orange); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .btn-tab { background: transparent; color: #888; border: none; padding: 10px 20px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; border-bottom: 3px solid transparent; display: flex; align-items: center; gap: 8px; }
+        .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .tabs-container::-webkit-scrollbar { display: none; }
+        .btn-tab { background: transparent; color: #888; border: none; padding: 10px 20px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; border-bottom: 3px solid transparent; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
         .btn-tab svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-tab.active { color: white; border-bottom-color: var(--accent); }
         .admin-section { display: none; flex-direction: column; gap: 20px; }
