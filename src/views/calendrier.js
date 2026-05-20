@@ -104,6 +104,9 @@ export async function render(container) {
         .note-box { background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-weight: normal; font-size: 14px; white-space: pre-wrap; line-height: 1.4; }
         .day-detail-item { padding: 12px; background: var(--bg-dark); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border); }
         .day-detail-item:hover { background: #343542; border-color: var(--btn-blue); }
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .cal-main { padding: 20px; gap: 15px; }
+        }
         @media (max-width: 768px) {
             .cal-main { padding: 15px; gap: 12px; }
             .dash-header { flex-direction: column; align-items: stretch; gap: 12px; }
