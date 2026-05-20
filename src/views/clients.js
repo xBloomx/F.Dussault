@@ -125,7 +125,7 @@ export async function render(container) {
             .cli-contact-item { justify-content: flex-start; text-align: left; }
             .cli-actions { align-self: flex-end; margin-left: 0; margin-top: -35px; }
             .modal-overlay { align-items: flex-end; }
-            .modal-card { width: 100% !important; max-height: calc(100dvh - max(env(safe-area-inset-top, 0px), 60px) - env(safe-area-inset-bottom, 0px)) !important; border-radius: 24px 24px 0 0 !important; padding: 25px 20px calc(max(env(safe-area-inset-bottom, 0px), 20px) + 20px) 20px !important; box-shadow: 0 -8px 30px rgba(0,0,0,0.5) !important; }
+            .modal-card { width: 100% !important; max-height: calc(100dvh - max(env(safe-area-inset-top, 0px), 60px) - env(safe-area-inset-bottom, 0px)) !important; border-radius: 24px !important; padding: 25px 20px calc(max(env(safe-area-inset-bottom, 0px), 20px) + 20px) 20px !important; box-shadow: 0 -8px 30px rgba(0,0,0,0.5) !important; }
             .modal-overlay.z-high { align-items: center; }
             .modal-card.small-card { width: 90% !important; max-height: none !important; border-radius: 15px !important; padding: 25px !important; }
             .form-row { flex-direction: column; gap: 0; }
