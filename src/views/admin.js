@@ -96,7 +96,7 @@ export async function render(container) {
         .btn-modal-green { background: var(--btn-green); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-modal-red   { background: var(--btn-red); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-modal-orange { background: var(--btn-orange); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; touch-action: pan-x; overscroll-behavior-x: contain; }
         .tabs-container::-webkit-scrollbar { display: none; }
         .btn-tab { background: transparent; color: #888; border: none; padding: 10px 20px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; border-bottom: 3px solid transparent; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
         .btn-tab svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -105,7 +105,7 @@ export async function render(container) {
         .admin-section.active { display: flex; }
         .perm-form-group { margin-bottom: 15px; }
         .perm-form-group label { display: block; color: var(--text-main); font-size: 14px; font-weight: bold; margin-bottom: 8px; }
-        @media (max-width: 768px) { .admin-main { padding: 30px 15px 15px 15px; } .dash-title { padding-right: 80px; } .dash-title h1 { font-size: 22px; } .tabs-container { margin-right: 0; } .settings-grid { grid-template-columns: 1fr; } .admin-danger-row { flex-direction: column; } .admin-danger-row .settings-card { min-width: 0 !important; flex: none !important; width: 100%; } }
+        @media (max-width: 768px) { .admin-main { padding: 80px 15px 15px 15px; } .dash-title { padding-right: 80px; } .dash-title h1 { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .tabs-container { margin-right: 0; } .settings-grid { grid-template-columns: 1fr; } .admin-danger-row { flex-direction: column; } .admin-danger-row .settings-card { min-width: 0 !important; flex: none !important; width: 100%; } }
     </style>
 
     <div class="admin-main">
