@@ -85,6 +85,9 @@ export async function render(container) {
         .form-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 5px; font-family: sans-serif; outline: none; transition: 0.2s; box-sizing: border-box; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+        .select-wrap { position: relative; display: block; }
+        .select-wrap select { -webkit-appearance: none; appearance: none; padding-right: 42px; cursor: pointer; }
+        .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .form-group textarea { resize: vertical; min-height: 80px; }
         .guest-list-container { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 5px; padding: 10px; max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
         .guest-item { display: flex; align-items: center; gap: 10px; color: white; font-size: 14px; cursor: pointer; }
@@ -203,11 +206,17 @@ export async function render(container) {
             <div class="modal-title" id="modalTitle">Nouvel Événement</div>
             <div class="form-group" id="grpCalendar">
                 <label>Calendrier de destination</label>
-                <select id="evtCalendarId"></select>
+                <div class="select-wrap">
+                    <select id="evtCalendarId"></select>
+                    <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
             </div>
             <div class="form-group" id="grpCategory">
                 <label>Catégorie</label>
-                <select id="evtCategory"></select>
+                <div class="select-wrap">
+                    <select id="evtCategory"></select>
+                    <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
             </div>
             <div class="form-group">
                 <label>Titre / Nom du chantier</label>
