@@ -110,6 +110,17 @@ export async function render(container) {
         .ci-role { font-size: 12px; color: var(--accent); font-style: italic; background: rgba(252,202,70,0.1); padding: 1px 6px; border-radius: 4px; display: inline-block; }
         .corbeille-item { background: #1a1b23; border: 1px dashed var(--btn-red); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .clients-main { padding: 20px; }
+            .client-item { flex-direction: column; align-items: stretch; gap: 10px; position: relative; }
+            .cli-info { gap: 12px; }
+            .cli-status { width: auto; flex-shrink: 0; }
+            .cli-name-container { flex-wrap: nowrap; }
+            .cli-contact { width: auto; align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 6px 20px; padding-right: 50px; }
+            .cli-contact-item { justify-content: flex-start; text-align: left; }
+            .cli-contact-item.address { margin-top: 0; }
+            .cli-actions { position: absolute; right: 20px; bottom: 15px; margin-left: 0; }
+        }
         @media (max-width: 768px) {
             .clients-main { padding: 15px; }
             .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; }
