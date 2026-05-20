@@ -57,7 +57,15 @@ export function hasPermission(permId) {
 
 // ── Chargement de la session au démarrage ───────────────────────────────────
 export async function loadSession() {
-    const { data: { user } } = await supabase.auth.getUser()
+    let user
+    try {
+        const { data, error } = await supabase.auth.getUser()
+        if (error) throw error
+        user = data?.user
+    } catch (e) {
+        console.warn('[auth] getUser() échoué:', e?.message)
+        return null
+    }
     if (!user) return null
 
     currentUser = user

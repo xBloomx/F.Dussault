@@ -313,7 +313,7 @@ export async function render(container) {
     </div>
     `
 
-    await init()
+    return await init()
 }
 
 // ── Init ────────────────────────────────────────────────────────────────────

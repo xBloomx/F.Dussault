@@ -32,6 +32,7 @@ let _longPressStartXY = null
 let _editingMsgId = null
 let _currentlySwipedItem = null
 let _swipeState = null
+let _titleNotifPending = false
 let quickReactions = (() => { try { return JSON.parse(localStorage.getItem('dussault_quick_reacts')) || ['❤️', '👍', '😂', '😮', '😢', '🙏'] } catch { return ['❤️', '👍', '😂', '😮', '😢', '🙏'] } })()
 
 const conversationsData = { 'global': { name: 'Équipe (Général)', isGroup: true, messages: [] } }
@@ -554,9 +555,16 @@ function notifierNouveauMessage(senderName, chatId, container) {
     // Badge dans la sidebar principale (événement DOM — plus de postMessage)
     window.dispatchEvent(new CustomEvent('new_message_notif', { detail: { sender: senderName, chatId } }))
     if (!document.title.startsWith('●')) document.title = '● ' + document.title
-    document.addEventListener('visibilitychange', function handler() {
-        if (!document.hidden) { document.title = document.title.replace('● ', ''); document.removeEventListener('visibilitychange', handler) }
-    })
+    if (!_titleNotifPending) {
+        _titleNotifPending = true
+        document.addEventListener('visibilitychange', function handler() {
+            if (!document.hidden) {
+                document.title = document.title.replace('● ', '')
+                _titleNotifPending = false
+                document.removeEventListener('visibilitychange', handler)
+            }
+        })
+    }
     container.querySelectorAll('.contact-item').forEach(item => {
         if (item.dataset.chatId === chatId) {
             item.style.borderLeft = '3px solid var(--accent)'
@@ -588,9 +596,13 @@ async function sendMessage(container) {
         const timeStr = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0')
 
         if (hasFiles) {
+            const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 Mo
+            const ALLOWED_EXT = new Set(['jpg','jpeg','png','gif','webp','pdf','doc','docx','xls','xlsx','csv','txt','zip','mp4','mov'])
             const files = [...selectedFiles]; selectedFiles = []; renderPreviews(container)
             for (const file of files) {
-                const fileExt = file.name.split('.').pop()
+                if (file.size > MAX_FILE_SIZE) { showAlert(`Fichier trop volumineux : ${file.name} (max 20 Mo)`, container); continue }
+                const fileExt = file.name.split('.').pop().toLowerCase()
+                if (!ALLOWED_EXT.has(fileExt)) { showAlert(`Type de fichier non autorisé : .${fileExt}`, container); continue }
                 const filePath = `${myUserId}/${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`
                 if (btnSend) btnSend.title = `Envoi de ${file.name}...`
                 const { error: uploadError } = await supabase.storage.from('pieces_jointes').upload(filePath, file)

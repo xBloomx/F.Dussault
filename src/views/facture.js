@@ -4,6 +4,7 @@
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
 import { sanitize } from '../shared/sanitize.js'
+import { friendlyError } from '../shared/errorMsg.js'
 import { createAutosave } from '../shared/autosave.js'
 import { canArchive, canSeeAllArchives, canRestore, confirmAndArchive, confirmAndRestore } from '../shared/archive.js'
 import { openPdfPreview } from '../shared/pdfExport.js'
@@ -93,11 +94,10 @@ export async function render(container) {
             #view-dashboard { padding: 20px; }
             .toolbar { flex-direction: row; align-items: center; }
             .select-wrap { min-width: 180px; flex-shrink: 0; }
-            .invoice-item { grid-template-columns: 60px 1fr 50px 78px 62px 30px; gap: 5px; }
-            .inv-id { font-size: 13px; }
-            .inv-client { font-size: 14px; }
-            .inv-author { font-size: 12px; }
-            .inv-date { font-size: 12px; }
+            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
+            .inv-id { grid-area: id; font-size: inherit; } .inv-client { grid-area: client; font-size: inherit; } .inv-author { grid-area: author; font-size: inherit; }
+            .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; font-size: inherit; }
+            .inv-actions { position: absolute; top: 16px; right: 16px; }
         }
         @media (max-width: 1024px) {
             .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
@@ -470,7 +470,7 @@ async function init(container) {
             container.querySelector('#current-status-text').textContent = labels[status] || status
             if (currentInvoiceId) {
                 const { error } = await supabase.from('factures').update({ status }).eq('id', currentInvoiceId)
-                if (error) showAlertModal('Erreur : ' + error.message, container)
+                if (error) showAlertModal(friendlyError(error), container)
                 else { await loadData(true, container); showAlertModal('Statut mis à jour.', container) }
             }
         })
@@ -514,7 +514,7 @@ async function loadData(reset = true, container) {
     const from = currentPage * PAGE_SIZE
     const to = from + PAGE_SIZE - 1
 
-    let query = supabase.from('factures').select('*')
+    let query = supabase.from('factures').select('id,client,date,status,author_id,author_name,return_note,is_archived,input_values,sig_values,page_count,is_paper_mode,paper_pages')
     if (currentInvTab === 'archives') {
         query = query.eq('is_archived', true)
         if (!canSeeAllArchives(currentRole)) query = query.eq('author_id', currentUser.id)
@@ -811,7 +811,7 @@ async function executeReturnInvoice(viewDash, viewEditor, container) {
     if (!note) { showAlertModal('Veuillez inscrire une note pour expliquer ce qui manque.', container); return }
     if (!currentInvoiceId) return
     const { error } = await supabase.from('factures').update({ status: 'attente', return_note: note }).eq('id', currentInvoiceId)
-    if (error) { showAlertModal('Erreur : ' + error.message, container); return }
+    if (error) { showAlertModal(friendlyError(error), container); return }
     closeModal('returnModal', container)
     await loadData(true, container)
     showDashboard(viewDash, viewEditor, container)

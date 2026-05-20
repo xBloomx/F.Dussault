@@ -108,16 +108,20 @@ function createModal() {
     _canvas.addEventListener('touchend', endDrawing)
     _canvas.addEventListener('touchcancel', endDrawing)
 
+    let _resizeTimer = null
     window.addEventListener('resize', () => {
         if (!_modal.classList.contains('show')) return
-        const current = _hasDrawn ? _canvas.toDataURL() : null
-        resizeCanvas()
-        if (current) {
-            const img = new Image()
-            img.onload = () => _ctx.drawImage(img, 0, 0, _canvas.clientWidth, _canvas.clientHeight)
-            img.src = current
-        }
-        updateRotationHint()
+        if (_resizeTimer) clearTimeout(_resizeTimer)
+        _resizeTimer = setTimeout(() => {
+            const current = _hasDrawn ? _canvas.toDataURL() : null
+            resizeCanvas()
+            if (current) {
+                const img = new Image()
+                img.onload = () => _ctx.drawImage(img, 0, 0, _canvas.clientWidth, _canvas.clientHeight)
+                img.src = current
+            }
+            updateRotationHint()
+        }, 120)
     })
 
     window.addEventListener('orientationchange', () => {

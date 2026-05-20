@@ -2,6 +2,8 @@
 // File d'attente pour synchroniser les sauvegardes Supabase après reconnexion
 
 const QUEUE_KEY = 'fdussault_offline_queue'
+const MAX_QUEUE_SIZE = 100
+const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000 // 7 jours
 
 function getQueue() {
     try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]') } catch { return [] }
@@ -13,11 +15,17 @@ function saveQueue(q) {
 
 // Ajoute ou remplace une entrée dans la file (dédupliqué par table+id)
 export function enqueueOfflineSave(table, payload) {
-    const q = getQueue()
+    let q = getQueue()
+    // Supprimer les entrées trop vieilles
+    const cutoff = Date.now() - MAX_AGE_MS
+    q = q.filter(e => e.enqueuedAt > cutoff)
+    // Remplacer ou ajouter
     const idx = q.findIndex(e => e.table === table && e.payload.id === payload.id)
     const entry = { table, payload, enqueuedAt: Date.now() }
     if (idx >= 0) q[idx] = entry
     else q.push(entry)
+    // Respecter la limite max (garder les plus récents)
+    if (q.length > MAX_QUEUE_SIZE) q = q.slice(-MAX_QUEUE_SIZE)
     saveQueue(q)
 }
 

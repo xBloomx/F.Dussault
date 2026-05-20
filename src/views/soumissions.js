@@ -85,11 +85,10 @@ export async function render(container) {
             #view-dashboard { padding: 20px; }
             .toolbar { flex-direction: row; align-items: center; }
             .select-wrap { min-width: 180px; flex-shrink: 0; }
-            .quote-item { grid-template-columns: 60px 1fr 50px 78px 62px 30px; gap: 5px; }
-            .inv-id { font-size: 13px; }
-            .inv-client { font-size: 14px; }
-            .inv-author { font-size: 12px; }
-            .inv-date { font-size: 12px; }
+            .quote-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
+            .inv-id { grid-area: id; font-size: inherit; } .inv-client { grid-area: client; font-size: inherit; } .inv-author { grid-area: author; font-size: inherit; }
+            .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; font-size: inherit; }
+            .inv-actions { position: absolute; top: 16px; right: 16px; }
         }
         @media (max-width: 1024px) {
             .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
@@ -385,7 +384,7 @@ async function loadData(reset = true, container) {
     const from = quotesPage * PAGE_SIZE
     const to = from + PAGE_SIZE - 1
 
-    let query = supabase.from('soumissions').select('*')
+    let query = supabase.from('soumissions').select('id,client,date,status,author_id,author_name,is_archived,input_values,sig_values,page_count')
     if (currentQuoteTab === 'archives') {
         query = query.eq('is_archived', true)
         if (!canSeeAllArchives(currentRole)) query = query.eq('author_id', currentUser.id)

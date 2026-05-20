@@ -25,12 +25,13 @@
             background-color: var(--bg-dark);
             color: var(--text-main);
             margin: 0; padding: 0;
-            height: calc(var(--app-height, 100dvh));
+            height: 100dvh;
             display: flex;
             overflow: hidden;
             padding-top: env(safe-area-inset-top, 0px);
             padding-left: env(safe-area-inset-left, 0px);
             padding-right: env(safe-area-inset-right, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         /* ── SIDEBAR ─────────────────────────────────────────────── */
@@ -297,7 +298,7 @@
 
 <script type="module">
 import { installConsoleFilter } from '/src/shared/consoleFilter.js'
-import { loadSession, currentUser, currentRole, currentProfil, hasPermission, invalidateRolesCache, reloadRolesConfig } from '/src/auth.js'
+import { loadSession, watchSession, currentUser, currentRole, currentProfil, hasPermission, invalidateRolesCache, reloadRolesConfig } from '/src/auth.js'
 import { supabase } from '/src/supabase.js'
 import { hasPendingOfflineSaves, getPendingCount, flushOfflineQueue } from '/src/shared/offlineQueue.js'
 
@@ -579,6 +580,9 @@ async function boot() {
 
         appliquerPermissions()
 
+        // Surveiller l'expiration de session — redirige vers login si SIGNED_OUT
+        watchSession(() => { window.location.replace('/login.html') })
+
         if (!navigator.onLine) showConnStatus(false)
 
         mainLoader.style.opacity = '0'
@@ -588,7 +592,7 @@ async function boot() {
         if (currentView === 'accueil') await navigateTo('accueil')
 
     } catch (e) {
-        console.error('[Boot] Erreur critique:', e)
+        console.warn('[Boot] Erreur critique:', e?.message)
         // NE PAS rediriger ici — évite la boucle infinie
     }
 }
@@ -606,14 +610,5 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<script>
-// ── Fix hauteur Safari iOS — barre navigation variable ────────────────────────
-function setAppHeight() {
-    document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px')
-}
-setAppHeight()
-window.addEventListener('resize', setAppHeight)
-window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 100))
-</script>
 </body>
 </html>

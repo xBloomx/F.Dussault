@@ -145,7 +145,10 @@ function buildModal(filename) {
     `
     document.body.appendChild(overlay)
 
+    const escHandler = e => { if (e.key === 'Escape') close() }
+
     function close() {
+        document.removeEventListener('keydown', escHandler)
         if (overlay._blobUrl) { URL.revokeObjectURL(overlay._blobUrl); overlay._blobUrl = null }
         overlay.remove()
     }
@@ -155,13 +158,16 @@ function buildModal(filename) {
         if (action === 'close') close()
     })
 
-    const escHandler = e => { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', escHandler) } }
     document.addEventListener('keydown', escHandler)
 
     return {
         overlay,
         setError(msg) {
-            overlay.querySelector('.pdfx-body').innerHTML = `<div class="pdfx-error">⚠ ${msg}</div>`
+            const body = overlay.querySelector('.pdfx-body')
+            const el = document.createElement('div')
+            el.className = 'pdfx-error'
+            el.textContent = '⚠ ' + msg
+            body.replaceChildren(el)
         },
         setPdfBlob(blob, pageImages, downloadFilename) {
             const url = URL.createObjectURL(blob)

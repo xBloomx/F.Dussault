@@ -4,6 +4,7 @@
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
 import { sanitize } from '../shared/sanitize.js'
+import { friendlyError } from '../shared/errorMsg.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let clients = []
@@ -476,7 +477,7 @@ async function saveClient() {
         error = e
     }
 
-    if (error) { openAlertModal('Erreur lors de la sauvegarde : ' + error.message); return }
+    if (error) { openAlertModal(friendlyError(error)); return }
     await loadClients()
     closeModal('editModal')
 }
@@ -486,7 +487,7 @@ async function executeDeleteClient() {
     if (!clientToDeleteId) { closeModal('confirmModal'); return }
     const { data, error } = await supabase.from('clients').update({ est_supprime: true }).eq('id', clientToDeleteId).select()
     closeModal('confirmModal')
-    if (error) { openAlertModal('Erreur lors de la suppression : ' + (error.message || 'inconnue')); return }
+    if (error) { openAlertModal(friendlyError(error)); return }
     if (!data || data.length === 0) { openAlertModal("La suppression a été bloquée par les permissions de la base de données."); return }
     closeModal('editModal')
     await loadClients()
@@ -495,7 +496,7 @@ async function executeDeleteClient() {
 
 async function restaurerClient(id) {
     const { data, error } = await supabase.from('clients').update({ est_supprime: false }).eq('id', id).select()
-    if (error) { openAlertModal('Erreur lors de la restauration : ' + (error.message || 'inconnue')); return }
+    if (error) { openAlertModal(friendlyError(error)); return }
     if (!data || data.length === 0) { openAlertModal("La restauration a été bloquée par les permissions."); return }
     await loadClients()
     showToast('✓ Client restauré')
@@ -505,7 +506,7 @@ async function restaurerClient(id) {
 async function executeHardDelete() {
     if (!hardDeleteId) return
     const { error } = await supabase.from('clients').delete().eq('id', hardDeleteId)
-    if (error) { openAlertModal('Erreur lors de la suppression : ' + error.message) }
+    if (error) { openAlertModal(friendlyError(error)) }
     closeModal('hardConfirmModal')
     hardDeleteId = null
     await loadClients()

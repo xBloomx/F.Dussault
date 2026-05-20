@@ -16,7 +16,7 @@ function isTransientError(error) {
 
 export async function withRetry(operation, options = {}) {
     if (!navigator.onLine) return { error: { message: 'Hors ligne — vos données sont sauvegardées localement.', offline: true } }
-    const delay = options.delay || 600
+    const baseDelay = options.delay || 600
     const maxAttempts = options.maxAttempts || 2
 
     let lastResult = null
@@ -26,7 +26,7 @@ export async function withRetry(operation, options = {}) {
             lastResult = await operation()
             if (lastResult?.error) {
                 if (attempt < maxAttempts && isTransientError(lastResult.error)) {
-                    await new Promise(r => setTimeout(r, delay))
+                    await new Promise(r => setTimeout(r, baseDelay * attempt))
                     continue
                 }
                 return lastResult
@@ -34,7 +34,7 @@ export async function withRetry(operation, options = {}) {
             return lastResult
         } catch (e) {
             if (attempt < maxAttempts && isTransientError(e)) {
-                await new Promise(r => setTimeout(r, delay))
+                await new Promise(r => setTimeout(r, baseDelay * attempt))
                 continue
             }
             return { error: e }

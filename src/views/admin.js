@@ -4,6 +4,7 @@
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, hasPermission } from '../auth.js'
 import { sanitize } from '../shared/sanitize.js'
+import { friendlyError } from '../shared/errorMsg.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let allLogs = []
@@ -733,7 +734,7 @@ async function updateEmploye() {
     const updateData = { prenom_nom: name }
     if (role !== 'A0') updateData.role = role
     const { error } = await supabase.from('profils').update(updateData).eq('id', id)
-    if (error) { showAlert(error.message) } else { closeModal('editUserModal'); chargerListeEmployes() }
+    if (error) { showAlert(friendlyError(error)) } else { closeModal('editUserModal'); chargerListeEmployes() }
 }
 
 async function creerEmploye() {
@@ -750,8 +751,13 @@ async function creerEmploye() {
     const tempSup = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_KEY, { auth: { persistSession: false } })
     const { data: authData, error: authError } = await tempSup.auth.signUp({ email, password })
     if (authError) { showAlert(authError.message); return }
+    if (!authData?.user) {
+        showAlert('Compte créé — en attente de confirmation par courriel.')
+        closeModal('newUserModal')
+        return
+    }
     const { error: profileError } = await supabase.from('profils').insert([{ id: authData.user.id, role, prenom_nom: nom }])
-    if (profileError) { showAlert(profileError.message) }
+    if (profileError) { showAlert('Compte auth créé mais profil non sauvegardé : ' + profileError.message); return }
     closeModal('newUserModal')
     chargerListeEmployes()
 }
@@ -759,7 +765,7 @@ async function creerEmploye() {
 async function deleteEmploye(id, nom) {
     showConfirmAdmin(`Voulez-vous supprimer le compte de ${sanitize(nom)} ?`, async () => {
         const { error } = await supabase.from('profils').delete().eq('id', id)
-        if (error) { showAlert(error.message) } else { showAlert('Compte supprimé avec succès.'); chargerListeEmployes() }
+        if (error) { showAlert(friendlyError(error)) } else { showAlert('Compte supprimé avec succès.'); chargerListeEmployes() }
     })
 }
 
@@ -787,7 +793,7 @@ async function toggleMaintenance() {
     if (btn) { btn.disabled = true; btn.textContent = 'Sauvegarde...' }
     const newState = !maintenanceActive
     const { error } = await supabase.from('parametres_globaux').upsert({ cle: 'mode_maintenance', valeur: String(newState) }, { onConflict: 'cle' })
-    if (error) { showAlert('❌ Erreur : ' + error.message); if (btn) { btn.disabled = false; updateMaintenanceBtn() }; return }
+    if (error) { showAlert('❌ ' + friendlyError(error)); if (btn) { btn.disabled = false; updateMaintenanceBtn() }; return }
     maintenanceActive = newState
     if (btn) btn.disabled = false
     updateMaintenanceBtn()
@@ -860,7 +866,7 @@ async function initSupportUI() {
         div.querySelector('[data-ticket-id]').addEventListener('click', async btn => {
             const id = btn.currentTarget.dataset.ticketId
             const { error } = await supabase.from('tickets_support').update({ statut: 'resolu' }).eq('id', id)
-            if (error) { showAlert('❌ Erreur : ' + error.message) } else { initSupportUI() }
+            if (error) { showAlert('❌ ' + friendlyError(error)) } else { initSupportUI() }
         })
         container.appendChild(div)
     })
@@ -883,7 +889,7 @@ async function loadSuppliers() {
 
 async function saveSuppliers() {
     const { error } = await supabase.from('parametres_globaux').upsert({ cle: 'fournisseurs_recurrents', valeur: JSON.stringify(suppliersData) }, { onConflict: 'cle' })
-    if (error) { showAlert('Erreur sauvegarde : ' + error.message); return false }
+    if (error) { showAlert(friendlyError(error)); return false }
     return true
 }
 
@@ -1013,7 +1019,7 @@ async function addTool() {
     if (toolsListData.some(t => (t.nom || '').toLowerCase() === name.toLowerCase())) { showAlert('Un outil avec ce nom existe déjà.'); return }
     const maxPos = toolsListData.reduce((max, t) => { const p = t.position ?? 0; return p > max ? p : max }, 0)
     const { error } = await supabase.from('outils').insert([{ nom: name, status: 'available', position: maxPos + 10 }])
-    if (error) { showAlert('Erreur : ' + error.message); return }
+    if (error) { showAlert(friendlyError(error)); return }
     if (inp) inp.value = ''
     await loadTools()
 }
@@ -1021,7 +1027,7 @@ async function addTool() {
 async function removeTool(id, name) {
     showConfirmAdmin(`Retirer définitivement "${name}" de l'inventaire ?`, async () => {
         const { error } = await supabase.from('outils').delete().eq('nom', name)
-        if (error) { showAlert('Erreur : ' + error.message) } else { await loadTools() }
+        if (error) { showAlert(friendlyError(error)) } else { await loadTools() }
     })
 }
 
@@ -1200,7 +1206,7 @@ async function loadLogsExpiredCount() {
 async function cleanExpiredLogs() {
     showConfirmAdmin("Supprimer DÉFINITIVEMENT tous les logs de plus d'un an ? Cette action est irréversible.", async () => {
         const { data, error } = await supabase.rpc('delete_expired_logs')
-        if (error) { showAlert('Erreur : ' + error.message); return }
+        if (error) { showAlert(friendlyError(error)); return }
         showAlert(`${Number(data || 0)} log(s) supprimé(s) avec succès.`)
         await loadLogsExpiredCount(); await loadTechnicalLogs()
     })

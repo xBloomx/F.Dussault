@@ -46,8 +46,10 @@
     --safe-right:  env(safe-area-inset-right,  0px);
 }
 
-html, body {
+html {
     height: 100%;
+}
+body {
     font-family: 'Segoe UI', Arial, sans-serif;
     background: var(--bg-dark);
     color: var(--text-main);
