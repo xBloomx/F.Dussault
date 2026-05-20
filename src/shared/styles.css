@@ -246,6 +246,7 @@ input, select, textarea {
     outline: none !important;
     box-shadow: none !important;
     border-color: #444 !important;
+    background-color: var(--bg-dark) !important;
     -webkit-tap-highlight-color: transparent !important;
 }
 
