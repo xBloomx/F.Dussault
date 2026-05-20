@@ -71,17 +71,17 @@ export async function render(container) {
         .modal-card { background: var(--bg-panel); width: 850px; padding: 30px; border-radius: 15px; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .modal-card.small-card { width: 350px; text-align: center; }
         .modal-title { font-size: 28px; color: white; margin-bottom: 20px; font-weight: bold; border-bottom: 2px solid var(--accent); padding-bottom: 10px; display: inline-block; }
-        .form-group { margin-bottom: 15px; text-align: left; }
-        .form-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-family: sans-serif; font-size: 14px; outline: none; box-sizing: border-box; }
+        .form-group { margin-bottom: 18px; text-align: left; }
+        .form-group label { display: block; color: #ccc; margin-bottom: 6px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 10px; font-family: sans-serif; font-size: 15px; outline: none; box-sizing: border-box; }
         .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
         .form-row { display: flex; gap: 15px; }
-        .contacts-container { border: 1px solid var(--border); padding: 10px; border-radius: 0; background: var(--bg-dark); margin-bottom: 15px; }
+        .contacts-container { border: 1px solid var(--border); padding: 12px; border-radius: 10px; background: var(--bg-dark); margin-bottom: 18px; }
         .contact-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .contact-inputs { display: flex; gap: 8px; flex: 1; }
-        .contact-inputs input { flex: 1; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-size: 14px; outline: none; }
+        .contact-inputs input { flex: 1; background: #1a1b23; border: 1px solid var(--border); color: white; padding: 12px 10px; border-radius: 8px; font-size: 14px; outline: none; }
         .contact-inputs input:focus { border-color: var(--accent); }
-        .btn-add-contact { background: #444; color: white; width: 100%; padding: 10px; border: 1px dashed #666; border-radius: 8px; cursor: pointer; font-size: 13px; margin-top: 5px; }
+        .btn-add-contact { background: #333; color: #ccc; width: 100%; padding: 12px; border: 1px dashed #555; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 5px; transition: 0.2s; }
         .btn-add-contact:hover { background: #555; }
         .btn-remove-row { background: transparent; border: none; color: #ff4d4d; cursor: pointer; font-weight: bold; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .select-wrap { position: relative; display: block; }
