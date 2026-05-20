@@ -121,6 +121,7 @@ export async function render(container) {
             .cli-contact-item { justify-content: flex-start; text-align: left; }
             .cli-contact-item.address { margin-top: 0; }
             .cli-actions { position: absolute; right: 20px; top: 15px; margin-left: 0; }
+            .modal-card { width: 90% !important; max-width: 650px !important; border-radius: 15px !important; padding: 30px !important; }
         }
         @media (max-width: 768px) {
             .clients-main { padding: 15px; }
