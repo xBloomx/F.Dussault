@@ -1,8 +1,7 @@
 // src/views/clients.js
-// Migré fidèlement depuis code_clients/code_clients.html
 
 import { supabase } from '../supabase.js'
-import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
+import { currentUser, hasPermission } from '../auth.js'
 import { sanitize } from '../shared/sanitize.js'
 import { friendlyError } from '../shared/errorMsg.js'
 
@@ -30,13 +29,13 @@ export async function render(container) {
         .btn-header-icon { background: #444; border: none; width: 38px; height: 38px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; color: #ccc; flex-shrink: 0; }
         .btn-header-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-header-icon:hover { background: var(--btn-red); color: white; }
-        .toolbar { display: flex; gap: 15px; align-items: center; background-color: var(--bg-panel); padding: 15px; border-radius: 12px; }
-        .search-box { flex: 1; position: relative; display: flex; align-items: center; }
+        .toolbar { display: flex; gap: 12px; align-items: center; background-color: var(--bg-panel); padding: 15px; border-radius: 12px; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 180px; position: relative; display: flex; align-items: center; }
         .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
         .search-box input:focus { border-color: var(--accent); }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .filter-select { background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; min-width: 180px; font-family: inherit; }
+        .filter-select { background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; min-width: 150px; font-family: inherit; }
         .filter-select:focus { border-color: var(--accent); }
         .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin-top: 1px; margin-bottom: 1px; padding-left: 10px; }
         .client-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
@@ -78,10 +77,13 @@ export async function render(container) {
         .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
         .form-row { display: flex; gap: 15px; }
         .contacts-container { border: 1px solid var(--border); padding: 12px; border-radius: 10px; background: var(--bg-dark); margin-bottom: 18px; }
-        .contact-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-        .contact-inputs { display: flex; gap: 8px; flex: 1; }
-        .contact-inputs input { flex: 1; background: #1a1b23; border: 1px solid var(--border); color: white; padding: 12px 10px; border-radius: 8px; font-size: 14px; outline: none; }
+        .contact-row { border: 1px solid #333; border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #1a1b23; }
+        .contact-row-top { display: flex; align-items: center; gap: 8px; }
+        .contact-inputs { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
+        .contact-inputs input { flex: 1; min-width: 80px; background: #252633; border: 1px solid var(--border); color: white; padding: 10px 10px; border-radius: 8px; font-size: 14px; outline: none; }
         .contact-inputs input:focus { border-color: var(--accent); }
+        .contact-notes-input { width: 100%; margin-top: 6px; background: #252633; border: 1px solid #444; color: #ccc; padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none; font-family: inherit; resize: none; }
+        .contact-notes-input:focus { border-color: var(--accent); }
         .btn-add-contact { background: #333; color: #ccc; width: 100%; padding: 12px; border: 1px dashed #555; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 5px; transition: 0.2s; }
         .btn-add-contact:hover { background: #555; }
         .btn-remove-row { background: transparent; border: none; color: #ff4d4d; cursor: pointer; font-weight: bold; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
@@ -106,10 +108,15 @@ export async function render(container) {
         .box-note { background: var(--bg-dark); padding: 10px; border-radius: 8px; color: #ddd; font-style: italic; min-height: 40px; white-space: pre-wrap; border: 1px solid var(--border); }
         .box-alert { background: rgba(255,77,77,0.1); border: 1px solid var(--btn-red); color: var(--btn-red); padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .box-alert svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .contact-item { background: #333; padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .contact-item { background: #333; padding: 12px; border-radius: 8px; margin-bottom: 8px; }
+        .contact-item-top { display: flex; justify-content: space-between; align-items: center; }
         .ci-name { font-weight: bold; color: white; font-size: 15px; }
         .ci-role { font-size: 12px; color: var(--accent); font-style: italic; background: rgba(252,202,70,0.1); padding: 1px 6px; border-radius: 4px; display: inline-block; }
+        .ci-notes { color: #aaa; font-size: 12px; margin-top: 6px; font-style: italic; background: rgba(255,255,255,0.04); padding: 5px 8px; border-radius: 5px; white-space: pre-wrap; }
         .corbeille-item { background: #1a1b23; border: 1px dashed var(--btn-red); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .historique-tabs { display: flex; gap: 0; border-bottom: 2px solid #444; margin-bottom: 12px; }
+        .hist-tab { padding: 8px 18px; background: none; border: none; color: #aaa; font-size: 14px; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.15s; }
+        .hist-tab.active { color: white; border-bottom-color: var(--accent); }
 
         @media (min-width: 769px) and (max-width: 1200px) {
             .clients-main { padding: 20px; }
@@ -143,6 +150,8 @@ export async function render(container) {
             .modal-overlay.z-high { align-items: center; }
             .modal-card.small-card { width: 90% !important; max-height: none !important; border-radius: 15px !important; padding: 25px !important; }
             .form-row { flex-direction: column; gap: 0; }
+            .contact-inputs { flex-wrap: wrap; }
+            .contact-inputs input { min-width: calc(50% - 4px); }
         }
     </style>
 
@@ -166,13 +175,16 @@ export async function render(container) {
         <div class="toolbar">
             <div class="search-box">
                 <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-                <input type="text" id="clientSearch" placeholder="Rechercher (Nom, Tél, Adresse...)">
+                <input type="text" id="clientSearch" placeholder="Rechercher (Nom, Tél, Ville...)">
             </div>
             <select id="statusFilter" class="filter-select">
                 <option value="all">Tous les statuts</option>
                 <option value="commercial">Commercial</option>
                 <option value="residentiel">Résidentiel</option>
                 <option value="prospect">Prospect</option>
+            </select>
+            <select id="villeFilter" class="filter-select">
+                <option value="all">Toutes les villes</option>
             </select>
         </div>
 
@@ -200,6 +212,7 @@ export async function render(container) {
                     <a href="#" id="vLinkApple" target="_blank" class="gps-btn gps-apple">🗺 Apple Plans</a>
                 </div>
             </div>
+            <div class="view-row" id="vRowVille" style="display:none"><div class="view-label">Ville</div><div class="view-val" id="vVille">-</div></div>
             <div class="view-section-title">Liste des Contacts</div>
             <div id="vContactsList"></div>
             <div id="vTarifSection" style="display:none">
@@ -208,9 +221,14 @@ export async function render(container) {
             </div>
             <div class="view-section-title">Notes Dossier</div>
             <div class="box-note" id="vNotes"></div>
-            <div id="vFacturesSection" style="display:none">
-                <div class="view-section-title" style="color:var(--btn-blue)">Factures associées</div>
-                <div id="vFacturesList" style="display:flex;flex-direction:column;gap:8px"></div>
+            <div id="vHistoriqueSection" style="display:none">
+                <div class="view-section-title" style="color:var(--btn-blue)">Historique</div>
+                <div class="historique-tabs">
+                    <button class="hist-tab active" data-hist="factures">Factures</button>
+                    <button class="hist-tab" data-hist="soumissions">Soumissions</button>
+                </div>
+                <div id="vFacturesList"></div>
+                <div id="vSoumissionsList" style="display:none"></div>
             </div>
             <div class="modal-actions">
                 <button class="btn-cancel" id="btnCloseView">Fermer</button>
@@ -259,9 +277,15 @@ export async function render(container) {
                 <label>Contact principal</label>
                 <input type="text" id="edContact" placeholder="Ex: Marie Tremblay">
             </div>
-            <div class="form-group">
-                <label>Adresse principale <span style="color:var(--btn-red)">*</span></label>
-                <input type="text" id="edAddress" placeholder="Adresse complète (Obligatoire)">
+            <div class="form-row">
+                <div class="form-group" style="flex:2">
+                    <label>Adresse principale <span style="color:var(--btn-red)">*</span></label>
+                    <input type="text" id="edAddress" placeholder="Adresse complète (Obligatoire)">
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label>Ville</label>
+                    <input type="text" id="edVille" placeholder="Ex: Montréal">
+                </div>
             </div>
             <div class="form-group">
                 <label>Contacts (Téléphones / Courriels) <span style="color:var(--btn-red)">*</span></label>
@@ -337,7 +361,6 @@ export async function render(container) {
 
 // ── Init ────────────────────────────────────────────────────────────────────
 async function init() {
-    // Permissions
     if (hasPermission('delete_clients')) {
         document.getElementById('btnShowCorbeille').style.display = 'flex'
     }
@@ -345,38 +368,41 @@ async function init() {
         document.getElementById('btnNewClient').style.display = 'none'
     }
 
-    // Boutons header
     document.getElementById('btnNewClient').addEventListener('click', () => openEditModal())
     document.getElementById('btnShowCorbeille').addEventListener('click', openCorbeille)
 
-    // Recherche et filtres
-    document.getElementById('clientSearch').addEventListener('keyup', filterClients)
+    document.getElementById('clientSearch').addEventListener('input', filterClients)
     document.getElementById('statusFilter').addEventListener('change', filterClients)
+    document.getElementById('villeFilter').addEventListener('change', filterClients)
 
-    // Modal view
     document.getElementById('btnCloseView').addEventListener('click', () => closeModal('viewModal'))
     document.getElementById('btnSwitchToEdit').addEventListener('click', () => {
         closeModal('viewModal')
         openEditModal(currentViewingId)
     })
 
-    // Modal edit
     document.getElementById('edStatus').addEventListener('change', toggleCommercialFields)
     document.getElementById('btnAddContact').addEventListener('click', () => addContactRow())
 
-    // Modal confirm delete
     document.getElementById('btnCancelDelete').addEventListener('click', () => closeModal('confirmModal'))
     document.getElementById('btnExecuteDelete').addEventListener('click', executeDeleteClient)
 
-    // Modal hard delete
     document.getElementById('btnCancelHard').addEventListener('click', () => { closeModal('hardConfirmModal'); hardDeleteId = null })
     document.getElementById('btnExecuteHard').addEventListener('click', executeHardDelete)
 
-    // Modal corbeille
     document.getElementById('btnCloseCorbeille').addEventListener('click', () => closeModal('corbeilleModal'))
-
-    // Alerte
     document.getElementById('btnCloseAlert').addEventListener('click', () => closeModal('alertModal'))
+
+    // Onglets historique
+    document.getElementById('vHistoriqueSection').addEventListener('click', e => {
+        const tab = e.target.closest('.hist-tab')
+        if (!tab) return
+        document.querySelectorAll('.hist-tab').forEach(t => t.classList.remove('active'))
+        tab.classList.add('active')
+        const type = tab.dataset.hist
+        document.getElementById('vFacturesList').style.display = type === 'factures' ? '' : 'none'
+        document.getElementById('vSoumissionsList').style.display = type === 'soumissions' ? '' : 'none'
+    })
 
     await loadClients()
 }
@@ -389,7 +415,7 @@ async function loadClients(reset = true) {
 
     const { data, error } = await supabase
         .from('clients')
-        .select('id,nom,type,adresse,contacts')
+        .select('id,nom,type,adresse,ville,contacts,notes,est_supprime,telephone')
         .order('nom', { ascending: true })
         .range(from, to + 1)
 
@@ -400,6 +426,7 @@ async function loadClients(reset = true) {
     clients = reset ? pageData : [...clients, ...pageData]
 
     updateCorbeilleCount()
+    populateVilleFilter()
     filterClients()
 }
 
@@ -416,6 +443,25 @@ async function chargerPlusClients() {
     }
 }
 
+function populateVilleFilter() {
+    const sel = document.getElementById('villeFilter')
+    if (!sel) return
+    const current = sel.value
+    const villes = [...new Set(
+        clients
+            .filter(c => !c.est_supprime && c.ville && c.ville.trim())
+            .map(c => c.ville.trim())
+    )].sort()
+    sel.innerHTML = '<option value="all">Toutes les villes</option>'
+    villes.forEach(v => {
+        const opt = document.createElement('option')
+        opt.value = v
+        opt.textContent = v
+        if (v === current) opt.selected = true
+        sel.appendChild(opt)
+    })
+}
+
 // ── Sauvegarde ──────────────────────────────────────────────────────────────
 async function saveClient() {
     const id = document.getElementById('edId').value
@@ -423,6 +469,7 @@ async function saveClient() {
     const company = document.getElementById('edCompany').value.trim()
     const contact = document.getElementById('edContact').value.trim()
     const address = document.getElementById('edAddress').value.trim()
+    const ville = document.getElementById('edVille').value.trim()
     const status = document.getElementById('edStatus').value
     const notes = document.getElementById('edNotes').value
     const tarif = document.getElementById('edTarif').value
@@ -439,8 +486,9 @@ async function saveClient() {
         const role = row.querySelector('.inp-role')?.value.trim() || ''
         const phone = row.querySelector('.inp-phone')?.value.trim() || ''
         const email = row.querySelector('.inp-email')?.value.trim() || ''
+        const contactNotes = row.querySelector('.contact-notes-input')?.value.trim() || ''
         if (phone.length > 0) hasPhone = true
-        if (name || phone || email) contactsList.push({ name, role, phone, email })
+        if (name || phone || email) contactsList.push({ name, role, phone, email, notes: contactNotes })
     })
 
     if (!hasPhone) { openAlertModal("Il faut ajouter au moins un numéro de téléphone valide."); return }
@@ -458,6 +506,7 @@ async function saveClient() {
         telephone: contactsList[0]?.phone || '',
         courriel: contactsList[0]?.email || '',
         adresse: address,
+        ville,
         contacts: {
             list: contactsList,
             company, subcontractor, contact,
@@ -563,7 +612,7 @@ function renderClients(list) {
                     </div>
                     <div class="cli-contact-item address">
                         <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        <span style="line-height:1.3">${sanitize(c.adresse ? (c.adresse.length > 40 ? c.adresse.substring(0, 40) + '...' : c.adresse) : '---')}</span>
+                        <span style="line-height:1.3">${c.ville ? sanitize(c.ville) : sanitize(c.adresse ? (c.adresse.length > 35 ? c.adresse.substring(0, 35) + '...' : c.adresse) : '---')}</span>
                     </div>
                 </div>
             </div>
@@ -587,26 +636,30 @@ function renderClients(list) {
 }
 
 function filterClients() {
-    const term = document.getElementById('clientSearch')?.value.toLowerCase() || ''
+    const term = (document.getElementById('clientSearch')?.value || '').toLowerCase()
     const statusF = document.getElementById('statusFilter')?.value || 'all'
+    const villeF = document.getElementById('villeFilter')?.value || 'all'
     const activeClients = clients.filter(c => !c.est_supprime)
 
     const filtered = activeClients.filter(c => {
         const extra = c.contacts || {}
-        const matchTerm = (c.nom || '').toLowerCase().includes(term) ||
+        const matchTerm = !term ||
+            (c.nom || '').toLowerCase().includes(term) ||
             (extra.company || '').toLowerCase().includes(term) ||
             (extra.subcontractor || '').toLowerCase().includes(term) ||
             (c.adresse || '').toLowerCase().includes(term) ||
+            (c.ville || '').toLowerCase().includes(term) ||
             (c.telephone || '').includes(term) ||
-            (extra.list || []).some(ct => (ct.phone || '').includes(term))
+            (extra.list || []).some(ct => (ct.phone || '').includes(term) || (ct.name || '').toLowerCase().includes(term))
         const matchStatus = statusF === 'all' || c.type === statusF
-        return matchTerm && matchStatus
+        const matchVille = villeF === 'all' || (c.ville || '').trim() === villeF
+        return matchTerm && matchStatus && matchVille
     })
 
     const resText = document.getElementById('filterResultText')
     if (resText) {
         const suffixe = clientsHasMore ? ` (${clients.length} chargés — il y en a plus)` : ''
-        resText.textContent = (statusF === 'all' && term === '')
+        resText.textContent = (statusF === 'all' && villeF === 'all' && term === '')
             ? `Total : ${filtered.length} client(s) dans le répertoire.${suffixe}`
             : `${filtered.length} client(s) affiché(s) selon vos filtres.`
     }
@@ -648,6 +701,10 @@ function openViewModal(id) {
     document.getElementById('vAddress').textContent = c.adresse || '-'
     document.getElementById('vNotes').textContent = extra.notes || c.notes || 'Aucune note.'
 
+    const rowVille = document.getElementById('vRowVille')
+    if (c.ville) { rowVille.style.display = 'flex'; document.getElementById('vVille').textContent = c.ville }
+    else { rowVille.style.display = 'none' }
+
     const secSub = document.getElementById('vRowSubcontractor')
     if (c.type === 'commercial' && extra.subcontractor) {
         secSub.style.display = 'flex'
@@ -670,47 +727,65 @@ function openViewModal(id) {
     contactsList.forEach(ct => {
         const phoneLink = ct.phone ? `<a href="tel:${sanitize(ct.phone)}" style="color:white;text-decoration:none;font-weight:bold" onclick="event.stopPropagation()">${sanitize(ct.phone)}</a>` : '---'
         const emailLink = ct.email ? `<a href="mailto:${sanitize(ct.email)}" style="color:#aaa;font-size:11px;text-decoration:none" onclick="event.stopPropagation()">${sanitize(ct.email)}</a>` : ''
-        contList.insertAdjacentHTML('beforeend', `<div class="contact-item"><div><div class="ci-name">${sanitize(ct.name)}</div>${ct.role ? `<div class="ci-role" style="margin-top:4px">${sanitize(ct.role)}</div>` : ''}</div><div style="text-align:right"><div>${phoneLink}</div><div>${emailLink}</div></div></div>`)
+        const notesHtml = ct.notes ? `<div class="ci-notes">${sanitize(ct.notes)}</div>` : ''
+        contList.insertAdjacentHTML('beforeend', `
+            <div class="contact-item">
+                <div class="contact-item-top">
+                    <div><div class="ci-name">${sanitize(ct.name)}</div>${ct.role ? `<div class="ci-role" style="margin-top:4px">${sanitize(ct.role)}</div>` : ''}</div>
+                    <div style="text-align:right"><div>${phoneLink}</div><div>${emailLink}</div></div>
+                </div>
+                ${notesHtml}
+            </div>`)
     })
 
     const nomClient = extra.company || c.nom || ''
-    if (nomClient) loadFacturesClient(nomClient)
-    else { const s = document.getElementById('vFacturesSection'); if (s) s.style.display = 'none' }
+    if (nomClient) loadHistoriqueClient(nomClient)
+    else { const s = document.getElementById('vHistoriqueSection'); if (s) s.style.display = 'none' }
 
     document.getElementById('viewModal').classList.add('open')
 }
 
-async function loadFacturesClient(clientNom) {
-    const section = document.getElementById('vFacturesSection')
-    const list = document.getElementById('vFacturesList')
-    if (!section || !list) return
-    list.innerHTML = '<div style="color:#888;font-size:13px">Chargement...</div>'
+async function loadHistoriqueClient(clientNom) {
+    const section = document.getElementById('vHistoriqueSection')
+    const listF = document.getElementById('vFacturesList')
+    const listS = document.getElementById('vSoumissionsList')
+    if (!section || !listF || !listS) return
+
+    listF.innerHTML = '<div style="color:#888;font-size:13px">Chargement...</div>'
+    listS.innerHTML = '<div style="color:#888;font-size:13px">Chargement...</div>'
     section.style.display = 'block'
 
-    const { data: factures } = await supabase
-        .from('factures')
-        .select('id, date, status')
-        .ilike('client', `%${clientNom}%`)
-        .order('created_at', { ascending: false })
-        .limit(10)
+    // Reset onglets
+    document.querySelectorAll('.hist-tab').forEach(t => t.classList.remove('active'))
+    document.querySelector('.hist-tab[data-hist="factures"]')?.classList.add('active')
+    listF.style.display = ''
+    listS.style.display = 'none'
 
-    if (!factures || factures.length === 0) {
-        list.innerHTML = '<div style="color:#888;font-size:13px;font-style:italic">Aucune facture trouvée pour ce client.</div>'
-        return
-    }
+    const [{ data: factures }, { data: soumissions }] = await Promise.all([
+        supabase.from('factures').select('id,date,status').ilike('client', `%${clientNom}%`).order('created_at', { ascending: false }).limit(15),
+        supabase.from('soumissions').select('id,date,status').ilike('client', `%${clientNom}%`).order('created_at', { ascending: false }).limit(15)
+    ])
 
-    const statusColors = { 'brouillon': '#888', 'envoyee': 'var(--btn-blue)', 'approuvee': 'var(--btn-green)', 'renvoye': 'var(--btn-red)', 'Convertie': 'var(--btn-purple)' }
-    const statusBg = { 'brouillon': 'rgba(136,136,136,0.15)', 'envoyee': 'rgba(52,152,219,0.15)', 'approuvee': 'rgba(40,167,69,0.15)', 'renvoye': 'rgba(255,77,77,0.15)', 'Convertie': 'rgba(156,39,176,0.15)' }
-    list.innerHTML = factures.map(f => {
+    const statusColors = { brouillon: '#888', envoyee: 'var(--btn-blue)', approuvee: 'var(--btn-green)', renvoye: 'var(--btn-red)', Convertie: 'var(--btn-purple)', acceptee: 'var(--btn-green)', refusee: 'var(--btn-red)' }
+    const statusBg = { brouillon: 'rgba(136,136,136,0.15)', envoyee: 'rgba(52,152,219,0.15)', approuvee: 'rgba(40,167,69,0.15)', renvoye: 'rgba(255,77,77,0.15)', Convertie: 'rgba(156,39,176,0.15)', acceptee: 'rgba(40,167,69,0.15)', refusee: 'rgba(255,77,77,0.15)' }
+
+    const renderRow = (f) => {
         const color = statusColors[f.status] || '#888'
         const bg = statusBg[f.status] || 'rgba(136,136,136,0.15)'
-        return `
-        <div style="background:var(--bg-dark);border-radius:8px;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid ${color}">
+        return `<div style="background:var(--bg-dark);border-radius:8px;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid ${color};margin-bottom:6px">
             <span style="color:white;font-weight:bold;font-family:monospace">${sanitize(f.id)}</span>
             <span style="color:var(--text-muted);font-size:13px">${sanitize(f.date || '')}</span>
             <span style="font-size:12px;padding:3px 10px;border-radius:6px;background:${bg};color:${color};font-weight:bold">${sanitize(f.status || '')}</span>
         </div>`
-    }).join('')
+    }
+
+    listF.innerHTML = factures?.length
+        ? factures.map(renderRow).join('')
+        : '<div style="color:#888;font-size:13px;font-style:italic">Aucune facture trouvée.</div>'
+
+    listS.innerHTML = soumissions?.length
+        ? soumissions.map(renderRow).join('')
+        : '<div style="color:#888;font-size:13px;font-style:italic">Aucune soumission trouvée.</div>'
 }
 
 // ── Modal édition ───────────────────────────────────────────────────────────
@@ -739,6 +814,7 @@ function openEditModal(id = null) {
         document.getElementById('edSubcontractor').value = extra.subcontractor || ''
         document.getElementById('edContact').value = extra.contact || ''
         document.getElementById('edAddress').value = c.adresse || ''
+        document.getElementById('edVille').value = c.ville || ''
         document.getElementById('edStatus').value = c.type || 'residentiel'
         document.getElementById('edNotes').value = extra.notes || c.notes || ''
         document.getElementById('edTarif').value = extra.tarif || ''
@@ -765,6 +841,7 @@ function openEditModal(id = null) {
         document.getElementById('edSubcontractor').value = ''
         document.getElementById('edContact').value = ''
         document.getElementById('edAddress').value = ''
+        document.getElementById('edVille').value = ''
         document.getElementById('edNotes').value = ''
         document.getElementById('edTarif').value = ''
         toggleCommercialFields()
@@ -781,17 +858,20 @@ function toggleCommercialFields() {
     document.getElementById('grpSubcontractor').style.display = isCommercial ? 'block' : 'none'
 }
 
-function addContactRow(data = { name: '', role: '', phone: '', email: '' }) {
+function addContactRow(data = { name: '', role: '', phone: '', email: '', notes: '' }) {
     const div = document.createElement('div')
     div.className = 'contact-row'
     div.innerHTML = `
-        <div class="contact-inputs">
-            <input type="text" placeholder="Nom" class="inp-name" value="${sanitize(data.name || '')}">
-            <input type="text" placeholder="Poste" class="inp-role" value="${sanitize(data.role || '')}">
-            <input type="text" placeholder="Tél" class="inp-phone" value="${sanitize(data.phone || '')}">
-            <input type="email" placeholder="Email" class="inp-email" value="${sanitize(data.email || '')}">
+        <div class="contact-row-top">
+            <div class="contact-inputs">
+                <input type="text" placeholder="Nom" class="inp-name" value="${sanitize(data.name || '')}">
+                <input type="text" placeholder="Poste" class="inp-role" value="${sanitize(data.role || '')}">
+                <input type="text" placeholder="Tél" class="inp-phone" value="${sanitize(data.phone || '')}">
+                <input type="email" placeholder="Email" class="inp-email" value="${sanitize(data.email || '')}">
+            </div>
+            <button class="btn-remove-row">×</button>
         </div>
-        <button class="btn-remove-row">×</button>
+        <input type="text" class="contact-notes-input" placeholder="Notes sur ce contact (optionnel)..." value="${sanitize(data.notes || '')}">
     `
     div.querySelector('.btn-remove-row').addEventListener('click', () => div.remove())
     div.querySelector('.inp-phone').addEventListener('keyup', e => formatPhone(e.target))
