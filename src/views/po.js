@@ -89,6 +89,7 @@ export async function render(container) {
         .btn-copy-large:hover { background: #555; }
         .btn-copy-large.success { background: var(--btn-green); color: white; }
 
+        @media (min-width: 769px) and (max-width: 1024px) { .po-main { padding: 20px; } }
         @media (max-width: 768px) {
             .po-main { padding: 15px; }
             .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }

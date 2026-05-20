@@ -83,6 +83,7 @@ export async function render(container) {
         .btn-close-modal { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #888; font-size: 30px; cursor: pointer; }
         .btn-close-modal:hover { color: white; }
 
+        @media (min-width: 769px) and (max-width: 1024px) { .outils-main { padding: 20px; } }
         @media (max-width: 768px) {
             .outils-main { padding: 15px; }
             .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }

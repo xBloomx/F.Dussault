@@ -105,6 +105,7 @@ export async function render(container) {
         .admin-section.active { display: flex; }
         .perm-form-group { margin-bottom: 15px; }
         .perm-form-group label { display: block; color: var(--text-main); font-size: 14px; font-weight: bold; margin-bottom: 8px; }
+        @media (min-width: 769px) and (max-width: 1024px) { .admin-main { padding: 20px; } }
         @media (max-width: 768px) { .admin-main { padding: 15px; } .dash-header { padding-right: 70px; } .tabs-container { margin-right: 0; } .settings-grid { grid-template-columns: 1fr; } .admin-danger-row { flex-direction: column; } .admin-danger-row .settings-card { min-width: 0 !important; flex: none !important; width: 100%; } }
     </style>
 

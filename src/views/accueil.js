@@ -133,6 +133,7 @@ export async function render(container) {
         .btn-modal-submit:hover { background: #218838; }
 
         @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        @media (min-width: 769px) and (max-width: 1024px) { .accueil-main { padding: 20px; } }
         @media (max-width: 768px) {
             .accueil-main { padding: 15px; }
             .dash-header { flex-direction: column; gap: 15px; align-items: flex-start; }

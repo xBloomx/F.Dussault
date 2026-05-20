@@ -181,6 +181,7 @@ export async function render(container) {
         .preview-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
         .preview-item-file { background: #333; padding: 5px 10px; border-radius: 8px; font-size: 12px; color: white; display: flex; align-items: center; gap: 5px; }
         .remove-attachment { position: absolute; top: -5px; right: -5px; background: var(--btn-red); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        @media (min-width: 769px) and (max-width: 1024px) { #view-dashboard { padding: 20px; } }
         @media (max-width: 900px) {
             #view-dashboard { padding: 15px; gap: 0; }
             .chat-sidebar { width: 100%; border-radius: 12px; flex: 1; }
