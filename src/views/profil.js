@@ -111,7 +111,12 @@ export async function render(container) {
         .btn-modal-yellow { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
         .btn-modal-green { background: var(--btn-green); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
 
-        @media (min-width: 769px) and (max-width: 1024px) { .profil-main { padding: 20px; } }
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .profil-main { padding: 20px; }
+            .modal-card-basic { max-width: 500px; }
+            #formationModal .form-group input { padding: 16px 15px; font-size: 16px; }
+            #formationModal .img-upload-btn { padding: 18px; font-size: 15px; }
+        }
         @media (max-width: 768px) {
             .profil-main { padding: 15px; }
             .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; }
