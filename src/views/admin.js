@@ -77,6 +77,12 @@ export async function render(container) {
         .logs-table th { text-align: left; padding: 12px; color: #aaa; font-weight: bold; border-bottom: 1px solid #444; position: sticky; top: 0; background: #2b2c36; z-index: 10; }
         .logs-table td { padding: 12px; border-bottom: 1px dashed #333; vertical-align: top; }
         .logs-scroll-area { max-height: 250px; overflow-y: auto; overflow-x: auto; }
+        .log-filters-wrapper { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .log-filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .log-select-wrap { position: relative; display: block; }
+        .log-select-wrap select { width: 100%; -webkit-appearance: none; appearance: none; background: #1a1b23; border: 1px solid #444; color: white; padding: 10px 32px 10px 12px; border-radius: 6px; font-size: 13px; outline: none; cursor: pointer; font-family: inherit; box-sizing: border-box; }
+        .log-select-wrap select:focus { border-color: var(--btn-blue); }
+        .log-select-wrap .sel-chevron { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 15px; height: 15px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
         .modal-overlay.open { display: flex; }
         .modal-card-basic { background: var(--bg-panel); width: 90%; max-width: 400px; padding: 25px; border-radius: 15px; text-align: left; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
@@ -338,36 +344,56 @@ export async function render(container) {
                             </button>
                         </div>
                     </div>
-                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-                        <div class="search-box" style="flex:1;min-width:180px;">
+                    <div class="log-filters-wrapper">
+                        <div class="search-box">
                             <span class="search-icon"><svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
                             <input type="text" id="logSearch" placeholder="Rechercher..." style="width:100%;background:#1a1b23;border:1px solid #444;color:white;padding:14px 15px 14px 45px;border-radius:8px;font-size:16px;outline:none;transition:0.2s;box-sizing:border-box">
                         </div>
-                        <select id="logActionFilter" style="background:#1a1b23;border:1px solid #444;color:white;padding:10px;border-radius:6px;font-size:13px;outline:none">
-                            <option value="">Toutes actions</option>
-                            <option value="creation">Création</option>
-                            <option value="modification">Modification</option>
-                            <option value="suppression">Suppression</option>
-                            <option value="archivage">Archivage</option>
-                            <option value="restauration">Restauration</option>
-                            <option value="role_change">Changement rôle</option>
-                            <option value="connexion">Connexion</option>
-                            <option value="maintenance">Maintenance</option>
-                        </select>
-                        <select id="logTableFilter" style="background:#1a1b23;border:1px solid #444;color:white;padding:10px;border-radius:6px;font-size:13px;outline:none">
-                            <option value="">Toutes tables</option>
-                            <option value="factures">Factures</option>
-                            <option value="soumissions">Soumissions</option>
-                            <option value="feuilles_de_temps">Feuilles temps</option>
-                            <option value="clients">Clients</option>
-                            <option value="bons_de_commande">PO</option>
-                            <option value="profils">Profils</option>
-                        </select>
-                        <select id="logUserFilter" style="background:#1a1b23;border:1px solid #444;color:white;padding:10px;border-radius:6px;font-size:13px;outline:none">
-                            <option value="">Tous utilisateurs</option>
-                        </select>
+                        <div class="log-filter-grid">
+                            <div class="log-select-wrap">
+                                <select id="logActionFilter">
+                                    <option value="">Toutes actions</option>
+                                    <option value="creation">Création</option>
+                                    <option value="modification">Modification</option>
+                                    <option value="suppression">Suppression</option>
+                                    <option value="archivage">Archivage</option>
+                                    <option value="restauration">Restauration</option>
+                                    <option value="role_change">Changement rôle</option>
+                                    <option value="connexion">Connexion</option>
+                                    <option value="maintenance">Maintenance</option>
+                                </select>
+                                <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                            <div class="log-select-wrap">
+                                <select id="logTableFilter">
+                                    <option value="">Toutes tables</option>
+                                    <option value="factures">Factures</option>
+                                    <option value="soumissions">Soumissions</option>
+                                    <option value="feuilles_de_temps">Feuilles temps</option>
+                                    <option value="clients">Clients</option>
+                                    <option value="bons_de_commande">PO</option>
+                                    <option value="profils">Profils</option>
+                                </select>
+                                <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                            <div class="log-select-wrap">
+                                <select id="logUserFilter">
+                                    <option value="">Tous utilisateurs</option>
+                                </select>
+                                <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                            <div class="log-select-wrap">
+                                <select id="logDateFilter">
+                                    <option value="">Toutes dates</option>
+                                    <option value="today">Aujourd'hui</option>
+                                    <option value="week">Cette semaine</option>
+                                    <option value="month">Ce mois-ci</option>
+                                </select>
+                                <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                        </div>
                     </div>
-                    <div style="background:#1a1b23;border:1px solid #444;border-radius:8px;overflow:hidden">
+                    <div style="background:#1a1b23;border:1px solid #444;border-radius:8px;overflow-x:auto">
                         <div class="logs-scroll-area">
                             <table class="logs-table">
                                 <thead><tr><th width="130">Date</th><th width="100">Action</th><th width="130">Utilisateur</th><th>Détails</th></tr></thead>
@@ -515,6 +541,7 @@ async function init() {
         document.getElementById('logActionFilter').addEventListener('change', filterLogs)
         document.getElementById('logTableFilter').addEventListener('change', filterLogs)
         document.getElementById('logUserFilter').addEventListener('change', filterLogs)
+        document.getElementById('logDateFilter').addEventListener('change', filterLogs)
         document.getElementById('customRoleId').addEventListener('input', e => {
             e.target.value = e.target.value.toUpperCase().replace(/\s+/g, '_')
         })
@@ -1083,16 +1110,28 @@ function renderLogs(data) {
     if (countText) countText.textContent = `${data.length} entrée(s) affichée(s) — total ${allLogs.length} chargée(s)`
 }
 
+function getDateFilterStart(fDate) {
+    if (!fDate) return null
+    const now = new Date()
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    if (fDate === 'week') start.setDate(start.getDate() - 7)
+    else if (fDate === 'month') start.setMonth(start.getMonth() - 1)
+    return start
+}
+
 function filterLogs() {
     const q = (document.getElementById('logSearch')?.value || '').toLowerCase()
     const fAction = document.getElementById('logActionFilter')?.value || ''
     const fTable = document.getElementById('logTableFilter')?.value || ''
     const fUser = document.getElementById('logUserFilter')?.value || ''
+    const fDate = document.getElementById('logDateFilter')?.value || ''
+    const dateStart = getDateFilterStart(fDate)
     const filtered = allLogs.filter(l => {
         if (fAction && l.action !== fAction) return false
         if (fTable && l.table !== fTable) return false
         if (fUser && l.user !== fUser) return false
         if (q && !(l.message + ' ' + l.user + ' ' + l.table + ' ' + l.docId).toLowerCase().includes(q)) return false
+        if (dateStart && l.rawDate && new Date(l.rawDate) < dateStart) return false
         return true
     })
     renderLogs(filtered)
@@ -1121,11 +1160,14 @@ function exportLogsCSV() {
     const fAction = document.getElementById('logActionFilter')?.value || ''
     const fTable = document.getElementById('logTableFilter')?.value || ''
     const fUser = document.getElementById('logUserFilter')?.value || ''
+    const fDate = document.getElementById('logDateFilter')?.value || ''
+    const dateStart = getDateFilterStart(fDate)
     const filtered = allLogs.filter(l => {
         if (fAction && l.action !== fAction) return false
         if (fTable && l.table !== fTable) return false
         if (fUser && l.user !== fUser) return false
         if (q && !(l.message + ' ' + l.user + ' ' + l.table + ' ' + l.docId).toLowerCase().includes(q)) return false
+        if (dateStart && l.rawDate && new Date(l.rawDate) < dateStart) return false
         return true
     })
     const esc = s => '"' + String(s ?? '').replace(/"/g, '""') + '"'
