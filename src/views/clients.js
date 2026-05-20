@@ -72,7 +72,7 @@ export async function render(container) {
         .modal-card.small-card { width: 350px; text-align: center; }
         .modal-title { font-size: 28px; color: white; margin-bottom: 20px; font-weight: bold; border-bottom: 2px solid var(--accent); padding-bottom: 10px; display: inline-block; }
         .form-group { margin-bottom: 18px; text-align: left; }
-        .form-group label { display: block; color: #ccc; margin-bottom: 6px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; }
+        .form-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 10px; font-family: sans-serif; font-size: 15px; outline: none; box-sizing: border-box; }
         .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
         .form-row { display: flex; gap: 15px; }
@@ -112,6 +112,7 @@ export async function render(container) {
 
         @media (min-width: 769px) and (max-width: 1200px) {
             .clients-main { padding: 20px; }
+            .form-row { flex-direction: column; gap: 0; }
             .client-item { flex-direction: column; align-items: stretch; gap: 10px; position: relative; }
             .cli-info { gap: 12px; }
             .cli-status { width: auto; flex-shrink: 0; }
