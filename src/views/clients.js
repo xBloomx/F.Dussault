@@ -114,7 +114,7 @@ export async function render(container) {
             .clients-main { padding: 20px; }
             .form-row { flex-direction: column; gap: 0; }
             .client-item { flex-direction: column; align-items: stretch; gap: 8px; position: relative; }
-            .cli-info { flex-direction: column; gap: 6px; }
+            .cli-info { flex-direction: column; gap: 6px; align-items: flex-start; }
             .cli-status { width: auto; flex-shrink: 0; }
             .cli-name-container { flex-wrap: nowrap; }
             .cli-contact { width: auto; align-items: flex-start; flex-direction: column; gap: 4px; padding-right: 50px; }
