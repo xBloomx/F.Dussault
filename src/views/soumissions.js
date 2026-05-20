@@ -85,6 +85,8 @@ export async function render(container) {
             #view-dashboard { padding: 20px; }
             .toolbar { flex-direction: row; align-items: center; }
             .select-wrap { min-width: 180px; flex-shrink: 0; }
+            .quote-item { grid-template-columns: 75px 1fr 65px 90px 36px; gap: 8px; }
+            .inv-date { display: none; }
         }
         @media (max-width: 1024px) {
             .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
