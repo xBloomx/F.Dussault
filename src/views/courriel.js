@@ -90,7 +90,7 @@ export async function render(container) {
         .btn-send:hover { background: #2980b9; }
         .btn-send svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-        @media (min-width: 769px) and (max-width: 1024px) { .courriel-main { padding: 20px; } }
+        @media (min-width: 769px) and (max-width: 1024px) { .courriel-main { padding: 20px; } .btn-compose { margin-right: 0 !important; } }
         @media (max-width: 900px) {
             .email-layout { flex-direction: column; gap: 0; }
             .email-folders { width: 100%; flex-direction: row; padding: 15px; border-right: none; border-bottom: 1px solid var(--border); background: var(--bg-panel); overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 10px; scrollbar-width: none; }
