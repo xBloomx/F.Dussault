@@ -117,7 +117,7 @@ export async function render(container) {
         .received .msg-reaction-badge { right: auto; left: 15px; transition: 0.2s;}
         .reaction-picker { position: fixed; background: #323340; border: 1px solid #555; border-radius: 30px; padding: 8px 15px; display: none; gap: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 200; align-items: center; }
         /* ── Bottom sheet emoji fullpicker ───────────────────────────── */
-        .bottom-sheet-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 6000; align-items: flex-end; justify-content: center; }
+        .bottom-sheet-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 6000; align-items: flex-end; justify-content: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
         .bottom-sheet-card { background: var(--card-bg); width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); border-top: 1px solid #444; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .top-quick-reactions { display: flex; justify-content: space-between; align-items: center; background: #1a1b23; padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; }
@@ -148,7 +148,7 @@ export async function render(container) {
         .btn-send-msg { background: var(--accent); color: black; border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.2s; flex-shrink: 0; }
         .btn-send-msg svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2.5; margin-left: -2px; }
         .btn-send-msg:hover { background: #ffd66b; transform: scale(1.1); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 5000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 5000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
         .modal-overlay.open { display: flex; }
         .new-chat-card { background: var(--bg-panel); width: 90%; max-width: 450px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 15px 35px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 85vh; overflow: hidden; }
         .new-chat-header { padding: 20px; border-bottom: 1px solid #333; display: flex; align-items: center; justify-content: space-between; background: #2e2f3a; }

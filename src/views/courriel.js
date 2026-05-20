@@ -74,7 +74,7 @@ export async function render(container) {
         .btn-mobile-back { display: flex; background: transparent; border: none; color: var(--accent); cursor: pointer; align-items: center; gap: 5px; font-weight: bold; padding: 0; margin-right: 15px; }
         .btn-mobile-back svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 5000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 5000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
         .modal-overlay.open { display: flex; }
         .compose-card { background: var(--bg-panel); width: 90%; max-width: 600px; border-radius: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
         .compose-header { background: #22232c; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; }

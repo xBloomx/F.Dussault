@@ -55,7 +55,7 @@ export async function render(container) {
         .status-badge { font-size: 12px; padding: 3px 10px; border-radius: 6px; font-weight: bold; background: rgba(40,167,69,0.15); color: var(--btn-green); display: inline-flex; align-items: center; gap: 4px; }
         .status-badge svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
         .modal-overlay.open { display: flex; }
         .modal-card-basic { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 15px; text-align: center; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .modal-actions { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }

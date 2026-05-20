@@ -65,7 +65,7 @@ export async function render(container) {
         .btn-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-icon:hover { background: var(--accent); color: black; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
         .modal-overlay.open { display: flex; }
         .modal-overlay.z-high { z-index: 4500; background: rgba(0,0,0,0.7); }
         .modal-card { background: var(--bg-panel); width: 850px; padding: 30px; border-radius: 15px; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }

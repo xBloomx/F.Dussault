@@ -77,7 +77,7 @@ export async function render(container) {
         .legend-container { display: flex; gap: 15px; font-size: 12px; color: #aaa; flex-wrap: wrap; }
         .legend-item { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; }
         .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 3000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 3000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
         .modal-overlay.open { display: flex; }
         .modal-card { background: var(--bg-panel); width: 90%; max-width: 450px; padding: 25px; border-radius: 15px; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .modal-title { font-size: 20px; color: white; margin-bottom: 20px; font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 10px; }

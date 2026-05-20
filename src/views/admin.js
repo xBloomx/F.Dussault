@@ -83,7 +83,7 @@ export async function render(container) {
         .log-select-wrap select { width: 100%; -webkit-appearance: none; appearance: none; background: #1a1b23; border: 1px solid #444; color: white; padding: 10px 32px 10px 12px; border-radius: 6px; font-size: 13px; outline: none; cursor: pointer; font-family: inherit; box-sizing: border-box; }
         .log-select-wrap select:focus { border-color: var(--btn-blue); }
         .log-select-wrap .sel-chevron { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 15px; height: 15px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
         .modal-overlay.open { display: flex; }
         .modal-card-basic { background: var(--bg-panel); width: 90%; max-width: 400px; padding: 25px; border-radius: 15px; text-align: left; border: 1px solid #555; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 15px; }
