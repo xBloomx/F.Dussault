@@ -89,6 +89,11 @@ export async function render(container) {
         .btn-send { background: var(--btn-blue) !important; color: white !important; }
         .btn-unlock { background: var(--btn-orange) !important; color: white !important; }
         .btn-return { background: var(--btn-red) !important; color: white !important; }
+        @media (min-width: 769px) and (max-width: 1024px) {
+            #view-dashboard { padding: 20px; }
+            .toolbar { flex-direction: row; align-items: center; }
+            .select-wrap { min-width: 180px; flex-shrink: 0; }
+        }
         @media (max-width: 1024px) {
             .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
             .top-bar::-webkit-scrollbar { display: none; }
