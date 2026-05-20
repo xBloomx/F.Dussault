@@ -113,14 +113,14 @@ export async function render(container) {
         @media (min-width: 769px) and (max-width: 1200px) {
             .clients-main { padding: 20px; }
             .form-row { flex-direction: column; gap: 0; }
-            .client-item { flex-direction: column; align-items: stretch; gap: 10px; position: relative; }
-            .cli-info { gap: 12px; }
+            .client-item { flex-direction: column; align-items: stretch; gap: 8px; position: relative; }
+            .cli-info { flex-direction: column; gap: 6px; }
             .cli-status { width: auto; flex-shrink: 0; }
             .cli-name-container { flex-wrap: nowrap; }
-            .cli-contact { width: auto; align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 6px 20px; padding-right: 50px; }
+            .cli-contact { width: auto; align-items: flex-start; flex-direction: column; gap: 4px; padding-right: 50px; }
             .cli-contact-item { justify-content: flex-start; text-align: left; }
             .cli-contact-item.address { margin-top: 0; }
-            .cli-actions { position: absolute; right: 20px; bottom: 15px; margin-left: 0; }
+            .cli-actions { position: absolute; right: 20px; top: 15px; margin-left: 0; }
         }
         @media (max-width: 768px) {
             .clients-main { padding: 15px; }
