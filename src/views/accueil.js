@@ -76,13 +76,13 @@ export async function render(container) {
         .btn-news-icon.pin-active { color: var(--accent); border-color: var(--accent); background: rgba(252,202,70,0.1); }
 
         /* Quick actions */
-        .quick-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
-        .quick-action-card { background-color: var(--bg-panel); border: 1px solid #333; border-radius: 15px; padding: 25px 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; cursor: pointer; transition: all 0.2s ease; }
+        .quick-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 30px; }
+        .quick-action-card { background-color: var(--bg-panel); border: 1px solid #333; border-radius: 18px; padding: 35px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; cursor: pointer; transition: all 0.2s ease; }
         .quick-action-card:hover { transform: translateY(-5px); background-color: #343542; border-color: var(--accent); }
-        .icon-bubble { background-color: #1e1f26; width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; color: #aaa; border: 1px solid #444; transition: 0.2s; }
-        .icon-bubble svg { width: 32px; height: 32px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+        .icon-bubble { background-color: #1e1f26; width: 72px; height: 72px; border-radius: 18px; display: flex; align-items: center; justify-content: center; color: #aaa; border: 1px solid #444; transition: 0.2s; }
+        .icon-bubble svg { width: 38px; height: 38px; stroke: currentColor; fill: none; stroke-width: 1.5; }
         .quick-action-card:hover .icon-bubble { border-color: var(--accent); background-color: rgba(252,202,70,0.1); color: var(--accent); }
-        .quick-action-text { font-size: 15px; font-weight: bold; color: white; text-align: center; }
+        .quick-action-text { font-size: 16px; font-weight: bold; color: white; text-align: center; }
 
         /* Bilan */
         .alerts-wrapper { background-color: var(--bg-panel); border-radius: 15px; border: 1px solid #333; padding: 25px; margin-bottom: 30px; }
@@ -135,7 +135,7 @@ export async function render(container) {
             .header-actions { width: 100%; flex-direction: column; align-items: stretch; gap: 10px; }
             .action-btn { width: 100%; justify-content: center; }
             .date-text { width: 100%; text-align: center; }
-            .quick-action-card { min-height: 130px; padding: 25px 15px; }
+            .quick-action-card { min-height: 150px; padding: 30px 15px; }
         }
     </style>
 
