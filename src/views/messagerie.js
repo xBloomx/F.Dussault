@@ -28,6 +28,7 @@ let currentChatIdToDelete = null
 let isCustomizing = false
 let selectedCustomizeIndex = 0
 let realtimeChannel = null
+let _previewBlobUrls = []
 let _longPressTimer = null
 let _longPressStartXY = null
 let _editingMsgId = null
@@ -416,6 +417,8 @@ async function init(container) {
 }
 
 function cleanup() {
+    _previewBlobUrls.forEach(u => URL.revokeObjectURL(u))
+    _previewBlobUrls = []
     if (realtimeChannel) {
         supabase.removeChannel(realtimeChannel)
         realtimeChannel = null
@@ -839,6 +842,8 @@ function handleFileSelect(e, container) {
 function renderPreviews(container) {
     const preview = container.querySelector('#attachmentPreview')
     const attachBtn = container.querySelector('#attachBtn')
+    _previewBlobUrls.forEach(u => URL.revokeObjectURL(u))
+    _previewBlobUrls = []
     preview.innerHTML = ''
     if (selectedFiles.length > 0) {
         attachBtn.classList.add('active')
@@ -847,7 +852,9 @@ function renderPreviews(container) {
             if (file.type.startsWith('image/')) {
                 div.className = 'preview-item'
                 const img = document.createElement('img')
-                img.src = URL.createObjectURL(file)
+                const blobUrl = URL.createObjectURL(file)
+                _previewBlobUrls.push(blobUrl)
+                img.src = blobUrl
                 div.appendChild(img)
             } else {
                 div.className = 'preview-item-file'

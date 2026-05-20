@@ -289,8 +289,12 @@ export function attachAll(container) {
     container.querySelectorAll('.display-sig').forEach(attach)
 }
 
+const _observedContainers = new WeakSet()
+
 export function watchContainer(container) {
     if (!container || !window.MutationObserver) return
+    if (_observedContainers.has(container)) return
+    _observedContainers.add(container)
     const obs = new MutationObserver(mutations => {
         for (const m of mutations) {
             if (m.type === 'attributes' && m.attributeName === 'src' && m.target.classList.contains('display-sig')) {
