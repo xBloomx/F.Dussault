@@ -122,7 +122,9 @@ export async function render(container) {
         .form-group textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
         .checkbox-group { display: flex; align-items: center; gap: 12px; background: #1a1b23; padding: 15px; border-radius: 8px; border: 1px dashed #555; cursor: pointer; transition: 0.2s; }
         .checkbox-group:hover { border-color: var(--accent); }
-        .checkbox-group input { width: 26px; height: 26px; cursor: pointer; flex-shrink: 0; accent-color: var(--accent); }
+        .checkbox-group input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; flex-shrink: 0; appearance: none; -webkit-appearance: none; border: 2px solid white; border-radius: 4px; background: transparent; position: relative; transition: 0.2s; }
+        .checkbox-group input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+        .checkbox-group input[type="checkbox"]:checked::after { content: ''; position: absolute; left: 5px; top: 1px; width: 8px; height: 12px; border: 2.5px solid white; border-top: none; border-left: none; transform: rotate(45deg); }
         .checkbox-group label { margin: 0; color: white; cursor: pointer; font-size: 15px; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; }
         .btn-modal-cancel { background: #444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; }
