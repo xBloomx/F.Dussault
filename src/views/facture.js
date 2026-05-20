@@ -93,8 +93,11 @@ export async function render(container) {
             #view-dashboard { padding: 20px; }
             .toolbar { flex-direction: row; align-items: center; }
             .select-wrap { min-width: 180px; flex-shrink: 0; }
-            .invoice-item { grid-template-columns: 75px 1fr 90px 70px 36px; gap: 8px; }
-            .inv-author { display: none; }
+            .invoice-item { grid-template-columns: 60px 1fr 50px 78px 62px 30px; gap: 5px; }
+            .inv-id { font-size: 13px; }
+            .inv-client { font-size: 14px; }
+            .inv-author { font-size: 12px; }
+            .inv-date { font-size: 12px; }
         }
         @media (max-width: 1024px) {
             .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
