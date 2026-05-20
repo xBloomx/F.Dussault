@@ -52,8 +52,8 @@ export async function render(container) {
         .cli-status.prospect { color: #6c757d; }
         .cli-name { font-weight: bold; font-size: 18px; color: white; flex: 1; }
         .cli-name-container { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .cli-chip-sub { font-size: 13px; color: white; background: #3a3b46; padding: 4px 12px; border-radius: 6px; font-weight: bold; border: 1px solid #555; }
-        .cli-chip-contact { font-size: 12px; color: var(--accent); background: rgba(252,202,70,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(252,202,70,0.3); }
+        .cli-chip-sub { font-size: 13px; color: white; background: #3a3b46; padding: 4px 12px; border-radius: 6px; font-weight: bold; border: 1px solid #555; white-space: nowrap; }
+        .cli-chip-contact { font-size: 12px; color: var(--accent); background: rgba(252,202,70,0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(252,202,70,0.3); white-space: nowrap; }
         .cli-alert-badge { background: var(--btn-red); color: white; font-size: 10px; padding: 4px 8px; border-radius: 6px; font-weight: bold; white-space: nowrap; border: 1px solid #ff7b7b; display: flex; align-items: center; gap: 4px; }
         .cli-alert-badge svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
         .cli-contact { color: #aaa; font-size: 14px; width: 250px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
@@ -110,7 +110,7 @@ export async function render(container) {
         .ci-role { font-size: 12px; color: var(--accent); font-style: italic; background: rgba(252,202,70,0.1); padding: 1px 6px; border-radius: 4px; display: inline-block; }
         .corbeille-item { background: #1a1b23; border: 1px dashed var(--btn-red); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
-        @media (min-width: 769px) and (max-width: 1024px) {
+        @media (min-width: 769px) and (max-width: 1200px) {
             .clients-main { padding: 20px; }
             .client-item { flex-direction: column; align-items: stretch; gap: 10px; position: relative; }
             .cli-info { gap: 12px; }
