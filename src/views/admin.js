@@ -52,7 +52,7 @@ export async function render(container) {
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
         .search-box input:focus { border-color: var(--accent) !important; }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
-        .admin-main { flex: 1; display: flex; flex-direction: column; padding: 30px; max-width: 1200px; margin: 0 auto; width: 100%; overflow-y: auto; min-height: 100%; }
+        .admin-main { flex: 1; display: flex; flex-direction: column; padding: 30px; max-width: 1200px; margin: 0 auto; width: 100%; overflow-y: auto; min-height: 100%; overscroll-behavior-y: contain; }
         .dash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
@@ -105,7 +105,7 @@ export async function render(container) {
         .admin-section.active { display: flex; }
         .perm-form-group { margin-bottom: 15px; }
         .perm-form-group label { display: block; color: var(--text-main); font-size: 14px; font-weight: bold; margin-bottom: 8px; }
-        @media (max-width: 768px) { .admin-main { padding: 15px; } .dash-title { padding-right: 80px; } .tabs-container { margin-right: 80px; } .settings-grid { grid-template-columns: 1fr; } .admin-danger-row { flex-direction: column; } .admin-danger-row .settings-card { min-width: 0 !important; flex: none !important; width: 100%; } }
+        @media (max-width: 768px) { .admin-main { padding: 30px 15px 15px 15px; } .dash-title { padding-right: 80px; } .tabs-container { margin-right: 80px; } .settings-grid { grid-template-columns: 1fr; } .admin-danger-row { flex-direction: column; } .admin-danger-row .settings-card { min-width: 0 !important; flex: none !important; width: 100%; } }
     </style>
 
     <div class="admin-main">
