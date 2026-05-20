@@ -666,7 +666,7 @@ async function createNewCustomRole() {
 // ── Employés ────────────────────────────────────────────────────────────────
 async function chargerListeEmployes() {
     const list = document.getElementById('employeeList')
-    const { data: profils, error } = await supabase.from('profils').select('*').order('role')
+    const { data: profils, error } = await supabase.from('profils').select('id,prenom_nom,role').order('role')
     if (error) { list.innerHTML = `<div style="color:var(--btn-red)">Erreur BD</div>`; return }
 
     if (currentRole !== 'A0' && profils?.length === 1) {
@@ -851,7 +851,7 @@ async function initSupportUI() {
     const container = document.getElementById('supportTicketsList')
     if (!container) return
     container.innerHTML = '<div style="color:#888;font-style:italic;text-align:center;padding:20px">Chargement...</div>'
-    const { data: tickets } = await supabase.from('tickets_support').select('*').eq('statut', 'ouvert').order('created_at', { ascending: false })
+    const { data: tickets } = await supabase.from('tickets_support').select('id,created_at,author_nom,message,statut').eq('statut', 'ouvert').order('created_at', { ascending: false })
     container.innerHTML = ''
     if (!tickets?.length) { container.innerHTML = '<div style="color:#888;font-style:italic;text-align:center;padding:20px">Aucun ticket.</div>'; return }
     tickets.forEach(t => {
@@ -1070,7 +1070,7 @@ async function loadCounters() {
 // ── Logs ─────────────────────────────────────────────────────────────────────
 async function loadTechnicalLogs() {
     const tbody = document.getElementById('logsTableBody')
-    const { data, error } = await supabase.from('logs_systeme').select('*').order('created_at', { ascending: false }).limit(500)
+    const { data, error } = await supabase.from('logs_systeme').select('id,created_at,action,type_erreur,utilisateur_nom,user_id,table_name,doc_id,message').order('created_at', { ascending: false }).limit(500)
     if (error) { if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#ff4d4d">Erreur de chargement</td></tr>'; return }
 
     const actionColors = { creation: 'var(--btn-green)', modification: 'var(--btn-blue)', suppression: 'var(--btn-red)', archivage: 'var(--btn-orange)', restauration: 'var(--accent)', role_change: '#9b59b6', connexion: '#888', maintenance: '#9b59b6' }

@@ -3,6 +3,8 @@
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
+import { sanitize } from '../shared/sanitize.js'
+import { friendlyError } from '../shared/errorMsg.js'
 import { createAutosave } from '../shared/autosave.js'
 import { canArchive, canSeeAllArchives, canRestore, confirmAndArchive, confirmAndRestore } from '../shared/archive.js'
 import { openPdfPreview } from '../shared/pdfExport.js'
@@ -406,9 +408,9 @@ function renderTimesheetList(list, container) {
         const div = document.createElement('div')
         div.className = 'invoice-item'
         div.innerHTML = `
-            <div class="inv-id">${sheet.periode || 'Période inconnue'}</div>
-            <div class="inv-client"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${sheet.employe || sheet.authorName || 'Employé'}</div>
-            <div class="inv-hours">${sheet.total_heures} h</div>
+            <div class="inv-id">${sanitize(sheet.periode || 'Période inconnue')}</div>
+            <div class="inv-client"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${sanitize(sheet.employe || sheet.authorName || 'Employé')}</div>
+            <div class="inv-hours">${sanitize(String(sheet.total_heures ?? ''))} h</div>
             <div class="inv-status">${badgeHTML}</div>
             <div class="inv-actions">${actionsHTML}</div>
         `
@@ -620,7 +622,7 @@ async function saveCurrentTimesheet(isSending, wrapper, viewDash, viewEditor, co
             return
         }
         const msg = (error.message || '').toLowerCase()
-        showAlertModal(msg.includes('lock broken') ? '❌ Réessayez dans 2 secondes.' : '❌ Erreur : ' + error.message, container)
+        showAlertModal(msg.includes('lock broken') ? '❌ Réessayez dans 2 secondes.' : friendlyError(error), container)
         return
     }
 
@@ -642,7 +644,7 @@ async function approuverFeuille(viewDash, viewEditor, container) {
     if (!currentSheetId) return
     showConfirmModal('Approuver cette feuille de temps ?', async () => {
         const { error } = await supabase.from('feuilles_de_temps').update({ status: 'approuve', return_note: null }).eq('id', currentSheetId)
-        if (error) { showAlertModal('❌ Erreur : ' + error.message, container); return }
+        if (error) { showAlertModal(friendlyError(error), container); return }
         await loadData(true, container)
         showDashboard(viewDash, viewEditor, container)
         showAlertModal('Feuille de temps approuvée !', container)
@@ -654,7 +656,7 @@ async function confirmerRefus(viewDash, viewEditor, container) {
     if (!note) { if (container.querySelector('#refusNote')) container.querySelector('#refusNote').style.borderColor = 'var(--btn-red)'; return }
     if (!currentSheetId) return
     const { error } = await supabase.from('feuilles_de_temps').update({ status: 'renvoye', return_note: note }).eq('id', currentSheetId)
-    if (error) { showAlertModal('❌ Erreur : ' + error.message, container); return }
+    if (error) { showAlertModal(friendlyError(error), container); return }
     container.querySelector('#refusModal').classList.remove('open')
     await loadData(true, container)
     showDashboard(viewDash, viewEditor, container)
@@ -818,7 +820,7 @@ function clearAutosaveCurrent() {
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 function showConfirmModal(msg, callback, container, title = 'Confirmation') {
     container.querySelector('#confirmTitle').textContent = title
-    container.querySelector('#confirmMsg').innerHTML = msg
+    container.querySelector('#confirmMsg').textContent = msg
     confirmCallback = callback
     container.querySelector('#confirmModal').classList.add('open')
 }
@@ -829,6 +831,6 @@ function closeConfirmModal(container) {
 }
 
 function showAlertModal(msg, container) {
-    container.querySelector('#alertMsg').innerHTML = msg
+    container.querySelector('#alertMsg').textContent = msg
     container.querySelector('#alertModal').classList.add('open')
 }

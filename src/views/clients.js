@@ -389,7 +389,7 @@ async function loadClients(reset = true) {
 
     const { data, error } = await supabase
         .from('clients')
-        .select('*')
+        .select('id,nom,type,adresse,contacts')
         .order('nom', { ascending: true })
         .range(from, to + 1)
 

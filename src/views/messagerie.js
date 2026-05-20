@@ -5,6 +5,7 @@
 import { supabase } from '../supabase.js'
 import { currentUser, currentProfil } from '../auth.js'
 import { sanitize } from '../shared/sanitize.js'
+import { friendlyError } from '../shared/errorMsg.js'
 
 function sanitizeUrl(url) {
     if (!url || typeof url !== 'string') return '#'
@@ -446,7 +447,7 @@ async function chargerMessagesSupabase(container) {
         .select('id, created_at, contenu, expediteur_id, chat_id, edited_at, deleted_at, profils(prenom_nom)')
         .order('created_at', { ascending: true })
 
-    if (error) { showAlert('❌ Erreur de chargement : ' + error.message, container); return }
+    if (error) { showAlert(friendlyError(error), container); return }
 
     Object.values(conversationsData).forEach(c => c.messages = [])
 
@@ -622,7 +623,7 @@ async function sendMessage(container) {
             messageInput.value = ''
             renderMessages(activeChat.messages, true, container)
             const { error } = await supabase.from('message').insert([{ contenu: text, expediteur_id: myUserId, chat_id: currentChatId }])
-            if (error) showAlert('❌ Le message n\'a pas pu être envoyé : ' + error.message, container)
+            if (error) showAlert(friendlyError(error), container)
         }
         renderContactList(container)
     } finally {

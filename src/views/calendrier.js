@@ -5,6 +5,7 @@ import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
 import { withRetry } from '../shared/withRetry.js'
 import { sanitize } from '../shared/sanitize.js'
+import { friendlyError } from '../shared/errorMsg.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let myUserName = ''
@@ -375,7 +376,7 @@ async function fetchTeamMembers() {
 }
 
 async function loadData() {
-    const { data } = await supabase.from('evenements').select('*')
+    const { data } = await supabase.from('evenements').select('id,type_entite,calendar_id,calendar_name,title,start_date,end_date,cat_id,note,author_id,author_name,shared_with')
     if (data) {
         allData = data
         calDefs = data.filter(d => d.type_entite === 'calendar_def')
@@ -622,7 +623,7 @@ function openDayDetails(dateStr) {
             div.style.borderLeft = `4px solid ${cat.color}`
             let subtitle = cat.name
             if (evt.isUrg && evt.author_name) subtitle += ` - Assuré par ${evt.author_name}`
-            div.innerHTML = `<div style="font-weight:bold;color:white;font-size:15px">${evt.t || evt.title}</div><div style="font-size:12px;color:#aaa">${subtitle}</div>`
+            div.innerHTML = `<div style="font-weight:bold;color:white;font-size:15px">${sanitize(evt.t || evt.title || '')}</div><div style="font-size:12px;color:#aaa">${sanitize(subtitle)}</div>`
             div.addEventListener('click', () => { closeModal('dayModal'); openViewEvent(evt.id, evt.isSys) })
             content.appendChild(div)
         })
@@ -640,7 +641,7 @@ function openNewCalendarModal() {
         if (tm.id === currentUser.id) return
         const label = document.createElement('label')
         label.className = 'guest-item'
-        label.innerHTML = `<input type="checkbox" class="cal-cb" value="${tm.id}" data-name="${tm.prenom_nom}"> ${tm.prenom_nom}`
+        label.innerHTML = `<input type="checkbox" class="cal-cb" value="${sanitize(tm.id)}" data-name="${sanitize(tm.prenom_nom)}"> ${sanitize(tm.prenom_nom)}`
         gList.appendChild(label)
     })
     document.getElementById('newCalModal').classList.add('open')
@@ -653,7 +654,7 @@ async function saveNewCalendar() {
     document.querySelectorAll('.cal-cb:checked').forEach(cb => { sharedWith.push({ id: cb.value, name: cb.getAttribute('data-name') }) })
     const payload = { id: 'cal-' + Date.now(), type_entite: 'calendar_def', calendar_name: name, author_id: currentUser.id, author_name: myUserName, shared_with: sharedWith }
     const { error } = await withRetry(() => supabase.from('evenements').upsert(payload))
-    if (error) { openAlert('❌ Erreur de sauvegarde : ' + error.message); return }
+    if (error) { openAlert(friendlyError(error)); return }
     closeModal('newCalModal')
     await loadData()
 }
@@ -707,7 +708,7 @@ function openAddModal(dateStart = '', isUrgence = false, evtToEdit = null) {
         calDefs.forEach(c => {
             const sIds = c.shared_with ? c.shared_with.map(s => s.id) : []
             if (c.author_id === currentUser.id || sIds.includes(currentUser.id)) {
-                selCal.innerHTML += `<option value="${c.id}">${c.calendar_name}</option>`
+                selCal.innerHTML += `<option value="${sanitize(c.id)}">${sanitize(c.calendar_name)}</option>`
             }
         })
         if (evtToEdit) selCal.value = evtToEdit.calendar_id
@@ -720,7 +721,7 @@ function openAddModal(dateStart = '', isUrgence = false, evtToEdit = null) {
             const checked = evtToEdit?.shared_with?.find(s => s.id === tm.id) ? 'checked' : ''
             const label = document.createElement('label')
             label.className = 'guest-item'
-            label.innerHTML = `<input type="checkbox" class="evt-guest-cb" value="${tm.id}" data-name="${tm.prenom_nom}" ${checked}> ${tm.prenom_nom}`
+            label.innerHTML = `<input type="checkbox" class="evt-guest-cb" value="${sanitize(tm.id)}" data-name="${sanitize(tm.prenom_nom)}" ${checked}> ${sanitize(tm.prenom_nom)}`
             gList.appendChild(label)
         })
     }
@@ -767,7 +768,7 @@ async function saveEvent() {
         if (msg.includes('lock broken') || error.name === 'AbortError') userMsg = '❌ Une autre opération est en cours. Attends 2 secondes et réessaie.'
         else if (msg.includes('failed to fetch') || msg.includes('network')) userMsg = "❌ Pas de connexion internet."
         else if (msg.includes('row-level security') || error.code === '42501') userMsg = "❌ Tu n'as pas la permission de créer cet événement."
-        else userMsg = '❌ Erreur de sauvegarde : ' + error.message
+        else userMsg = friendlyError(error)
         openAlert(userMsg); return
     }
 
@@ -825,7 +826,7 @@ function deleteCurrentEvent() {
     if (!currentViewId || isSystemEvent) return
     showConfirm('Supprimer cet événement ?', async () => {
         const { error } = await withRetry(() => supabase.from('evenements').delete().eq('id', currentViewId))
-        if (error) { openAlert('❌ Erreur de suppression : ' + error.message); return }
+        if (error) { openAlert(friendlyError(error)); return }
         closeModal('viewModal')
         await loadData()
     })

@@ -4,6 +4,8 @@
 import { supabase } from '../supabase.js'
 import { currentUser, currentProfil, logout } from '../auth.js'
 import { showToast } from '../shared/toast.js'
+import { sanitize } from '../shared/sanitize.js'
+import { friendlyError } from '../shared/errorMsg.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let formations = []
@@ -439,7 +441,7 @@ async function initProfileData() {
 
         const { data: formData } = await supabase
             .from('formations')
-            .select('*')
+            .select('id,nom,date_expiration,image_base64')
             .eq('user_id', currentUser.id)
             .order('date_expiration', { ascending: true })
 
@@ -489,7 +491,7 @@ async function updateMyPassword() {
     if (signInError) return showAlert("L'ancien mot de passe est incorrect.")
 
     const { error } = await supabase.auth.updateUser({ password: newPwd })
-    if (error) { showAlert('Erreur : ' + error.message); return }
+    if (error) { showAlert(friendlyError(error)); return }
 
     document.getElementById('oldPassword').value = ''
     document.getElementById('newPassword').value = ''
@@ -529,9 +531,9 @@ function renderFormations() {
         item.innerHTML = `
             ${imgHTML}
             <div class="form-info">
-                <div class="form-name">${f.name}</div>
-                <div class="form-date">Exp: ${dateFR}</div>
-                <div class="form-status ${statusClass}">${statusText}</div>
+                <div class="form-name">${sanitize(f.name || '')}</div>
+                <div class="form-date">Exp: ${sanitize(dateFR)}</div>
+                <div class="form-status ${statusClass}">${sanitize(statusText)}</div>
             </div>
             <button class="btn-del-small" data-del-id="${f.id}">
                 <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -593,7 +595,7 @@ async function saveFormation() {
         image_base64: currentFormationImageBase64
     }]).select().single()
 
-    if (error) { showAlert('❌ Erreur : ' + error.message); return }
+    if (error) { showAlert(friendlyError(error)); return }
     formations.push({ id: data.id, name: data.nom, dateExp: data.date_expiration, image: data.image_base64 })
     renderFormations()
     closeModal('formationModal')
@@ -603,7 +605,7 @@ async function saveFormation() {
 
 async function deleteFormation(id) {
     const { error } = await supabase.from('formations').delete().eq('id', id)
-    if (error) { showAlert('❌ Erreur suppression : ' + error.message); return }
+    if (error) { showAlert(friendlyError(error)); return }
     formations = formations.filter(f => f.id !== id)
     renderFormations()
     // Propager aux autres modules (Accueil → alertes certifications, Calendrier → événements)
@@ -630,7 +632,7 @@ async function envoyerTicket() {
         statut: 'ouvert'
     }])
 
-    if (error) { showAlert('❌ Erreur d\'envoi : ' + error.message); return }
+    if (error) { showAlert(friendlyError(error)); return }
     document.getElementById('ticketMessage').value = ''
     closeModal('ticketModal')
     showAlert('✅ Message envoyé au bureau avec succès !')

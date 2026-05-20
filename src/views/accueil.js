@@ -5,6 +5,7 @@ import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
 import { showToast } from '../shared/toast.js'
 import { sanitize } from '../shared/sanitize.js'
+import { friendlyError } from '../shared/errorMsg.js'
 
 // ── Navigation locale (compatible index.html MODULE_MAP) ────────────────────
 // Traduit les anciennes clés router.js en data-view du MODULE_MAP réel
@@ -387,7 +388,7 @@ async function loadNews() {
     try {
         const { data, error } = await supabase
             .from('annonces')
-            .select('*')
+            .select('id,type,titre,contenu,auteur,created_at,is_pinned')
             .order('is_pinned', { ascending: false })
             .order('created_at', { ascending: false })
         if (error) throw error
@@ -514,7 +515,7 @@ async function saveNews() {
             type, titre: title, contenu: body, auteur: authorName, is_pinned: isPinned
         }])
 
-        if (error) { showToast('Erreur de publication : ' + error.message, 'error'); return }
+        if (error) { showToast(friendlyError(error), 'error'); return }
         await loadNews()
         closeNewsModal()
     } finally {
@@ -525,7 +526,7 @@ async function saveNews() {
 function deleteNews(id) {
     showConfirm('Voulez-vous vraiment supprimer cette annonce pour tout le monde ?', async () => {
         const { error } = await supabase.from('annonces').delete().eq('id', id)
-        if (error) { showToast('Erreur suppression : ' + error.message, 'error'); return }
+        if (error) { showToast(friendlyError(error), 'error'); return }
         newsData = newsData.filter(n => n.id !== id)
         renderNews()
     })
@@ -566,7 +567,7 @@ async function checkCertifications() {
     container.innerHTML = ''
     let hasAlerts = false
 
-    const { data } = await supabase.from('formations').select('*').eq('user_id', currentUser.id)
+    const { data } = await supabase.from('formations').select('nom,date_expiration').eq('user_id', currentUser.id)
     const formations = data || []
     const today = new Date()
 

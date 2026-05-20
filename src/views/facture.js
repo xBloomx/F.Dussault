@@ -869,7 +869,7 @@ async function saveCurrentInvoice(isSending, invoiceContainer, viewDash, viewEdi
             showAlertModal('Hors ligne — la facture sera synchronisée automatiquement à la reconnexion.', container)
             return
         }
-        showAlertModal('❌ Erreur : ' + error.message, container)
+        showAlertModal(friendlyError(error), container)
         return
     }
 
@@ -1321,7 +1321,7 @@ function setupDescTextareaJump(invoiceContainer) {
 }
 
 function showConfirmModal(msg, callback, container, title = 'Confirmation') {
-    container.querySelector('#confirmMsg').innerHTML = msg
+    container.querySelector('#confirmMsg').textContent = msg
     confirmCallback = callback
     container.querySelector('#confirmModal').classList.add('open')
 }
@@ -1332,7 +1332,7 @@ function closeConfirmModal(container) {
 }
 
 function showAlertModal(msg, container) {
-    container.querySelector('#alertMsg').innerHTML = msg
+    container.querySelector('#alertMsg').textContent = msg
     container.querySelector('#alertModal').classList.add('open')
 }
 

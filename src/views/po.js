@@ -3,6 +3,8 @@
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
+import { sanitize } from '../shared/sanitize.js'
+import { friendlyError } from '../shared/errorMsg.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let myUserName = 'Employé'
@@ -270,11 +272,11 @@ async function loadData(reset = true) {
 
     const { data, error } = await supabase
         .from('bons_de_commande')
-        .select('*')
+        .select('id,created_at,numero,author_id,author_nom,fournisseur,description,date_po,items')
         .order('created_at', { ascending: false })
         .range(from, to + 1)
 
-    if (error) { console.error('Erreur chargement PO:', error); showAlert('Erreur de chargement : ' + error.message); return }
+    if (error) { console.error('Erreur chargement PO:', error); showAlert(friendlyError(error)); return }
 
     poHasMore = (data || []).length > PO_PAGE_SIZE
     const pageData = (data || []).slice(0, PO_PAGE_SIZE)
@@ -332,7 +334,7 @@ async function generatePO() {
             items: { hasPhoto }
         }]).select().single()
 
-        if (error) { showAlert('Erreur lors de la sauvegarde : ' + error.message); return }
+        if (error) { showAlert(friendlyError(error)); return }
 
         poLog.unshift(data)
         filterPO()
@@ -388,7 +390,7 @@ function renderPOList(list) {
         card.innerHTML = `
             <div class="po-info">
                 <div class="po-number">
-                    ${po.numero}
+                    ${sanitize(po.numero || '')}
                     <span class="status-badge">
                         <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                         Enregistré
@@ -397,22 +399,22 @@ function renderPOList(list) {
                 <div class="po-details">
                     <span>
                         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <strong>${po.author_nom || '-'}</strong>
+                        <strong>${sanitize(po.author_nom || '-')}</strong>
                     </span>
                     <span>
                         <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01"/></svg>
-                        ${po.fournisseur || '-'}
+                        ${sanitize(po.fournisseur || '-')}
                     </span>
                     ${photoBadge}
                 </div>
                 <div class="po-subtext">
                     <span style="display:flex;align-items:center;gap:4px">
                         <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        ${po.description || '-'}
+                        ${sanitize(po.description || '-')}
                     </span>
                     <span style="display:flex;align-items:center;gap:4px;margin-left:10px">
                         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        ${formatDateFR(po.date_po)}
+                        ${sanitize(formatDateFR(po.date_po))}
                     </span>
                 </div>
             </div>
@@ -554,7 +556,7 @@ function askDeletePO(id) {
     document.getElementById('confirmMsg').textContent = 'Effacer définitivement ce PO ?'
     confirmCallback = async () => {
         const { error } = await supabase.from('bons_de_commande').delete().eq('id', itemToProcessId)
-        if (error) { showAlert('Erreur : ' + error.message); return }
+        if (error) { showAlert(friendlyError(error)); return }
         poLog = poLog.filter(po => po.id !== itemToProcessId)
         filterPO()
     }

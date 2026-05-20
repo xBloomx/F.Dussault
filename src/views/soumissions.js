@@ -11,6 +11,7 @@ import { attachAll, watchContainer, refreshIndicators } from '../shared/signatur
 import { withRetry } from '../shared/withRetry.js'
 import { enqueueOfflineSave } from '../shared/offlineQueue.js'
 import { createZoomController } from '../shared/zoom.js'
+import { friendlyError } from '../shared/errorMsg.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let myUserName = 'Employé'
@@ -671,7 +672,7 @@ async function saveCurrentQuote(isSending, quoteContainer, container) {
             return false
         }
         const msg = (error.message || '').toLowerCase()
-        showAlertModal(msg.includes('lock broken') ? '❌ Réessayez dans 2 secondes.' : '❌ Erreur : ' + error.message, container)
+        showAlertModal(msg.includes('lock broken') ? '❌ Réessayez dans 2 secondes.' : friendlyError(error), container)
         return false
     }
 
@@ -712,7 +713,7 @@ async function convertToInvoice(quoteContainer, container) {
             showAlertModal(`Succès ! La facture #${nextInvNum} a été générée.`, container)
             showDashboard(container.querySelector('#view-dashboard'), container.querySelector('#view-editor'), container)
         } else {
-            showAlertModal('❌ Erreur : ' + error.message, container)
+            showAlertModal(friendlyError(error), container)
         }
     }, container, 'Convertir en Facture', true)
 }
@@ -875,7 +876,7 @@ function showConfirm(msg, callback, container, title = 'Confirmation', isConvert
     const msgEl = container.querySelector('#confirmMsg')
     const yesBtn = container.querySelector('#btnConfirmYes')
     if (titleEl) titleEl.textContent = title
-    if (msgEl) msgEl.innerHTML = msg
+    if (msgEl) msgEl.textContent = msg
     if (yesBtn) {
         yesBtn.style.background = isConvert ? 'var(--btn-blue)' : 'var(--btn-red)'
         yesBtn.textContent = isConvert ? 'Convertir' : 'Oui'
@@ -892,6 +893,6 @@ function closeConfirmModal(container) {
 function showAlertModal(msg, container) {
     const modal = container.querySelector('#alertModal')
     const msgEl = container.querySelector('#alertMsg')
-    if (msgEl) msgEl.innerHTML = msg
+    if (msgEl) msgEl.textContent = msg
     modal?.classList.add('open')
 }

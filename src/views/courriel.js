@@ -281,7 +281,7 @@ function cleanup() {
 async function chargerCourriels() {
     const { data, error } = await supabase
         .from('courriels')
-        .select('*')
+        .select('id,folder,expediteur,from_address,sujet,subject,contenu,body_text,created_at,est_lu,from_name,thread_id,provider_message_id,provider')
         .or(`destinataire.eq.${myUserEmail},expediteur.eq.${myUserEmail}`)
         .order('created_at', { ascending: false })
 
