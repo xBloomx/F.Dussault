@@ -38,7 +38,7 @@ let confirmCallback = null
 export async function render(container) {
     container.innerHTML = `
     <style>
-        .main-content {
+        .accueil-main {
             flex: 1; display: flex; flex-direction: column;
             background-color: var(--bg-dark); padding: 30px;
             width: 100%; gap: 20px;
@@ -134,7 +134,7 @@ export async function render(container) {
 
         @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
         @media (max-width: 768px) {
-            .main-content { padding: 15px; }
+            .accueil-main { padding: 15px; }
             .dash-header { flex-direction: column; gap: 15px; align-items: flex-start; }
             .dash-title { padding-right: 80px; }
             .header-actions { width: 100%; flex-direction: column; align-items: stretch; gap: 10px; }
@@ -169,7 +169,7 @@ export async function render(container) {
         <symbol id="ic-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
     </svg>
 
-    <div class="main-content">
+    <div class="accueil-main">
 
         <div class="dash-header">
             <div class="dash-title-area">
