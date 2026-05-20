@@ -125,7 +125,10 @@ export async function render(container) {
             .cli-contact { width: 100%; align-items: flex-start; }
             .cli-contact-item { justify-content: flex-start; text-align: left; }
             .cli-actions { align-self: flex-end; margin-left: 0; margin-top: -35px; }
-            .modal-card { width: 95% !important; padding: 20px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
+            .modal-overlay { align-items: flex-end; }
+            .modal-card { width: 100% !important; max-height: 95vh !important; border-radius: 24px 24px 0 0 !important; padding: 25px 20px 40px !important; box-shadow: 0 -8px 30px rgba(0,0,0,0.5) !important; }
+            .modal-overlay.z-high { align-items: center; }
+            .modal-card.small-card { width: 90% !important; max-height: none !important; border-radius: 15px !important; padding: 25px !important; }
             .form-row { flex-direction: column; gap: 0; }
         }
     </style>
