@@ -116,10 +116,13 @@ export async function render(container) {
         .form-group label { display: block; color: #aaa; margin-bottom: 8px; font-size: 14px; font-weight: bold; }
         .form-group input[type="text"], .form-group textarea, .form-group select { width: 100%; padding: 12px 15px; background: #1a1b23; border: 1px solid #444; color: white; border-radius: 8px; font-size: 15px; outline: none; font-family: inherit; transition: 0.2s; }
         .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); }
+        .select-wrap { position: relative; display: block; }
+        .select-wrap select { -webkit-appearance: none; appearance: none; padding-right: 42px; cursor: pointer; }
+        .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .form-group textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
-        .checkbox-group { display: flex; align-items: center; gap: 10px; background: #1a1b23; padding: 15px; border-radius: 8px; border: 1px dashed #555; cursor: pointer; transition: 0.2s; }
+        .checkbox-group { display: flex; align-items: center; gap: 12px; background: #1a1b23; padding: 15px; border-radius: 8px; border: 1px dashed #555; cursor: pointer; transition: 0.2s; }
         .checkbox-group:hover { border-color: var(--accent); }
-        .checkbox-group input { width: 20px; height: 20px; cursor: pointer; }
+        .checkbox-group input { width: 26px; height: 26px; cursor: pointer; flex-shrink: 0; accent-color: var(--accent); }
         .checkbox-group label { margin: 0; color: white; cursor: pointer; font-size: 15px; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px; }
         .btn-modal-cancel { background: #444; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; }
@@ -262,11 +265,14 @@ export async function render(container) {
             <h2 class="modal-title">Publier une annonce</h2>
             <div class="form-group">
                 <label>Niveau d'importance</label>
-                <select id="newsType">
-                    <option value="info">Information (Affichage standard)</option>
-                    <option value="important">Urgent (Affichage Rouge)</option>
-                    <option value="normal">Note de chantier (Affichage Bleu)</option>
-                </select>
+                <div class="select-wrap">
+                    <select id="newsType">
+                        <option value="info">Information (Affichage standard)</option>
+                        <option value="important">Urgent (Affichage Rouge)</option>
+                        <option value="normal">Note de chantier (Affichage Bleu)</option>
+                    </select>
+                    <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
             </div>
             <div class="form-group">
                 <label>Titre principal</label>
