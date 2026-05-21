@@ -82,9 +82,7 @@ export async function render(container) {
         .contact-inputs { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
         .contact-inputs input { flex: 1; min-width: 80px; background: #252633; border: 1px solid var(--border); color: white; padding: 10px 10px; border-radius: 8px; font-size: 14px; outline: none; }
         .contact-inputs input:focus { border-color: var(--accent); }
-        .contact-notes-input { width: 100%; margin-top: 6px; background: #252633; border: 1px solid #444; color: #ccc; padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none; font-family: inherit; resize: none; }
-        .contact-notes-input:focus { border-color: var(--accent); }
-        .btn-add-contact { background: #333; color: #ccc; width: 100%; padding: 12px; border: 1px dashed #555; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 5px; transition: 0.2s; }
+.btn-add-contact { background: #333; color: #ccc; width: 100%; padding: 12px; border: 1px dashed #555; border-radius: 8px; cursor: pointer; font-size: 14px; margin-top: 5px; transition: 0.2s; }
         .btn-add-contact:hover { background: #555; }
         .btn-remove-row { background: transparent; border: none; color: #ff4d4d; cursor: pointer; font-weight: bold; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .select-wrap { position: relative; display: block; }
@@ -464,9 +462,8 @@ async function saveClient() {
         const role = row.querySelector('.inp-role')?.value.trim() || ''
         const phone = row.querySelector('.inp-phone')?.value.trim() || ''
         const email = row.querySelector('.inp-email')?.value.trim() || ''
-        const contactNotes = row.querySelector('.contact-notes-input')?.value.trim() || ''
         if (phone.length > 0) hasPhone = true
-        if (name || phone || email) contactsList.push({ name, role, phone, email, notes: contactNotes })
+        if (name || phone || email) contactsList.push({ name, role, phone, email })
     })
 
     if (!hasPhone) { openAlertModal("Il faut ajouter au moins un numéro de téléphone valide."); return }
@@ -850,7 +847,6 @@ function addContactRow(data = { name: '', role: '', phone: '', email: '', notes:
             </div>
             <button class="btn-remove-row">×</button>
         </div>
-        <input type="text" class="contact-notes-input" placeholder="Notes sur ce contact (optionnel)..." value="${sanitize(data.notes || '')}">
     `
     div.querySelector('.btn-remove-row').addEventListener('click', () => div.remove())
     div.querySelector('.inp-phone').addEventListener('keyup', e => formatPhone(e.target))
