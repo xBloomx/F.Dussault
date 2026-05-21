@@ -88,12 +88,6 @@
                le contenu commence en dessous grâce au padding-top */
             padding-top: env(safe-area-inset-top, 0px);
         }
-        /* En mode PWA standalone : padding sur le container de vue, pas sur main-content
-           (évite la bande sombre du fond derrière le home indicator) */
-        @media (display-mode: standalone) {
-            #app-container > div { padding-bottom: env(safe-area-inset-bottom, 0px); }
-        }
-
         #app-loader {
             position: absolute; inset: 0;
             background: var(--bg-dark);
@@ -106,12 +100,19 @@
 
         #app-container {
             flex: 1; min-height: 0; overflow: hidden;
-            display: flex; flex-direction: column;
+            position: relative;
         }
-        /* Force les vues à remplir l'écran sur Safari iOS.
-           height:auto écrase le height:100% des modules (non résolu en flex = void) */
-        #app-container > div {
-            flex: 1; min-height: 0; height: auto;
+        /* position:absolute;inset:0 est la méthode la plus fiable sur Safari iOS
+           pour remplir un parent dont la hauteur vient du flex algorithm.
+           Cible seulement le 1er div (container de la vue) — les modales
+           ont position:fixed dans leur propre CSS qui prime de toute façon. */
+        #app-container > div:first-of-type {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            bottom: env(safe-area-inset-bottom, 0px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            height: auto;
         }
 
         /* ─── Toast : géré par src/shared/styles.css (.shared-toast) ─── */
