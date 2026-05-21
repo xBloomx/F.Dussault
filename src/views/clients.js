@@ -250,7 +250,7 @@ export async function render(container) {
                 <input type="text" id="edAlert" placeholder="S'affiche en rouge..." style="border-color:var(--btn-red)">
             </div>
             <div class="form-row">
-                <div class="form-group" style="flex:2">
+                <div class="form-group" id="grpCompany" style="flex:2">
                     <label>Nom de l'entreprise</label>
                     <input type="text" id="edCompany" placeholder="Ex: Bridgestone">
                 </div>
@@ -829,7 +829,10 @@ function openEditModal(id = null) {
 }
 
 function toggleCommercialFields() {
-    const isCommercial = document.getElementById('edStatus').value === 'commercial'
+    const status = document.getElementById('edStatus').value
+    const isCommercial = status === 'commercial'
+    const isResidentiel = status === 'residentiel'
+    document.getElementById('grpCompany').style.display = isResidentiel ? 'none' : ''
     document.getElementById('grpTarif').style.display = isCommercial ? 'block' : 'none'
     document.getElementById('grpSubcontractor').style.display = isCommercial ? 'block' : 'none'
 }
