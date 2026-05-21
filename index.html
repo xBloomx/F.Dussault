@@ -107,8 +107,10 @@
             flex: 1; min-height: 0; overflow: hidden;
             display: flex; flex-direction: column;
         }
+        /* Force les vues à remplir l'écran sur Safari iOS.
+           height:auto écrase le height:100% des modules (non résolu en flex = void) */
         #app-container > div {
-            flex: 1; min-height: 0;
+            flex: 1; min-height: 0; height: auto;
         }
 
         /* ─── Toast : géré par src/shared/styles.css (.shared-toast) ─── */
