@@ -496,7 +496,7 @@ export async function render(container) {
             <h2 style="color:#2ecc71;margin-top:0;margin-bottom:20px;border-bottom:1px solid #444;padding-bottom:10px">Ajouter une formation</h2>
             <div class="form-group"><label>Employé</label><select id="formAdminUserId"></select></div>
             <div class="form-group"><label>Nom de la formation / certification</label><input type="text" id="formAdminNom" placeholder="Ex: Secourisme, Travail en hauteur..."></div>
-            <div class="form-group"><label>Date d'expiration (optionnel)</label><input type="date" id="formAdminDateExp"></div>
+            <div class="form-group"><label>Date d'expiration (optionnel)</label><input type="date" id="formAdminDateExp" style="padding:18px 12px;font-size:16px;min-height:52px"></div>
             <div class="modal-actions">
                 <button class="btn-modal-gray" id="btnCloseAddFormation">Annuler</button>
                 <button class="btn-modal-green" style="flex:1" id="btnSaveFormationAdmin">Ajouter</button>
