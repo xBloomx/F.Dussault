@@ -879,8 +879,17 @@ function deletePage(wrapper, container) {
 function buildRecapMonthOptions(container) {
     const sel = container.querySelector('#recapMonth')
     if (!sel || sel.options.length > 0) return
+    ;[
+        { value: 'semaine',     label: 'Semaine en cours' },
+        { value: '2semaines',   label: '2 dernières semaines' },
+        { value: 'mois-courant', label: 'Mois en cours' },
+    ].forEach(({ value, label }) => {
+        const opt = document.createElement('option')
+        opt.value = value; opt.textContent = label
+        sel.appendChild(opt)
+    })
     const now = new Date()
-    for (let i = 0; i < 6; i++) {
+    for (let i = 1; i <= 6; i++) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
         const label = d.toLocaleDateString('fr-CA', { month: 'long', year: 'numeric' })
         const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -893,12 +902,32 @@ function buildRecapMonthOptions(container) {
 async function loadRecap(container) {
     buildRecapMonthOptions(container)
     const sel = container.querySelector('#recapMonth')
-    const month = sel?.value
-    if (!month) return
+    const period = sel?.value
+    if (!period) return
 
-    const [year, mon] = month.split('-').map(Number)
-    const dateFrom = `${year}-${String(mon).padStart(2, '0')}-01`
-    const dateTo = new Date(year, mon, 0).toISOString().split('T')[0]
+    const now = new Date()
+    let dateFrom, dateTo
+    if (period === 'semaine') {
+        const day = now.getDay()
+        const mon = new Date(now)
+        mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1))
+        mon.setHours(0, 0, 0, 0)
+        dateFrom = mon.toISOString().split('T')[0]
+        dateTo = now.toISOString().split('T')[0]
+    } else if (period === '2semaines') {
+        const start = new Date(now)
+        start.setDate(now.getDate() - 13)
+        start.setHours(0, 0, 0, 0)
+        dateFrom = start.toISOString().split('T')[0]
+        dateTo = now.toISOString().split('T')[0]
+    } else if (period === 'mois-courant') {
+        dateFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+        dateTo = now.toISOString().split('T')[0]
+    } else {
+        const [year, mon] = period.split('-').map(Number)
+        dateFrom = `${year}-${String(mon).padStart(2, '0')}-01`
+        dateTo = new Date(year, mon, 0).toISOString().split('T')[0]
+    }
 
     const empFilter = container.querySelector('#recapEmpFilter')?.value || 'all'
     const showOnlyMine = !canViewAllTimesheets() || empFilter === 'mine'

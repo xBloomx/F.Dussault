@@ -857,15 +857,6 @@ function checkUpcomingReminders() {
 
     if (todayEvts.length)    showToast(`Aujourd'hui : ${todayEvts.map(e => sanitize(e.title)).join(', ')}`, 'warning', 6000)
     if (tomorrowEvts.length) showToast(`Demain : ${tomorrowEvts.map(e => sanitize(e.title)).join(', ')}`, 'warning', 5000)
-
-    // Certifications expiring within 30 days
-    const expSoon = userFormations.filter(f => {
-        if (!f.date_expiration) return false
-        const exp = new Date(f.date_expiration); exp.setHours(0, 0, 0, 0)
-        const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24))
-        return diff >= 0 && diff <= 30
-    })
-    if (expSoon.length) showToast(`Certif. bientôt expirée(s) : ${expSoon.map(f => sanitize(f.nom)).join(', ')}`, 'warning', 7000)
 }
 
 // ── Utilitaires ─────────────────────────────────────────────────────────────

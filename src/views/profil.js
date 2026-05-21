@@ -94,7 +94,8 @@ export async function render(container) {
         .btn-add-small { background: #444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
         .btn-add-small:hover { background: #555; }
         .btn-add-small svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-del-small { background: transparent; color: var(--btn-red); border: none; cursor: pointer; flex-shrink: 0; padding: 5px; display: flex; }
+        .btn-del-small { background: transparent; color: var(--btn-red); border: none; outline: none; cursor: pointer; flex-shrink: 0; padding: 5px; display: flex; border-radius: 50%; }
+        .btn-del-small:focus-visible { outline: 2px solid var(--btn-red); }
         .btn-del-small svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
 
         .img-upload-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: #323443; border: 1px dashed #888; color: #ccc; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: 0.2s; }

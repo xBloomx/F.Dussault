@@ -183,9 +183,6 @@ export async function render(container) {
                 <option value="residentiel">Résidentiel</option>
                 <option value="prospect">Prospect</option>
             </select>
-            <select id="villeFilter" class="filter-select">
-                <option value="all">Toutes les villes</option>
-            </select>
         </div>
 
         <div class="discrete-stats" id="filterResultText">Total : 0 client(s) dans le répertoire.</div>
@@ -373,7 +370,7 @@ async function init() {
 
     document.getElementById('clientSearch').addEventListener('input', filterClients)
     document.getElementById('statusFilter').addEventListener('change', filterClients)
-    document.getElementById('villeFilter').addEventListener('change', filterClients)
+
 
     document.getElementById('btnCloseView').addEventListener('click', () => closeModal('viewModal'))
     document.getElementById('btnSwitchToEdit').addEventListener('click', () => {
@@ -426,7 +423,6 @@ async function loadClients(reset = true) {
     clients = reset ? pageData : [...clients, ...pageData]
 
     updateCorbeilleCount()
-    populateVilleFilter()
     filterClients()
 }
 
@@ -443,24 +439,6 @@ async function chargerPlusClients() {
     }
 }
 
-function populateVilleFilter() {
-    const sel = document.getElementById('villeFilter')
-    if (!sel) return
-    const current = sel.value
-    const villes = [...new Set(
-        clients
-            .filter(c => !c.est_supprime && c.ville && c.ville.trim())
-            .map(c => c.ville.trim())
-    )].sort()
-    sel.innerHTML = '<option value="all">Toutes les villes</option>'
-    villes.forEach(v => {
-        const opt = document.createElement('option')
-        opt.value = v
-        opt.textContent = v
-        if (v === current) opt.selected = true
-        sel.appendChild(opt)
-    })
-}
 
 // ── Sauvegarde ──────────────────────────────────────────────────────────────
 async function saveClient() {
@@ -638,7 +616,6 @@ function renderClients(list) {
 function filterClients() {
     const term = (document.getElementById('clientSearch')?.value || '').toLowerCase()
     const statusF = document.getElementById('statusFilter')?.value || 'all'
-    const villeF = document.getElementById('villeFilter')?.value || 'all'
     const activeClients = clients.filter(c => !c.est_supprime)
 
     const filtered = activeClients.filter(c => {
@@ -652,14 +629,13 @@ function filterClients() {
             (c.telephone || '').includes(term) ||
             (extra.list || []).some(ct => (ct.phone || '').includes(term) || (ct.name || '').toLowerCase().includes(term))
         const matchStatus = statusF === 'all' || c.type === statusF
-        const matchVille = villeF === 'all' || (c.ville || '').trim() === villeF
-        return matchTerm && matchStatus && matchVille
+        return matchTerm && matchStatus
     })
 
     const resText = document.getElementById('filterResultText')
     if (resText) {
         const suffixe = clientsHasMore ? ` (${clients.length} chargés — il y en a plus)` : ''
-        resText.textContent = (statusF === 'all' && villeF === 'all' && term === '')
+        resText.textContent = (statusF === 'all' && term === '')
             ? `Total : ${filtered.length} client(s) dans le répertoire.${suffixe}`
             : `${filtered.length} client(s) affiché(s) selon vos filtres.`
     }
