@@ -180,10 +180,20 @@ export async function render(container) {
         <div id="view-recap">
             <div class="dash-header">
                 <div class="dash-title"><h1>Récapitulatif</h1><p>Heures par employé et par période</p></div>
+                <button class="action-btn btn-back" id="btnRecapBack">
+                    <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Retour
+                </button>
             </div>
             <div class="recap-filters">
                 <label style="color:white;font-weight:bold">Période :</label>
                 <select id="recapMonth" class="recap-sel"></select>
+                <div id="recapEmpFilterWrap" style="display:none">
+                    <select id="recapEmpFilter" class="recap-sel">
+                        <option value="all">Tous les employés</option>
+                        <option value="mine">Mes feuilles seulement</option>
+                    </select>
+                </div>
                 <button id="btnRecapRefresh" class="action-btn" style="padding:10px 20px;background:var(--btn-blue);color:white">
                     <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                     Actualiser
@@ -315,6 +325,9 @@ async function init(container) {
     container.querySelector('#tab-archives').addEventListener('click', () => switchTab('archives', container))
     container.querySelector('#tab-recap').addEventListener('click', () => switchTab('recap', container))
     container.querySelector('#btnRecapRefresh').addEventListener('click', () => loadRecap(container))
+    container.querySelector('#btnRecapBack').addEventListener('click', () => switchTab('mine', container))
+    container.querySelector('#recapEmpFilter').addEventListener('change', () => loadRecap(container))
+    if (canViewAllTimesheets()) container.querySelector('#recapEmpFilterWrap').style.display = 'flex'
     container.querySelector('#searchInput').addEventListener('keyup', () => filterTimesheets(container))
 
     // Dashboard
@@ -887,14 +900,20 @@ async function loadRecap(container) {
     const dateFrom = `${year}-${String(mon).padStart(2, '0')}-01`
     const dateTo = new Date(year, mon, 0).toISOString().split('T')[0]
 
-    const { data, error } = await supabase
+    const empFilter = container.querySelector('#recapEmpFilter')?.value || 'all'
+    const showOnlyMine = !canViewAllTimesheets() || empFilter === 'mine'
+
+    let query = supabase
         .from('feuilles_de_temps')
-        .select('employe_nom, author_name, total_heures, total_heures_sup, status, periode')
+        .select('employe_nom, author_name, author_id, total_heures, total_heures_sup, status, periode')
         .eq('is_archived', false)
         .in('status', ['envoye', 'approuve'])
         .gte('created_at', dateFrom + 'T00:00:00')
         .lte('created_at', dateTo + 'T23:59:59')
 
+    if (showOnlyMine) query = query.eq('author_id', currentUser.id)
+
+    const { data, error } = await query
     if (error) { console.error('[recap]', error); return }
     renderRecap(data || [], container)
 }
