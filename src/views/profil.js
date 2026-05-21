@@ -643,25 +643,7 @@ async function envoyerTicket() {
 
 // ── Alertes certifications ────────────────────────────────────────────────────
 function checkCertificationAlerts() {
-    if (!formations.length) return
-    const today = new Date()
-    const expired = formations.filter(f => f.dateExp && new Date(f.dateExp) < today)
-    const expiringSoon = formations.filter(f => {
-        if (!f.dateExp) return false
-        const exp = new Date(f.dateExp)
-        const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24))
-        return diff >= 0 && diff <= 30
-    })
-    if (expired.length > 0) {
-        const names = expired.map(f => f.name).join(', ')
-        showToast(`⚠️ Certification(s) expirée(s) : ${names}`, 'error', 6000)
-    } else if (expiringSoon.length > 0) {
-        const names = expiringSoon.map(f => {
-            const diff = Math.ceil((new Date(f.dateExp) - today) / (1000 * 60 * 60 * 24))
-            return `${f.name} (${diff}j)`
-        }).join(', ')
-        showToast(`🔔 Certification(s) bientôt expirée(s) : ${names}`, 'warning', 6000)
-    }
+    // Notifications désactivées — statut visible directement sur les cartes
 }
 
 // ── Utilitaires ─────────────────────────────────────────────────────────────
