@@ -88,9 +88,10 @@
                le contenu commence en dessous grâce au padding-top */
             padding-top: env(safe-area-inset-top, 0px);
         }
-        /* En mode PWA standalone : contenu s'arrête au-dessus du home indicator */
+        /* En mode PWA standalone : padding sur le container de vue, pas sur main-content
+           (évite la bande sombre du fond derrière le home indicator) */
         @media (display-mode: standalone) {
-            .main-content { padding-bottom: env(safe-area-inset-bottom, 0px); }
+            #app-container > div { padding-bottom: env(safe-area-inset-bottom, 0px); }
         }
 
         #app-loader {
