@@ -188,10 +188,14 @@ export async function render(container) {
             <div class="recap-filters">
                 <label style="color:white;font-weight:bold">Période :</label>
                 <select id="recapMonth" class="recap-sel"></select>
-                <div id="recapEmpFilterWrap" style="display:none">
+                <div id="recapEmpFilterWrap" style="display:none;gap:10px;align-items:center">
                     <select id="recapEmpFilter" class="recap-sel">
                         <option value="all">Tous les employés</option>
                         <option value="mine">Mes feuilles seulement</option>
+                        <option value="person">Un employé...</option>
+                    </select>
+                    <select id="recapEmpPerson" class="recap-sel" style="display:none">
+                        <option value="">— choisir —</option>
                     </select>
                 </div>
                 <button id="btnRecapRefresh" class="action-btn" style="padding:10px 20px;background:var(--btn-blue);color:white">
@@ -326,7 +330,19 @@ async function init(container) {
     container.querySelector('#tab-recap').addEventListener('click', () => switchTab('recap', container))
     container.querySelector('#btnRecapRefresh').addEventListener('click', () => loadRecap(container))
     container.querySelector('#btnRecapBack').addEventListener('click', () => switchTab('mine', container))
-    container.querySelector('#recapEmpFilter').addEventListener('change', () => loadRecap(container))
+    container.querySelector('#recapEmpFilter').addEventListener('change', async () => {
+        const val = container.querySelector('#recapEmpFilter').value
+        const personSel = container.querySelector('#recapEmpPerson')
+        if (val === 'person') {
+            personSel.style.display = ''
+            if (personSel.options.length <= 1) await loadRecapEmployees(container)
+            else loadRecap(container)
+        } else {
+            personSel.style.display = 'none'
+            loadRecap(container)
+        }
+    })
+    container.querySelector('#recapEmpPerson').addEventListener('change', () => loadRecap(container))
     if (canViewAllTimesheets()) container.querySelector('#recapEmpFilterWrap').style.display = 'flex'
     container.querySelector('#searchInput').addEventListener('keyup', () => filterTimesheets(container))
 
@@ -899,6 +915,17 @@ function buildRecapMonthOptions(container) {
     }
 }
 
+async function loadRecapEmployees(container) {
+    const { data } = await supabase.from('profils').select('id, prenom_nom').order('prenom_nom')
+    const sel = container.querySelector('#recapEmpPerson')
+    ;(data || []).forEach(p => {
+        const opt = document.createElement('option')
+        opt.value = p.id; opt.textContent = p.prenom_nom
+        sel.appendChild(opt)
+    })
+    if (data?.length) loadRecap(container)
+}
+
 async function loadRecap(container) {
     buildRecapMonthOptions(container)
     const sel = container.querySelector('#recapMonth')
@@ -930,6 +957,7 @@ async function loadRecap(container) {
     }
 
     const empFilter = container.querySelector('#recapEmpFilter')?.value || 'all'
+    const personId  = container.querySelector('#recapEmpPerson')?.value || ''
     const showOnlyMine = !canViewAllTimesheets() || empFilter === 'mine'
 
     let query = supabase
@@ -941,6 +969,7 @@ async function loadRecap(container) {
         .lte('created_at', dateTo + 'T23:59:59')
 
     if (showOnlyMine) query = query.eq('author_id', currentUser.id)
+    else if (empFilter === 'person' && personId) query = query.eq('author_id', personId)
 
     const { data, error } = await query
     if (error) { console.error('[recap]', error); return }
