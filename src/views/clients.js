@@ -35,7 +35,7 @@ export async function render(container) {
         .search-box input:focus { border-color: var(--accent); }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .filter-select { background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; min-width: 150px; font-family: inherit; }
+        .filter-select { background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 42px 14px 15px; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; min-width: 150px; font-family: inherit; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23aaaaaa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
         .filter-select:focus { border-color: var(--accent); }
         .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin-top: 1px; margin-bottom: 1px; padding-left: 10px; }
         .client-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 80px; }
