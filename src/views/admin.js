@@ -11,6 +11,7 @@ let allLogs = []
 let roleDefinitions = {}
 let suppliersData = []
 let toolsListData = []
+let currentToolSettingsId = null
 let maintenanceActive = false
 let confirmAdminCallback = null
 let allFormationsData = []
@@ -75,6 +76,12 @@ export async function render(container) {
         .btn-del-emp { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 30px; height: 30px; border-radius: 6px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .btn-del-emp svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-del-emp:hover { background: var(--btn-red); color: white; }
+        .btn-gear-tool { background: rgba(255,152,0,0.12); color: #ff9800; border: 1px solid transparent; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+        .btn-gear-tool svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .btn-gear-tool:hover { background: #ff9800; color: black; }
+        .tool-settings-section { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #333; }
+        .tool-settings-label { color: #aaa; font-size: 12px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tool-histo-item { background: #252636; border-radius: 6px; padding: 8px 10px; font-size: 12px; color: #ccc; display: flex; justify-content: space-between; align-items: center; }
         .logs-table { width: 100%; border-collapse: collapse; font-size: 13px; color: #ccc; min-width: 400px; }
         .logs-table th { text-align: left; padding: 12px; color: #aaa; font-weight: bold; border-bottom: 1px solid #444; position: sticky; top: 0; background: #2b2c36; z-index: 10; }
         .logs-table td { padding: 12px; border-bottom: 1px dashed #333; vertical-align: top; }
@@ -491,6 +498,53 @@ export async function render(container) {
         </div>
     </div>
 
+    <!-- Modal paramètres outil -->
+    <div class="modal-overlay" id="toolSettingsModal">
+        <div class="modal-card-basic" style="max-width:440px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;border-bottom:1px solid #444;padding-bottom:14px">
+                <svg viewBox="0 0 24 24" width="22" height="22" style="stroke:#ff9800;fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <h2 id="toolSettingsTitle" style="color:#ff9800;margin:0;font-size:18px;word-break:break-word;flex:1">Outil</h2>
+            </div>
+
+            <div class="tool-settings-section">
+                <div class="tool-settings-label">Renommer</div>
+                <div style="display:flex;gap:8px">
+                    <input type="text" id="toolSettingsName" style="flex:1;padding:10px;background:#1a1b23;border:1px solid #444;color:white;border-radius:8px;font-size:15px;outline:none;box-sizing:border-box">
+                    <button class="btn-modal-green" id="btnSaveToolName" style="white-space:nowrap;padding:10px 14px">Renommer</button>
+                </div>
+            </div>
+
+            <div class="tool-settings-section">
+                <div class="tool-settings-label">Note</div>
+                <textarea id="toolSettingsNote" rows="3" style="width:100%;background:#1a1b23;border:1px solid #444;color:white;border-radius:8px;padding:10px;font-family:inherit;font-size:14px;resize:vertical;outline:none;box-sizing:border-box" placeholder="Remarques, état général, maintenances effectuées..."></textarea>
+                <button class="btn-modal-gray" id="btnSaveToolNote" style="width:100%;margin-top:8px">Sauvegarder la note</button>
+            </div>
+
+            <div class="tool-settings-section">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                    <div class="tool-settings-label" style="margin:0">Utilisations (transferts)</div>
+                    <button class="btn-modal-orange" id="btnResetUsage" style="font-size:12px;padding:6px 12px">⟳ Reset</button>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:6px">
+                    <span id="toolUsageCount" style="font-size:36px;font-weight:bold;color:white;line-height:1">0</span>
+                    <span style="color:#666;font-size:13px">fois</span>
+                </div>
+                <div style="font-size:11px;color:#555;margin-top:4px">Le reset efface l'historique des transferts.</div>
+            </div>
+
+            <div class="tool-settings-section" style="border:none;margin-bottom:0;padding-bottom:0">
+                <div class="tool-settings-label">Historique des transferts</div>
+                <div id="toolHistoriqueList" style="max-height:140px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:20px;padding-top:15px;border-top:1px solid #444">
+                <button class="btn-modal-gray" id="btnToggleService" style="flex:1">Mettre hors service</button>
+                <button class="btn-modal-red" id="btnDeleteToolFromSettings">Supprimer</button>
+            </div>
+            <button class="btn-modal-gray" id="btnCloseToolSettings" style="width:100%;margin-top:8px">Fermer</button>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="addFormationAdminModal">
         <div class="modal-card-basic">
             <h2 style="color:#2ecc71;margin-top:0;margin-bottom:20px;border-bottom:1px solid #444;padding-bottom:10px">Ajouter une formation</h2>
@@ -542,6 +596,14 @@ async function init() {
         try { if (confirmAdminCallback) await confirmAdminCallback() }
         finally { if (btn) { btn.disabled = false; btn.style.opacity = '' }; closeConfirmAdminModal() }
     })
+
+    // Modal paramètres outil
+    document.getElementById('btnCloseToolSettings').addEventListener('click', () => closeModal('toolSettingsModal'))
+    document.getElementById('btnSaveToolName').addEventListener('click', saveToolName)
+    document.getElementById('btnSaveToolNote').addEventListener('click', saveToolNote)
+    document.getElementById('btnToggleService').addEventListener('click', toggleToolService)
+    document.getElementById('btnResetUsage').addEventListener('click', resetToolUsage)
+    document.getElementById('btnDeleteToolFromSettings').addEventListener('click', deleteToolFromSettings)
 
     // Certifications modal
     document.getElementById('btnCloseAddFormation')?.addEventListener('click', () => closeModal('addFormationAdminModal'))
@@ -1008,18 +1070,24 @@ function renderTools() {
     })
 
     list.innerHTML = uniqueTools.map((t, idx) => {
-        const statusText = (t.status === 'active' && t.assignee_nom)
-            ? `<span style="color:var(--accent);font-size:12px">→ ${sanitize(t.assignee_nom)}</span>`
-            : `<span style="color:#888;font-size:12px;font-style:italic">Disponible</span>`
+        let statusText
+        if (t.status === 'hors_service') {
+            statusText = `<span style="color:#ff6b6b;font-size:12px;font-weight:bold">⚠ Hors service</span>`
+        } else if (t.status === 'active' && t.assignee_nom) {
+            statusText = `<span style="color:var(--accent);font-size:12px">→ ${sanitize(t.assignee_nom)}</span>`
+        } else {
+            statusText = `<span style="color:#888;font-size:12px;font-style:italic">Disponible</span>`
+        }
         const isFirst = idx === 0, isLast = idx === uniqueTools.length - 1
+        const gearSvg = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`
         return `
-            <div class="tool-item" data-tool-id="${sanitize(t.id)}" data-tool-name="${sanitize(t.nom || '')}" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#1a1b23;border:1px solid #444;border-radius:6px;margin-bottom:6px">
+            <div class="tool-item" data-tool-id="${sanitize(t.id)}" data-tool-name="${sanitize(t.nom || '')}" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#1a1b23;border:1px solid ${t.status === 'hors_service' ? '#ff6b6b44' : '#444'};border-radius:6px;margin-bottom:6px">
                 <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
                     <button data-tool-up="${idx}" ${isFirst ? 'disabled' : ''} style="background:${isFirst ? '#222' : '#333'};color:${isFirst ? '#444' : '#bbb'};border:none;border-radius:4px;width:28px;height:22px;display:flex;align-items:center;justify-content:center;cursor:${isFirst ? 'default' : 'pointer'};padding:0">▲</button>
                     <button data-tool-down="${idx}" ${isLast ? 'disabled' : ''} style="background:${isLast ? '#222' : '#333'};color:${isLast ? '#444' : '#bbb'};border:none;border-radius:4px;width:28px;height:22px;display:flex;align-items:center;justify-content:center;cursor:${isLast ? 'default' : 'pointer'};padding:0">▼</button>
                 </div>
                 <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0"><span style="color:#ddd;font-size:14px;font-weight:bold;word-break:break-word">${sanitize(t.nom || 'Sans nom')}</span>${statusText}</div>
-                <button class="btn-del-emp" data-tool-del-id="${sanitize(t.id)}" data-tool-del-name="${sanitize(t.nom || '')}"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                <button class="btn-gear-tool" data-tool-settings="${sanitize(t.id)}">${gearSvg}</button>
             </div>`
     }).join('')
 
@@ -1037,7 +1105,7 @@ function renderTools() {
         list.insertBefore(items[i + 1], items[i])
         await saveToolsOrder(); renderTools()
     }))
-    list.querySelectorAll('[data-tool-del-id]').forEach(btn => btn.addEventListener('click', () => removeTool(btn.dataset.toolDelId, btn.dataset.toolDelName)))
+    list.querySelectorAll('[data-tool-settings]').forEach(btn => btn.addEventListener('click', () => openToolSettings(btn.dataset.toolSettings)))
 }
 
 async function saveToolsOrder() {
@@ -1069,6 +1137,88 @@ async function removeTool(id, name) {
     showConfirmAdmin(`Retirer définitivement "${name}" de l'inventaire ?`, async () => {
         const { error } = await supabase.from('outils').delete().eq('nom', name)
         if (error) { showAlert(friendlyError(error)) } else { await loadTools() }
+    })
+}
+
+async function openToolSettings(toolId) {
+    currentToolSettingsId = toolId
+    const { data: tool, error } = await supabase.from('outils').select('id,nom,notes,status,historique_transferts').eq('id', toolId).single()
+    if (error || !tool) { showAlert('Outil introuvable.'); return }
+
+    document.getElementById('toolSettingsTitle').textContent = tool.nom || 'Outil'
+    document.getElementById('toolSettingsName').value = tool.nom || ''
+    document.getElementById('toolSettingsNote').value = tool.notes || ''
+
+    const hist = Array.isArray(tool.historique_transferts) ? tool.historique_transferts : []
+    document.getElementById('toolUsageCount').textContent = hist.length
+
+    const histList = document.getElementById('toolHistoriqueList')
+    if (hist.length === 0) {
+        histList.innerHTML = '<div style="color:#555;font-size:13px;font-style:italic;padding:8px 0">Aucun transfert enregistré.</div>'
+    } else {
+        histList.innerHTML = [...hist].reverse().map(h => {
+            const nom = sanitize(h.to || h.nom || h.name || '?')
+            const date = h.date ? new Date(h.date).toLocaleDateString('fr-CA') : ''
+            return `<div class="tool-histo-item"><span>${nom}</span><span style="color:#555;font-size:11px">${date}</span></div>`
+        }).join('')
+    }
+
+    const toggleBtn = document.getElementById('btnToggleService')
+    if (tool.status === 'hors_service') {
+        toggleBtn.textContent = '✓ Remettre en service'
+        toggleBtn.className = 'btn-modal-green'
+    } else {
+        toggleBtn.textContent = 'Mettre hors service'
+        toggleBtn.className = 'btn-modal-gray'
+    }
+    toggleBtn.style.flex = '1'
+
+    document.getElementById('toolSettingsModal').classList.add('open')
+}
+
+async function saveToolName() {
+    const newName = document.getElementById('toolSettingsName').value.trim()
+    if (!newName) { showAlert('Le nom ne peut pas être vide.'); return }
+    const { error } = await supabase.from('outils').update({ nom: newName }).eq('id', currentToolSettingsId)
+    if (error) { showAlert(friendlyError(error)); return }
+    document.getElementById('toolSettingsTitle').textContent = newName
+    await loadTools()
+    showAlert('✓ Nom modifié.')
+}
+
+async function saveToolNote() {
+    const note = document.getElementById('toolSettingsNote').value
+    const { error } = await supabase.from('outils').update({ notes: note }).eq('id', currentToolSettingsId)
+    if (error) { showAlert(friendlyError(error)); return }
+    showAlert('✓ Note sauvegardée.')
+}
+
+async function toggleToolService() {
+    const { data: tool } = await supabase.from('outils').select('status').eq('id', currentToolSettingsId).single()
+    if (!tool) return
+    const newStatus = tool.status === 'hors_service' ? 'available' : 'hors_service'
+    const { error } = await supabase.from('outils').update({ status: newStatus }).eq('id', currentToolSettingsId)
+    if (error) { showAlert(friendlyError(error)); return }
+    await loadTools()
+    closeModal('toolSettingsModal')
+}
+
+async function resetToolUsage() {
+    showConfirmAdmin("Réinitialiser le compteur ? L'historique des transferts sera effacé.", async () => {
+        const { error } = await supabase.from('outils').update({ historique_transferts: [] }).eq('id', currentToolSettingsId)
+        if (error) { showAlert(friendlyError(error)); return }
+        document.getElementById('toolUsageCount').textContent = '0'
+        document.getElementById('toolHistoriqueList').innerHTML = '<div style="color:#555;font-size:13px;font-style:italic;padding:8px 0">Aucun transfert enregistré.</div>'
+    })
+}
+
+async function deleteToolFromSettings() {
+    const name = document.getElementById('toolSettingsTitle').textContent
+    showConfirmAdmin(`Retirer définitivement "${name}" de l'inventaire ?`, async () => {
+        const { error } = await supabase.from('outils').delete().eq('id', currentToolSettingsId)
+        if (error) { showAlert(friendlyError(error)); return }
+        closeModal('toolSettingsModal')
+        await loadTools()
     })
 }
 
