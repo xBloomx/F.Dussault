@@ -57,6 +57,8 @@ export async function render(container) {
         .cal-nav-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
         .cal-nav-btn:hover { background: var(--accent); color: black; }
         .cal-month-title { font-size: 24px; font-weight: bold; color: white; text-transform: capitalize; }
+        .cal-menu-toggle { display: none; background: var(--accent); color: black; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; align-items: center; justify-content: center; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+        .cal-menu-toggle svg { width: 22px; height: 22px; stroke: black; stroke-width: 3; stroke-linecap: round; fill: none; display: block; }
         .calendar-wrapper { flex: none; background: var(--bg-panel); border-radius: 12px; border: 1px solid var(--cal-grid-border); overflow-x: auto; display: flex; flex-direction: column; }
         .day-headers { display: grid; grid-template-columns: repeat(7, 1fr); min-width: 700px; }
         .day-header { background: var(--cal-header-bg); color: #aaa; display: flex; align-items: center; justify-content: center; font-weight: bold; border-bottom: 1px solid var(--cal-grid-border); border-right: 1px solid var(--cal-grid-border); padding: 10px 0; }
@@ -125,6 +127,7 @@ export async function render(container) {
             .event-bar { font-size: 10px; padding: 3px 5px; }
             .urgence-badge { top: 4px; right: 4px; width: 20px; height: 20px; font-size: 10px; }
             .modal-card { width: 95%; padding: 20px; }
+            .cal-menu-toggle { display: flex; }
         }
     </style>
 
@@ -156,6 +159,9 @@ export async function render(container) {
             <div class="cal-month-title" id="calTitle">...</div>
             <button class="cal-nav-btn" id="btnNextMonth">
                 <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button class="cal-menu-toggle" id="btnCalMenuToggle" title="Menu">
+                <svg viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>
             </button>
         </div>
 
@@ -343,6 +349,12 @@ async function init() {
     document.getElementById('btnNextMonth').addEventListener('click', () => changeMonth(1))
     document.getElementById('btnAddEvent').addEventListener('click', () => openAddModal())
     document.getElementById('btnDeleteCal').addEventListener('click', deleteCurrentCalendar)
+    document.getElementById('btnCalMenuToggle').addEventListener('click', () => {
+        const sidebar = document.getElementById('sidebar')
+        const overlay = document.getElementById('overlay')
+        const menuBtn = document.getElementById('menu-toggle')
+        if (sidebar) { sidebar.classList.add('open'); overlay?.classList.add('active'); menuBtn?.classList.add('hide') }
+    })
 
     // Modales
     document.getElementById('btnCloseNewCal').addEventListener('click', () => closeModal('newCalModal'))
@@ -482,7 +494,8 @@ function getSystemEvents(year) {
 
     userFormations.forEach((form, idx) => {
         if (!form.date_expiration) return
-        const expDate = new Date(form.date_expiration)
+        const [ey, em, ed] = form.date_expiration.split('-').map(Number)
+        const expDate = new Date(ey, em - 1, ed)
         if (isNaN(expDate.getTime()) || expDate.getFullYear() !== year) return
         list.push({ id: 'sys-form-' + (form.id || idx), d: getVal(expDate), t: 'Expiration : ' + (form.nom || 'Formation'), type: 'formation' })
     })
