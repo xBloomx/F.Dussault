@@ -126,22 +126,6 @@ export async function render(container) {
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .inv-hsup { font-size: 12px; color: #e67e22; margin-top: 2px; white-space: nowrap; }
-        #view-recap { padding: 20px; height: 100%; overflow-y: auto; display: none; flex-direction: column; gap: 16px; }
-        .recap-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .recap-header-btns { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-        .recap-filter-card { background: var(--bg-panel); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
-        .recap-filter-row { display: flex; align-items: center; gap: 10px; }
-        .recap-label { color: white; font-weight: bold; font-size: 14px; white-space: nowrap; }
-        .recap-sel { background: var(--bg-dark); color: white; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; flex: 1; min-width: 0; }
-        .recap-emp-row { display: flex; gap: 10px; }
-        .recap-emp-row .recap-sel { flex: 1; }
-        .recap-table-wrap { background: var(--bg-panel); border-radius: 12px; overflow: hidden; }
-        .recap-table { width: 100%; border-collapse: collapse; }
-        .recap-table th { text-align: left; padding: 12px 20px; color: #aaa; font-size: 13px; font-weight: bold; border-bottom: 1px solid var(--border); text-transform: uppercase; }
-        .recap-table td { padding: 14px 20px; color: white; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .recap-table tr:last-child td { border-bottom: none; }
-        .recap-table tr:hover td { background: rgba(255,255,255,0.03); }
-        .recap-total-row td { font-weight: bold; color: var(--accent); border-top: 2px solid var(--border); font-size: 15px; }
     </style>
 
     <div class="fdt-main">
@@ -167,10 +151,6 @@ export async function render(container) {
                     <svg viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
                     Archives
                 </button>
-                <button id="tab-recap" class="btn-tab" style="display:none">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-                    Récapitulatif
-                </button>
             </div>
 
             <div class="toolbar">
@@ -183,40 +163,6 @@ export async function render(container) {
             <div class="invoice-list" id="timesheetListContainer"></div>
         </div>
 
-        <div id="view-recap">
-            <div class="recap-header">
-                <div class="dash-title"><h1 style="font-size:24px">Récapitulatif</h1><p style="margin:4px 0 0;color:#aaa;font-size:13px">Heures par employé et par période</p></div>
-                <div class="recap-header-btns">
-                    <button class="action-btn btn-back" id="btnRecapBack">
-                        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                        Retour
-                    </button>
-                    <button id="btnRecapRefresh" class="action-btn" style="background:var(--btn-blue);color:white">
-                        <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                        Actualiser
-                    </button>
-                </div>
-            </div>
-            <div class="recap-filter-card">
-                <div class="recap-filter-row">
-                    <span class="recap-label">Période :</span>
-                    <select id="recapMonth" class="recap-sel"></select>
-                </div>
-                <div id="recapEmpFilterWrap" style="display:none">
-                    <div class="recap-emp-row">
-                        <select id="recapEmpFilter" class="recap-sel">
-                            <option value="all">Tous les employés</option>
-                            <option value="mine">Mes feuilles seulement</option>
-                            <option value="person">Un employé...</option>
-                        </select>
-                        <select id="recapEmpPerson" class="recap-sel" style="display:none">
-                            <option value="">— choisir —</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div id="recapTableContainer"></div>
-        </div>
 
         <div id="note-refus-box">
             <strong>↩️ Renvoyé pour correction :</strong>
@@ -330,7 +276,6 @@ async function init(container) {
     // Tabs
     if (canViewAllTimesheets()) {
         container.querySelector('#timesheet-tabs').style.display = 'flex'
-        container.querySelector('#tab-recap').style.display = 'flex'
     } else {
         container.querySelector('#timesheet-tabs').style.display = 'flex'
         container.querySelector('#tab-all').style.display = 'none'
@@ -339,23 +284,6 @@ async function init(container) {
     container.querySelector('#tab-mine').addEventListener('click', () => switchTab('mine', container))
     container.querySelector('#tab-all').addEventListener('click', () => switchTab('all', container))
     container.querySelector('#tab-archives').addEventListener('click', () => switchTab('archives', container))
-    container.querySelector('#tab-recap').addEventListener('click', () => switchTab('recap', container))
-    container.querySelector('#btnRecapRefresh').addEventListener('click', () => loadRecap(container))
-    container.querySelector('#btnRecapBack').addEventListener('click', () => switchTab('mine', container))
-    container.querySelector('#recapEmpFilter').addEventListener('change', async () => {
-        const val = container.querySelector('#recapEmpFilter').value
-        const personSel = container.querySelector('#recapEmpPerson')
-        if (val === 'person') {
-            personSel.style.display = ''
-            if (personSel.options.length <= 1) await loadRecapEmployees(container)
-            else loadRecap(container)
-        } else {
-            personSel.style.display = 'none'
-            loadRecap(container)
-        }
-    })
-    container.querySelector('#recapEmpPerson').addEventListener('change', () => loadRecap(container))
-    if (canViewAllTimesheets()) container.querySelector('#recapEmpFilterWrap').style.display = 'flex'
     container.querySelector('#searchInput').addEventListener('keyup', () => filterTimesheets(container))
 
     // Dashboard
@@ -447,15 +375,8 @@ function switchTab(tab, container) {
     currentInvTab = tab
     container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
     container.querySelector(`#tab-${tab}`)?.classList.add('active')
-    if (tab === 'recap') {
-        container.querySelector('#view-dashboard').style.display = 'none'
-        container.querySelector('#view-recap').style.display = 'flex'
-        loadRecap(container)
-    } else {
-        container.querySelector('#view-dashboard').style.display = 'flex'
-        container.querySelector('#view-recap').style.display = 'none'
-        loadData(true, container)
-    }
+    container.querySelector('#view-dashboard').style.display = 'flex'
+    loadData(true, container)
 }
 
 // ── Rendu liste ─────────────────────────────────────────────────────────────
@@ -593,8 +514,6 @@ function showDashboard(viewDash, viewEditor, container) {
     stopAutosave()
     viewDash.style.display = 'flex'
     viewEditor.style.display = 'none'
-    const recapView = container.querySelector('#view-recap')
-    if (recapView) recapView.style.display = 'none'
     currentInvTab = 'mine'
     container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
     container.querySelector('#tab-mine')?.classList.add('active')
@@ -901,151 +820,6 @@ function duplicatePage(wrapper, zoomDisplay) {
 function deletePage(wrapper, container) {
     if (wrapper.children.length > 1) { wrapper.removeChild(wrapper.lastElementChild) }
     else showAlertModal('Impossible de supprimer la dernière page.', container)
-}
-
-// ── Récapitulatif ────────────────────────────────────────────────────────────
-function buildRecapMonthOptions(container) {
-    const sel = container.querySelector('#recapMonth')
-    if (!sel || sel.options.length > 0) return
-    ;[
-        { value: 'semaine',     label: 'Semaine en cours' },
-        { value: '2semaines',   label: '2 dernières semaines' },
-        { value: 'mois-courant', label: 'Mois en cours' },
-    ].forEach(({ value, label }) => {
-        const opt = document.createElement('option')
-        opt.value = value; opt.textContent = label
-        sel.appendChild(opt)
-    })
-    const now = new Date()
-    for (let i = 1; i <= 6; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-        const label = d.toLocaleDateString('fr-CA', { month: 'long', year: 'numeric' })
-        const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-        const opt = document.createElement('option')
-        opt.value = value; opt.textContent = label.charAt(0).toUpperCase() + label.slice(1)
-        sel.appendChild(opt)
-    }
-}
-
-async function loadRecapEmployees(container) {
-    const { data } = await supabase.from('profils').select('id, prenom_nom').order('prenom_nom')
-    const sel = container.querySelector('#recapEmpPerson')
-    ;(data || []).forEach(p => {
-        const opt = document.createElement('option')
-        opt.value = p.id; opt.textContent = p.prenom_nom
-        sel.appendChild(opt)
-    })
-    if (data?.length) loadRecap(container)
-}
-
-async function loadRecap(container) {
-    buildRecapMonthOptions(container)
-    const sel = container.querySelector('#recapMonth')
-    const period = sel?.value
-    if (!period) return
-
-    const now = new Date()
-    let dateFrom, dateTo
-    if (period === 'semaine') {
-        const day = now.getDay()
-        const mon = new Date(now)
-        mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1))
-        mon.setHours(0, 0, 0, 0)
-        dateFrom = mon.toISOString().split('T')[0]
-        dateTo = now.toISOString().split('T')[0]
-    } else if (period === '2semaines') {
-        const start = new Date(now)
-        start.setDate(now.getDate() - 13)
-        start.setHours(0, 0, 0, 0)
-        dateFrom = start.toISOString().split('T')[0]
-        dateTo = now.toISOString().split('T')[0]
-    } else if (period === 'mois-courant') {
-        dateFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-        dateTo = now.toISOString().split('T')[0]
-    } else {
-        const [year, mon] = period.split('-').map(Number)
-        dateFrom = `${year}-${String(mon).padStart(2, '0')}-01`
-        dateTo = new Date(year, mon, 0).toISOString().split('T')[0]
-    }
-
-    const empFilter = container.querySelector('#recapEmpFilter')?.value || 'all'
-    const personId  = container.querySelector('#recapEmpPerson')?.value || ''
-    const showOnlyMine = !canViewAllTimesheets() || empFilter === 'mine'
-
-    let query = supabase
-        .from('feuilles_de_temps')
-        .select('employe_nom, author_name, author_id, total_heures, total_heures_sup, status, periode')
-        .eq('is_archived', false)
-        .in('status', ['envoye', 'approuve'])
-        .gte('created_at', dateFrom + 'T00:00:00')
-        .lte('created_at', dateTo + 'T23:59:59')
-
-    if (showOnlyMine) query = query.eq('author_id', currentUser.id)
-    else if (empFilter === 'person' && personId) query = query.eq('author_id', personId)
-
-    const { data, error } = await query
-    if (error) { console.error('[recap]', error); return }
-    renderRecap(data || [], container)
-}
-
-function renderRecap(rows, container) {
-    const wrap = container.querySelector('#recapTableContainer')
-    if (!wrap) return
-
-    if (!rows.length) {
-        wrap.innerHTML = '<div style="color:#888;font-style:italic;padding:20px;text-align:center">Aucune feuille soumise pour cette période.</div>'
-        return
-    }
-
-    const byEmp = {}
-    rows.forEach(r => {
-        const name = r.employe_nom || r.author_name || 'Inconnu'
-        if (!byEmp[name]) byEmp[name] = { heures: 0, hsup: 0, count: 0, statuts: new Set() }
-        byEmp[name].heures += r.total_heures || 0
-        byEmp[name].hsup += r.total_heures_sup || 0
-        byEmp[name].count++
-        byEmp[name].statuts.add(r.status)
-    })
-
-    const sortedNames = Object.keys(byEmp).sort()
-    let totalH = 0, totalS = 0, totalF = 0
-    const bodyRows = sortedNames.map(name => {
-        const e = byEmp[name]
-        totalH += e.heures; totalS += e.hsup; totalF += e.count
-        const statutsBadges = [...e.statuts].map(s => {
-            if (s === 'approuve') return '<span style="background:rgba(40,167,69,0.15);color:var(--btn-green);padding:2px 8px;border-radius:6px;font-size:12px;font-weight:bold">Approuvée</span>'
-            return '<span style="background:rgba(52,152,219,0.15);color:var(--btn-blue);padding:2px 8px;border-radius:6px;font-size:12px;font-weight:bold">Envoyée</span>'
-        }).join(' ')
-        return `<tr>
-            <td><strong>${sanitize(name)}</strong></td>
-            <td><strong style="color:var(--accent)">${e.heures.toFixed(1)} h</strong></td>
-            <td>${e.hsup > 0 ? `<span style="color:#e67e22;font-weight:bold">+${e.hsup.toFixed(1)} h</span>` : '<span style="color:#555">—</span>'}</td>
-            <td style="color:#aaa">${e.count} feuille${e.count > 1 ? 's' : ''}</td>
-            <td>${statutsBadges}</td>
-        </tr>`
-    }).join('')
-
-    wrap.innerHTML = `<div class="recap-table-wrap">
-        <table class="recap-table">
-            <thead><tr>
-                <th>Employé</th>
-                <th>Total heures</th>
-                <th>H. supplémentaires</th>
-                <th>Feuilles</th>
-                <th>Statut</th>
-            </tr></thead>
-            <tbody>
-                ${bodyRows}
-                <tr class="recap-total-row">
-                    <td>TOTAL</td>
-                    <td>${totalH.toFixed(1)} h</td>
-                    <td>${totalS > 0 ? `+${totalS.toFixed(1)} h` : '—'}</td>
-                    <td>${totalF} feuille${totalF > 1 ? 's' : ''}</td>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>`
 }
 
 // ── Autosave ────────────────────────────────────────────────────────────────
