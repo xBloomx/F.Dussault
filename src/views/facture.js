@@ -514,7 +514,7 @@ async function loadData(reset = true, container) {
     const from = currentPage * PAGE_SIZE
     const to = from + PAGE_SIZE - 1
 
-    let query = supabase.from('factures').select('id,client,date,status,author_id,author_name,return_note,is_archived,input_values,sig_values,page_count,is_paper_mode,paper_pages')
+    let query = supabase.from('factures').select('id,client,date,status,author_id,author_name,return_note,is_archived,input_values,sig_values,page_count,is_paper,paper_pages,created_at')
     if (currentInvTab === 'archives') {
         query = query.eq('is_archived', true)
         if (!canSeeAllArchives(currentRole)) query = query.eq('author_id', currentUser.id)
