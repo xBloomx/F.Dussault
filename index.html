@@ -87,6 +87,11 @@
             position: relative; background-color: var(--bg-dark);
             overflow: hidden;
         }
+        /* En mode PWA standalone : le fond descend jusqu'au bord,
+           le contenu s'arrête au-dessus du home indicator */
+        @media (display-mode: standalone) {
+            .main-content { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        }
 
         #app-loader {
             position: absolute; inset: 0;
