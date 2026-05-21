@@ -20,6 +20,9 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; }
 
+        /* Le fond couvre tout l'écran jusqu'au bord (home indicator inclus) */
+        html { background-color: #1e1f26; }
+
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: var(--bg-dark);
@@ -31,10 +34,7 @@
             padding-top: env(safe-area-inset-top, 0px);
             padding-left: env(safe-area-inset-left, 0px);
             padding-right: env(safe-area-inset-right, 0px);
-        }
-        /* Safe-area bottom uniquement en mode PWA standalone (pas dans Safari browser) */
-        @media (display-mode: standalone) {
-            body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+            /* Pas de padding-bottom : le fond s'étend jusqu'au bord, home indicator compris */
         }
 
         /* ── SIDEBAR ─────────────────────────────────────────────── */
