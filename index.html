@@ -106,6 +106,11 @@
         #app-container {
             flex: 1; height: 100%; overflow: hidden;
             display: flex; flex-direction: column;
+            position: relative;
+        }
+        .view-container {
+            flex: 1; min-height: 0; overflow: hidden;
+            display: flex; flex-direction: column;
         }
 
         /* ─── Toast : géré par src/shared/styles.css (.shared-toast) ─── */
@@ -342,7 +347,9 @@ const MODULE_MAP = {
 
 // ── État ────────────────────────────────────────────────────────────────────
 let currentView = 'accueil'
-let currentCleanup = null
+const viewCache = new Map()   // viewName → { el, cleanup, renderedAt }
+const ALWAYS_REFRESH = new Set(['messagerie'])
+const CACHE_TTL = 5 * 60 * 1000   // 5 minutes
 const appContainer = document.getElementById('app-container')
 const appLoader = document.getElementById('app-loader')
 const mainLoader = document.getElementById('security-loader')
@@ -351,20 +358,54 @@ const menuBtn = document.getElementById('menu-toggle')
 const overlay = document.getElementById('overlay')
 
 // ── Router ──────────────────────────────────────────────────────────────────
+function invalidateCache(viewName) {
+    if (!viewName) { viewCache.clear(); return }
+    viewCache.delete(viewName)
+}
+
+async function forceRefresh(viewName) {
+    invalidateCache(viewName || currentView)
+    await navigateTo(viewName || currentView)
+}
+
 async function navigateTo(viewName) {
     if (!MODULE_MAP[viewName]) return
 
-    // Cleanup module précédent
-    if (currentCleanup) { try { currentCleanup() } catch {} currentCleanup = null }
+    const now = Date.now()
+    const cached = viewCache.get(viewName)
+    const isStale = !cached || (now - cached.renderedAt > CACHE_TTL) || ALWAYS_REFRESH.has(viewName)
+
+    // Cacher la vue actuelle
+    if (currentView !== viewName) {
+        const cur = viewCache.get(currentView)
+        if (cur) cur.el.style.display = 'none'
+    }
+
+    if (!isStale) {
+        // Vue en cache — afficher immédiatement sans loader
+        cached.el.style.display = ''
+        currentView = viewName
+        return
+    }
+
+    // Nettoyage de l'entrée périmée
+    if (cached) {
+        if (cached.cleanup) { try { cached.cleanup() } catch {} }
+        cached.el.remove()
+        viewCache.delete(viewName)
+    }
 
     appLoader.classList.remove('hidden')
-    appContainer.innerHTML = ''
-    appContainer.style.opacity = '0'
+
+    const el = document.createElement('div')
+    el.className = 'view-container'
+    el.style.opacity = '0'
+    appContainer.appendChild(el)
 
     try {
         const mod = await MODULE_MAP[viewName]()
-        const cleanup = await mod.render(appContainer)
-        if (typeof cleanup === 'function') currentCleanup = cleanup
+        const cleanup = await mod.render(el)
+        viewCache.set(viewName, { el, cleanup: typeof cleanup === 'function' ? cleanup : null, renderedAt: Date.now() })
     } catch (e) {
         // Module introuvable = SW périmé après déploiement → recharger une seule fois
         if (e instanceof TypeError && e.message.includes('Failed to fetch dynamically imported module')) {
@@ -376,16 +417,15 @@ async function navigateTo(viewName) {
         }
         sessionStorage.removeItem('sw_reload_attempted')
         console.error('[Router] Erreur chargement module', viewName, e)
-        appContainer.innerHTML = `<div style="color:#ff4d4d;padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
+        el.innerHTML = `<div style="color:#ff4d4d;padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
     }
 
     currentView = viewName
     appLoader.classList.add('hidden')
 
-    // Fade-in — reproduit l'animation opacity 0.18s de l'ancienne version
     requestAnimationFrame(() => {
-        appContainer.style.transition = 'opacity 0.18s ease'
-        appContainer.style.opacity = '1'
+        el.style.transition = 'opacity 0.18s ease'
+        el.style.opacity = '1'
     })
 }
 
@@ -465,6 +505,8 @@ function handlePWAShortcut() {
 // ── Toast global ─────────────────────────────────────────────────────────────
 window.showToast = function(msg, type = 'info', duration = 3000) {
     if (type !== 'error' && type !== 'warning' && type !== 'success') return
+    if (type === 'success') window.haptic('success')
+    else if (type === 'error') window.haptic('error')
     const tc = document.getElementById('toast-container')
     const t = document.createElement('div')
     t.className = `shared-toast ${type}`
@@ -475,6 +517,45 @@ window.showToast = function(msg, type = 'info', duration = 3000) {
         t.classList.remove('show')
         setTimeout(() => t.remove(), 300)
     }, duration)
+}
+
+// ── Haptic (Android uniquement — Vibration API non supportée sur iOS) ─────────
+window.haptic = function(type = 'light') {
+    if (!navigator.vibrate) return
+    const patterns = { light: [10], medium: [20], success: [10, 50, 10], error: [30, 50, 30] }
+    navigator.vibrate(patterns[type] || patterns.light)
+}
+
+// ── Timeout inactivité 30 min ─────────────────────────────────────────────────
+function _startInactivityTimer() {
+    let timer = null
+    function reset() {
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(async () => {
+            await supabase.auth.signOut()
+            window.location.replace('/login.html')
+        }, 30 * 60 * 1000)
+    }
+    ;['pointerdown', 'keydown', 'touchstart'].forEach(ev =>
+        window.addEventListener(ev, reset, { passive: true })
+    )
+    reset()
+}
+
+// ── Pull-to-refresh ───────────────────────────────────────────────────────────
+function _initPullToRefresh() {
+    let startY = 0, canPull = false
+    appContainer.addEventListener('touchstart', e => {
+        const scroller = appContainer.querySelector('.main-content') || appContainer
+        canPull = scroller.scrollTop === 0
+        startY = e.touches[0].clientY
+    }, { passive: true })
+    appContainer.addEventListener('touchend', e => {
+        if (!canPull) return
+        const dy = e.changedTouches[0].clientY - startY
+        if (dy > 80) { window.haptic('medium'); forceRefresh(currentView) }
+        canPull = false
+    }, { passive: true })
 }
 
 // ── Toggle hamburger mobile depuis les modules (modales ouvertes/fermées) ────
@@ -551,10 +632,11 @@ window.addEventListener('toggle_maintenance', (e) => {
 
 // ── Cascade formations (Profil → Accueil + Calendrier rechargent) ─────────────
 window.addEventListener('formations_updated', () => {
-    // Si l'accueil ou le calendrier est actuellement affiché, forcer un rechargement
-    const view = currentView
-    if (view === 'accueil' || view === 'calendrier') {
-        navigateTo(view)
+    if (currentView === 'accueil' || currentView === 'calendrier') {
+        forceRefresh(currentView)
+    } else {
+        invalidateCache('accueil')
+        invalidateCache('calendrier')
     }
 })
 
@@ -599,6 +681,8 @@ async function boot() {
         }
 
         appliquerPermissions()
+        _startInactivityTimer()
+        _initPullToRefresh()
 
         // Surveiller l'expiration de session — redirige vers login si SIGNED_OUT
         watchSession(() => { window.location.replace('/login.html') })
