@@ -281,36 +281,24 @@ function cleanup() {
 async function chargerCourriels() {
     const { data, error } = await supabase
         .from('courriels')
-        .select('id,folder,expediteur,from_address,sujet,subject,contenu,body_text,created_at,est_lu,from_name,thread_id,provider_message_id,provider')
+        .select('id,expediteur,destinataire,sujet,contenu,created_at,est_lu')
         .or(`destinataire.eq.${myUserEmail},expediteur.eq.${myUserEmail}`)
         .order('created_at', { ascending: false })
 
     if (error) { console.error('Erreur chargement courriels:', error); return }
 
     emailsData = (data || []).map(dbMail => {
-        const folder = dbMail.folder ||
-            (dbMail.expediteur?.toLowerCase() === myUserEmail ? 'sent' : 'inbox')
+        const folder = dbMail.expediteur?.toLowerCase() === myUserEmail ? 'sent' : 'inbox'
         const dateObj = new Date(dbMail.created_at)
         const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.getHours() + ':' + String(dateObj.getMinutes()).padStart(2, '0')
         return {
             id: dbMail.id, folder,
-            // Champs internes
-            sender: dbMail.expediteur || dbMail.from_address || '',
-            emailAddress: dbMail.expediteur || dbMail.from_address || '',
-            subject: dbMail.sujet || dbMail.subject || '(Sans objet)',
-            body: dbMail.contenu || dbMail.body_text || '',
+            sender: dbMail.expediteur || '',
+            emailAddress: dbMail.expediteur || '',
+            subject: dbMail.sujet || '(Sans objet)',
+            body: dbMail.contenu || '',
             date: dateStr, fullDate: dateStr,
             unread: !dbMail.est_lu && folder === 'inbox',
-            // Champs étendus — prêts pour intégration email externe
-            fromName: dbMail.from_name || '',           // Nom affiché de l'expéditeur
-            bodyPlain: dbMail.body_text || dbMail.contenu || '', // Texte brut
-            // bodyHtml: dbMail.body_html || null,       // HTML (affiché dans iframe sandboxée)
-            threadId: dbMail.thread_id || null,         // Pour regrouper les conversations
-            providerId: dbMail.provider_message_id || null, // ID chez Gmail/Outlook/IMAP
-            provider: dbMail.provider || 'internal',    // 'internal' | 'gmail' | 'outlook' | 'imap'
-            // attachments: dbMail.attachments || [],    // [{ name, size, url }]
-            // cc: dbMail.cc || [],
-            // replyTo: dbMail.reply_to || null,
         }
     })
 
