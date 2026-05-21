@@ -126,9 +126,15 @@ export async function render(container) {
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .inv-hsup { font-size: 12px; color: #e67e22; margin-top: 2px; white-space: nowrap; }
-        #view-recap { padding: 30px; height: 100%; overflow-y: auto; display: none; flex-direction: column; gap: 20px; }
-        .recap-filters { display: flex; gap: 10px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; flex-wrap: wrap; }
-        .recap-sel { background: var(--bg-dark); color: white; border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; }
+        #view-recap { padding: 20px; height: 100%; overflow-y: auto; display: none; flex-direction: column; gap: 16px; }
+        .recap-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .recap-header-btns { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        .recap-filter-card { background: var(--bg-panel); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+        .recap-filter-row { display: flex; align-items: center; gap: 10px; }
+        .recap-label { color: white; font-weight: bold; font-size: 14px; white-space: nowrap; }
+        .recap-sel { background: var(--bg-dark); color: white; border: 1px solid var(--border); padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; flex: 1; min-width: 0; }
+        .recap-emp-row { display: flex; gap: 10px; }
+        .recap-emp-row .recap-sel { flex: 1; }
         .recap-table-wrap { background: var(--bg-panel); border-radius: 12px; overflow: hidden; }
         .recap-table { width: 100%; border-collapse: collapse; }
         .recap-table th { text-align: left; padding: 12px 20px; color: #aaa; font-size: 13px; font-weight: bold; border-bottom: 1px solid var(--border); text-transform: uppercase; }
@@ -178,30 +184,36 @@ export async function render(container) {
         </div>
 
         <div id="view-recap">
-            <div class="dash-header">
-                <div class="dash-title"><h1>Récapitulatif</h1><p>Heures par employé et par période</p></div>
-                <button class="action-btn btn-back" id="btnRecapBack">
-                    <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-                    Retour
-                </button>
-            </div>
-            <div class="recap-filters">
-                <label style="color:white;font-weight:bold">Période :</label>
-                <select id="recapMonth" class="recap-sel"></select>
-                <div id="recapEmpFilterWrap" style="display:none;gap:10px;align-items:center">
-                    <select id="recapEmpFilter" class="recap-sel">
-                        <option value="all">Tous les employés</option>
-                        <option value="mine">Mes feuilles seulement</option>
-                        <option value="person">Un employé...</option>
-                    </select>
-                    <select id="recapEmpPerson" class="recap-sel" style="display:none">
-                        <option value="">— choisir —</option>
-                    </select>
+            <div class="recap-header">
+                <div class="dash-title"><h1 style="font-size:24px">Récapitulatif</h1><p style="margin:4px 0 0;color:#aaa;font-size:13px">Heures par employé et par période</p></div>
+                <div class="recap-header-btns">
+                    <button class="action-btn btn-back" id="btnRecapBack">
+                        <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        Retour
+                    </button>
+                    <button id="btnRecapRefresh" class="action-btn" style="background:var(--btn-blue);color:white">
+                        <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        Actualiser
+                    </button>
                 </div>
-                <button id="btnRecapRefresh" class="action-btn" style="padding:10px 20px;background:var(--btn-blue);color:white">
-                    <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-                    Actualiser
-                </button>
+            </div>
+            <div class="recap-filter-card">
+                <div class="recap-filter-row">
+                    <span class="recap-label">Période :</span>
+                    <select id="recapMonth" class="recap-sel"></select>
+                </div>
+                <div id="recapEmpFilterWrap" style="display:none">
+                    <div class="recap-emp-row">
+                        <select id="recapEmpFilter" class="recap-sel">
+                            <option value="all">Tous les employés</option>
+                            <option value="mine">Mes feuilles seulement</option>
+                            <option value="person">Un employé...</option>
+                        </select>
+                        <select id="recapEmpPerson" class="recap-sel" style="display:none">
+                            <option value="">— choisir —</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div id="recapTableContainer"></div>
         </div>
