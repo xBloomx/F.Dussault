@@ -104,8 +104,11 @@
         #app-loader.hidden { opacity: 0; pointer-events: none; }
 
         #app-container {
-            flex: 1; height: 100%; overflow: hidden;
+            flex: 1; min-height: 0; overflow: hidden;
             display: flex; flex-direction: column;
+        }
+        #app-container > div {
+            flex: 1; min-height: 0;
         }
 
         /* ─── Toast : géré par src/shared/styles.css (.shared-toast) ─── */
