@@ -36,10 +36,13 @@ export async function render(container) {
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
         .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .section-title { font-size: 16px; color: var(--accent); text-transform: uppercase; margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
-        .tool-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 30px; }
+        .section-title.repair { color: #e67e22; border-color: rgba(230,126,34,0.3); }
+        .section-title.history { color: #888; border-color: rgba(136,136,136,0.3); }
+        .tool-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 10px; }
         .tool-item { background-color: var(--bg-panel); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
         .tool-item.has-delete { padding-right: 58px; }
         .tool-item.returned { border-left-color: var(--btn-green); opacity: 0.7; }
+        .tool-item.en-reparation { border-left-color: #e67e22; }
         .tool-info { display: flex; flex-direction: column; gap: 5px; flex: 1; }
         .tool-name { font-size: 18px; font-weight: bold; color: white; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .tool-name svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -49,6 +52,7 @@ export async function render(container) {
         .status-badge { font-size: 12px; padding: 3px 10px; border-radius: 6px; font-weight: bold; text-transform: uppercase; white-space: nowrap; display: inline-flex; align-items: center; }
         .status-badge.out { background: rgba(252,202,70,0.15); color: var(--accent); }
         .status-badge.in  { background: rgba(40,167,69,0.15);  color: var(--btn-green); }
+        .status-badge.rep { background: rgba(230,126,34,0.15); color: #e67e22; }
         .tool-actions { display: flex; gap: 10px; margin-left: 20px; flex-wrap: wrap; }
         .btn-return { background: var(--btn-green); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
         .btn-return svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -56,6 +60,12 @@ export async function render(container) {
         .btn-transfer { background: var(--btn-blue); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
         .btn-transfer svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-transfer:hover { background: #2980b9; }
+        .btn-brise { background: rgba(230,126,34,0.15); color: #e67e22; border: 1px solid rgba(230,126,34,0.4); padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+        .btn-brise:hover { background: #e67e22; color: white; }
+        .btn-repare { background: var(--btn-green); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+        .btn-repare:hover { background: #218838; }
+        .btn-historique { background: rgba(136,136,136,0.12); color: #aaa; border: 1px solid rgba(136,136,136,0.3); padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 13px; }
+        .btn-historique:hover { background: rgba(136,136,136,0.25); color: white; }
         .btn-delete-tool { position: absolute; top: 12px; right: 12px; background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; }
         .btn-delete-tool svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-delete-tool:hover { background: var(--btn-red); color: white; }
@@ -68,14 +78,16 @@ export async function render(container) {
         .btn-modal-yellow { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-modal-green { background: var(--btn-green); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-modal-red { background: var(--btn-red); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-modal-orange { background: #e67e22; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
         .custom-form-card { background: var(--bg-panel); width: 90%; max-width: 400px; padding: 30px; border-radius: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); position: relative; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
         .modal-header-custom { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; color: white; font-size: 22px; font-weight: bold; }
         .modal-header-custom svg { width: 35px; height: 35px; stroke: currentColor; fill: none; stroke-width: 2; }
         .custom-group { margin-bottom: 22px; text-align: left; }
         .custom-group label { display: block; color: white; margin-bottom: 7px; font-size: 15px; font-weight: bold; }
-        .custom-group input, .custom-group select { width: 100%; padding: 12px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
-        .custom-group input:focus, .custom-group select:focus { border-color: var(--accent); }
+        .custom-group input, .custom-group select, .custom-group textarea { width: 100%; padding: 12px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
+        .custom-group textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+        .custom-group input:focus, .custom-group select:focus, .custom-group textarea:focus { border-color: var(--accent); }
         .custom-group select { -webkit-appearance: none; appearance: none; padding-right: 42px; cursor: pointer; }
         .select-wrap { position: relative; }
         .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
@@ -83,6 +95,19 @@ export async function render(container) {
         .btn-custom-submit:hover { background-color: var(--accent-hover); }
         .btn-close-modal { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #888; font-size: 30px; cursor: pointer; }
         .btn-close-modal:hover { color: white; }
+
+        /* Modal historique */
+        .hist-modal-card { background: var(--bg-panel); width: 90%; max-width: 520px; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); position: relative; border: 1px solid var(--border); max-height: 85vh; overflow-y: auto; }
+        .hist-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .hist-entry { background: var(--bg-dark); border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 3px; border-left: 3px solid var(--border); }
+        .hist-entry.emprunté { border-color: var(--accent); }
+        .hist-entry.retourné { border-color: var(--btn-green); }
+        .hist-entry.transféré { border-color: var(--btn-blue); }
+        .hist-entry.signalé { border-color: #e67e22; }
+        .hist-entry.réparé { border-color: #9b59b6; }
+        .hist-action { font-weight: bold; font-size: 14px; color: white; text-transform: capitalize; }
+        .hist-detail { font-size: 13px; color: #aaa; }
+        .hist-date { font-size: 12px; color: #666; margin-top: 2px; }
 
         @media (min-width: 769px) and (max-width: 1024px) { .outils-main { padding: 20px; } }
         @media (max-width: 768px) {
@@ -93,7 +118,7 @@ export async function render(container) {
             .tool-item { flex-direction: column; align-items: flex-start; gap: 15px; padding: 15px; }
             .tool-item.has-delete { padding-right: 58px; }
             .tool-actions { align-self: stretch; margin-left: 0; width: 100%; }
-            .btn-return, .btn-transfer { flex: 1; justify-content: center; }
+            .btn-return, .btn-transfer, .btn-brise, .btn-repare, .btn-historique { flex: 1; justify-content: center; }
         }
     </style>
 
@@ -119,7 +144,10 @@ export async function render(container) {
         <div class="section-title">En cours d'utilisation</div>
         <div class="tool-list" id="activeListContainer"></div>
 
-        <div class="section-title" style="margin-top:20px;color:#888">Historique des retours</div>
+        <div class="section-title repair" id="reparationSectionTitle" style="margin-top:20px">En réparation</div>
+        <div class="tool-list" id="reparationListContainer"></div>
+
+        <div class="section-title history" style="margin-top:20px">Historique des retours</div>
         <div class="tool-list" id="historyListContainer"></div>
     </div>
 
@@ -213,6 +241,35 @@ export async function render(container) {
         </div>
     </div>
 
+    <!-- Modal signaler brisé -->
+    <div class="modal-overlay" id="briseModal">
+        <div class="custom-form-card">
+            <button class="btn-close-modal" id="btnCloseBrise">×</button>
+            <div class="modal-header-custom" style="color:#e67e22">
+                <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Signaler brisé
+            </div>
+            <div class="custom-group">
+                <label style="color:#aaa">Outil : <span id="briseToolName" style="color:white;font-size:16px;font-weight:bold"></span></label>
+            </div>
+            <div class="custom-group">
+                <label>Note de réparation <span style="color:#888;font-weight:normal;font-size:13px">(optionnel)</span></label>
+                <textarea id="inpBriseNote" placeholder="Ex: La lame est cassée, nécessite une inspection..."></textarea>
+            </div>
+            <button class="btn-custom-submit" id="btnConfirmBrise" style="background:#e67e22;color:white">Signaler comme brisé</button>
+        </div>
+    </div>
+
+    <!-- Modal historique -->
+    <div class="modal-overlay" id="historiqueModal">
+        <div class="hist-modal-card">
+            <button class="btn-close-modal" id="btnCloseHistorique">×</button>
+            <div style="font-size:20px;font-weight:bold;color:white;margin-bottom:5px">Historique</div>
+            <div id="historiqueToolTitle" style="font-size:15px;color:#aaa;margin-bottom:10px"></div>
+            <div class="hist-list" id="historiqueList"></div>
+        </div>
+    </div>
+
     <!-- Modal alerte -->
     <div class="modal-overlay" id="alertModal">
         <div class="modal-card-basic">
@@ -243,7 +300,6 @@ async function init() {
     if (!currentUser) return
     myUserName = currentProfil?.prenom_nom || currentUser.email.split('@')[0]
 
-    // Boutons
     document.getElementById('btnBorrow').addEventListener('click', openBorrowModal)
     document.getElementById('btnCloseBorrow').addEventListener('click', () => closeModal('borrowModal'))
     document.getElementById('btnSaveBorrow').addEventListener('click', saveBorrow)
@@ -252,12 +308,16 @@ async function init() {
     document.getElementById('btnExecuteTransfer').addEventListener('click', executeTransfer)
     document.getElementById('btnRefuseTransfer').addEventListener('click', refuseTransfer)
     document.getElementById('btnAcceptTransfer').addEventListener('click', acceptTransfer)
+    document.getElementById('btnCloseBrise').addEventListener('click', () => closeModal('briseModal'))
+    document.getElementById('btnConfirmBrise').addEventListener('click', confirmSignalerBrise)
+    document.getElementById('btnCloseHistorique').addEventListener('click', () => closeModal('historiqueModal'))
     document.getElementById('btnCloseAlert').addEventListener('click', () => closeModal('alertModal'))
     document.getElementById('btnCancelConfirm').addEventListener('click', closeConfirmModal)
     document.getElementById('btnConfirmAction').addEventListener('click', async () => {
         if (!itemToProcess) return
         if (actionType === 'return') await confirmReturn()
         else if (actionType === 'delete') await confirmDelete()
+        else if (actionType === 'repare') await confirmMarquerRepare()
     })
     document.getElementById('toolSearch').addEventListener('keyup', filterTools)
 
@@ -280,7 +340,7 @@ async function loadTools(reset = true) {
 
     const { data, error } = await supabase
         .from('outils')
-        .select('id,created_at,nom,assignee_nom,notes,date_transfert,status,pending_transfer_to,pending_transfer_at')
+        .select('id,created_at,nom,assignee_nom,notes,date_transfert,status,pending_transfer_to,pending_transfer_at,historique_transferts')
         .order('created_at', { ascending: false })
         .range(from, to + 1)
 
@@ -324,33 +384,44 @@ function formatDateFR(isoDate) {
 
 function renderTools(list = toolsLog) {
     const activeContainer = document.getElementById('activeListContainer')
+    const reparationContainer = document.getElementById('reparationListContainer')
     const historyContainer = document.getElementById('historyListContainer')
-    if (!activeContainer || !historyContainer) return
+    const reparationTitle = document.getElementById('reparationSectionTitle')
+    if (!activeContainer || !historyContainer || !reparationContainer) return
+
     activeContainer.innerHTML = ''
+    reparationContainer.innerHTML = ''
     historyContainer.innerHTML = ''
 
     const canManage = hasPermission('manage_tools')
-    let hasActive = false, hasHistory = false
+    let hasActive = false, hasReparation = false, hasHistory = false
 
     list.forEach(t => {
         if (t.status === 'available') return
 
         const hasPendingTransfer = !!t.pending_transfer_to
-        let badge = t.status === 'active'
-            ? `<span class="status-badge out">En cours</span>`
-            : `<span class="status-badge in">Retourné</span>`
+        const isMyTool = (t.assignee_nom || '').trim() === (myUserName || '').trim()
+
+        let badge = ''
+        if (t.status === 'active') badge = `<span class="status-badge out">En cours</span>`
+        else if (t.status === 'en_reparation') badge = `<span class="status-badge rep">⚠ En réparation</span>`
+        else badge = `<span class="status-badge in">Retourné</span>`
 
         if (hasPendingTransfer) {
-            badge += ` <span class="status-badge" style="background:rgba(91,192,235,0.15);color:var(--btn-blue);border:1px solid rgba(91,192,235,0.4)">↗ Transfert en attente : ${t.pending_transfer_to}</span>`
+            badge += ` <span class="status-badge" style="background:rgba(91,192,235,0.15);color:var(--btn-blue);border:1px solid rgba(91,192,235,0.4)">↗ Transfert en attente : ${sanitize(t.pending_transfer_to)}</span>`
         }
 
         const deleteBtn = canManage ? `<button class="btn-delete-tool" data-delete="${t.id}">
             <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>` : ''
 
+        const histBtn = `<button class="btn-historique" data-historique="${t.id}">
+            <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Historique
+        </button>`
+
         let actionsHTML = ''
         if (t.status === 'active') {
-            const isMyTool = (t.assignee_nom || '').trim() === (myUserName || '').trim()
             if (isMyTool) {
                 if (hasPendingTransfer) {
                     actionsHTML += `<button class="btn-transfer" style="background:#888" data-cancel="${t.id}">
@@ -363,12 +434,26 @@ function renderTools(list = toolsLog) {
                     actionsHTML += `<button class="btn-transfer" data-transfer="${t.id}">
                         <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
                         Transférer</button>`
+                    actionsHTML += `<button class="btn-brise" data-brise="${t.id}">
+                        <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+                        Signaler brisé</button>`
                 }
+            } else if (canManage && !hasPendingTransfer) {
+                actionsHTML += `<button class="btn-brise" data-brise="${t.id}">
+                    <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+                    Signaler brisé</button>`
             }
+        } else if (t.status === 'en_reparation' && canManage) {
+            actionsHTML += `<button class="btn-repare" data-repare="${t.id}">
+                <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="20 6 9 17 4 12"/></svg>
+                Marquer réparé</button>`
         }
 
+        actionsHTML += histBtn
+
+        const itemClass = t.status === 'returned' ? 'returned' : t.status === 'en_reparation' ? 'en-reparation' : ''
         const card = document.createElement('div')
-        card.className = `tool-item ${t.status === 'returned' ? 'returned' : ''} ${canManage ? 'has-delete' : ''}`
+        card.className = `tool-item ${itemClass} ${canManage ? 'has-delete' : ''}`.trim()
         card.innerHTML = `
             <div class="tool-info">
                 <div class="tool-name">
@@ -381,24 +466,32 @@ function renderTools(list = toolsLog) {
                     <span><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Emprunté le ${sanitize(formatDateFR(t.date_transfert))}</span>
                 </div>
             </div>
-            ${actionsHTML ? `<div class="tool-actions">${actionsHTML}</div>` : ''}
+            <div class="tool-actions">${actionsHTML}</div>
             ${deleteBtn}
         `
 
-        const target = t.status === 'active' ? activeContainer : historyContainer
-        target.appendChild(card)
-        if (t.status === 'active') hasActive = true
+        let target = historyContainer
+        if (t.status === 'active') { target = activeContainer; hasActive = true }
+        else if (t.status === 'en_reparation') { target = reparationContainer; hasReparation = true }
         else hasHistory = true
+        target.appendChild(card)
     })
 
     // Brancher les boutons
     activeContainer.querySelectorAll('[data-return]').forEach(btn => btn.addEventListener('click', () => askReturn(btn.dataset.return)))
     activeContainer.querySelectorAll('[data-transfer]').forEach(btn => btn.addEventListener('click', () => openTransferModal(btn.dataset.transfer)))
     activeContainer.querySelectorAll('[data-cancel]').forEach(btn => btn.addEventListener('click', () => cancelPendingTransfer(btn.dataset.cancel)))
+    activeContainer.querySelectorAll('[data-brise]').forEach(btn => btn.addEventListener('click', () => openBriseModal(btn.dataset.brise)))
+    reparationContainer.querySelectorAll('[data-repare]').forEach(btn => btn.addEventListener('click', () => askMarquerRepare(btn.dataset.repare)))
     document.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => askDelete(btn.dataset.delete)))
+    document.querySelectorAll('[data-historique]').forEach(btn => btn.addEventListener('click', () => openHistoriqueModal(btn.dataset.historique)))
 
     if (!hasActive) activeContainer.innerHTML = '<div style="color:#888;font-style:italic;padding:10px">Aucun outil actuellement en utilisation.</div>'
     if (!hasHistory) historyContainer.innerHTML = '<div style="color:#888;font-style:italic;padding:10px">Aucun historique de retour.</div>'
+
+    if (reparationTitle) reparationTitle.style.display = hasReparation ? '' : 'none'
+    if (!hasReparation) reparationContainer.innerHTML = ''
+
     ajouterBoutonPlusOutils()
 }
 
@@ -501,8 +594,12 @@ async function saveBorrow() {
     }
 
     const { error } = await supabase.from('outils').insert([{
-        nom: tool, assignee_nom: plumber, notes: address,
-        date_transfert: dateOut, status: 'active'
+        nom: tool,
+        assignee_nom: plumber,
+        notes: address,
+        date_transfert: dateOut,
+        status: 'active',
+        historique_transferts: [{ action: 'emprunté', par: plumber, lieu: address, date: dateOut }]
     }])
 
     if (error) { showAlert(friendlyError(error)); return }
@@ -524,10 +621,15 @@ function askReturn(id) {
 async function confirmReturn() {
     const today = new Date().toISOString().split('T')[0]
     const tool = toolsLog.find(t => t.id === itemToProcess)
+    const hist = Array.isArray(tool?.historique_transferts) ? tool.historique_transferts : []
+    hist.push({ action: 'retourné', par: tool?.assignee_nom || '', date: today })
+
     const { error } = await supabase.from('outils').update({
         status: 'returned',
-        notes: (tool?.notes || '') + ' | Retourné: ' + today
+        notes: (tool?.notes || '') + ' | Retourné: ' + today,
+        historique_transferts: hist
     }).eq('id', itemToProcess)
+
     if (error) { showAlert(friendlyError(error)); return }
     await loadTools()
     closeConfirmModal()
@@ -603,7 +705,7 @@ async function cancelPendingTransfer(toolId) {
 async function checkPendingTransfers() {
     const { data, error } = await supabase
         .from('outils')
-        .select('id, nom, assignee_nom, notes, pending_transfer_to, pending_transfer_at')
+        .select('id, nom, assignee_nom, notes, pending_transfer_to, pending_transfer_at, historique_transferts')
         .eq('pending_transfer_to', myUserName)
         .eq('status', 'active')
 
@@ -627,14 +729,21 @@ async function acceptTransfer() {
     const newLocation = document.getElementById('inpReceiveNewLocation').value.trim()
     if (!newLocation) { showAlert("Veuillez indiquer le nouveau lieu de l'outil avant d'accepter."); return }
 
+    const today = new Date().toISOString().split('T')[0]
+    const fromName = currentPendingTransfer.assignee_nom
+    const hist = Array.isArray(currentPendingTransfer.historique_transferts) ? currentPendingTransfer.historique_transferts : []
+    hist.push({ action: 'transféré', de: fromName, vers: myUserName, lieu: newLocation, date: today })
+
     const { error } = await supabase.from('outils').update({
-        assignee_nom: myUserName, notes: newLocation,
-        pending_transfer_to: null, pending_transfer_at: null
+        assignee_nom: myUserName,
+        notes: newLocation,
+        pending_transfer_to: null,
+        pending_transfer_at: null,
+        historique_transferts: hist
     }).eq('id', currentPendingTransfer.id)
 
     if (error) { showAlert(friendlyError(error)); return }
 
-    const fromName = currentPendingTransfer.assignee_nom
     const toolName = currentPendingTransfer.nom
     closeModal('receiveTransferModal')
     await loadTools()
@@ -657,6 +766,101 @@ async function refuseTransfer() {
     await loadTools()
     showAlert(`Transfert refusé. L'outil "${toolName}" reste assigné à ${fromName}.`)
     setTimeout(showNextPendingTransfer, 500)
+}
+
+// ── Signaler brisé ──────────────────────────────────────────────────────────
+function openBriseModal(toolId) {
+    itemToProcess = toolId
+    const t = toolsLog.find(x => x.id === toolId)
+    if (!t) return
+    document.getElementById('briseToolName').textContent = t.nom || ''
+    document.getElementById('inpBriseNote').value = ''
+    document.getElementById('briseModal').classList.add('open')
+}
+
+async function confirmSignalerBrise() {
+    if (!itemToProcess) return
+    const note = document.getElementById('inpBriseNote').value.trim()
+    const today = new Date().toISOString().split('T')[0]
+    const tool = toolsLog.find(t => t.id === itemToProcess)
+    const hist = Array.isArray(tool?.historique_transferts) ? tool.historique_transferts : []
+    hist.push({ action: 'signalé brisé', par: myUserName, note: note || '', date: today })
+
+    const { error } = await supabase.from('outils').update({
+        status: 'en_reparation',
+        historique_transferts: hist
+    }).eq('id', itemToProcess)
+
+    if (error) { showAlert(friendlyError(error)); return }
+    closeModal('briseModal')
+    itemToProcess = null
+    await loadTools()
+}
+
+// ── Marquer réparé ──────────────────────────────────────────────────────────
+function askMarquerRepare(toolId) {
+    itemToProcess = toolId; actionType = 'repare'
+    const t = toolsLog.find(x => x.id === toolId)
+    document.getElementById('confirmTitle').textContent = 'Outil réparé'
+    document.getElementById('confirmTitle').style.color = 'var(--btn-green)'
+    document.getElementById('confirmMsg').textContent = `Marquer "${t?.nom || 'cet outil'}" comme réparé et disponible ?`
+    const btn = document.getElementById('btnConfirmAction')
+    btn.textContent = 'Oui, réparé'; btn.className = 'btn-modal-green'
+    document.getElementById('confirmModal').classList.add('open')
+}
+
+async function confirmMarquerRepare() {
+    const today = new Date().toISOString().split('T')[0]
+    const tool = toolsLog.find(t => t.id === itemToProcess)
+    const hist = Array.isArray(tool?.historique_transferts) ? tool.historique_transferts : []
+    hist.push({ action: 'réparé', par: myUserName, date: today })
+
+    const { error } = await supabase.from('outils').update({
+        status: 'available',
+        historique_transferts: hist
+    }).eq('id', itemToProcess)
+
+    if (error) { showAlert(friendlyError(error)); return }
+    await loadTools()
+    closeConfirmModal()
+}
+
+// ── Modal historique ────────────────────────────────────────────────────────
+function openHistoriqueModal(toolId) {
+    const t = toolsLog.find(x => x.id === toolId)
+    if (!t) return
+
+    document.getElementById('historiqueToolTitle').textContent = t.nom || ''
+
+    const hist = Array.isArray(t.historique_transferts) ? t.historique_transferts : []
+    const list = document.getElementById('historiqueList')
+
+    if (!hist.length) {
+        list.innerHTML = '<div style="color:#888;font-style:italic;padding:10px">Aucun historique disponible pour cet outil.</div>'
+    } else {
+        const colorClass = (action) => {
+            if (action?.includes('emprunté')) return 'emprunté'
+            if (action?.includes('retourné')) return 'retourné'
+            if (action?.includes('transféré')) return 'transféré'
+            if (action?.includes('brisé')) return 'signalé'
+            if (action?.includes('réparé')) return 'réparé'
+            return ''
+        }
+        list.innerHTML = [...hist].reverse().map(h => {
+            let detail = ''
+            if (h.par) detail += `Par : ${sanitize(h.par)}`
+            if (h.de && h.vers) detail += `De ${sanitize(h.de)} → ${sanitize(h.vers)}`
+            if (h.lieu) detail += (detail ? ' · ' : '') + `Lieu : ${sanitize(h.lieu)}`
+            if (h.note) detail += (detail ? ' · ' : '') + `Note : ${sanitize(h.note)}`
+            return `<div class="hist-entry ${colorClass(h.action)}">
+                <div class="hist-action">${sanitize(h.action || '')}</div>
+                ${detail ? `<div class="hist-detail">${detail}</div>` : ''}
+                <div class="hist-date">${sanitize(h.date || '')}</div>
+            </div>`
+        }).join('')
+    }
+
+    document.getElementById('historiqueModal').classList.add('open')
 }
 
 // ── Utilitaires ─────────────────────────────────────────────────────────────

@@ -13,6 +13,7 @@ let suppliersData = []
 let toolsListData = []
 let maintenanceActive = false
 let confirmAdminCallback = null
+let allFormationsData = []
 
 const DEFAULT_SUPPLIERS = ['Deschênes', 'Wolseley', 'Plomberie Provinciale']
 
@@ -106,6 +107,14 @@ export async function render(container) {
         .admin-section.active { display: flex; }
         .perm-form-group { margin-bottom: 15px; }
         .perm-form-group label { display: block; color: var(--text-main); font-size: 14px; font-weight: bold; margin-bottom: 8px; }
+        .cert-emp-group { margin-bottom:15px; }
+        .cert-emp-name { color:#ff9800;font-weight:bold;font-size:13px;margin-bottom:7px;padding-bottom:4px;border-bottom:1px dashed #333; }
+        .cert-row { display:flex;align-items:center;gap:10px;padding:8px 12px;background:#1a1b23;border:1px solid #444;border-radius:6px;margin-bottom:5px; }
+        .cert-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
+        .cert-ok { background:var(--btn-green); }
+        .cert-soon { background:var(--btn-orange); }
+        .cert-exp { background:var(--btn-red); }
+        .cert-nodate { background:#555; }
         @media (min-width: 769px) and (max-width: 1024px) { .admin-main { padding: 20px; } }
         @media (max-width: 768px) { .admin-main { padding: 15px; } .dash-header { padding-right: 70px; } .tabs-container { margin-right: 0; } .settings-grid { grid-template-columns: 1fr; } .admin-danger-row { flex-direction: column; } .admin-danger-row .settings-card { min-width: 0 !important; flex: none !important; width: 100%; } }
     </style>
@@ -216,6 +225,19 @@ export async function render(container) {
                 <p style="color:#aaa;font-size:13px;margin-bottom:15px;line-height:1.4">Supprime <b>définitivement</b> les documents archivés depuis plus d'un an.</p>
                 <div id="archivesExpiredCount" style="font-size:13px;color:#aaa;margin-bottom:10px">Chargement…</div>
                 <button id="btnCleanArchives" style="width:100%;padding:12px;background:transparent;border:2px solid #ff9800;color:#ff9800;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.2s">Nettoyer</button>
+            </div>
+
+            <div class="settings-card" style="border-color:#2ecc71;grid-column:1/-1" id="certificationsPanel">
+                <div class="card-header" style="color:#2ecc71">
+                    <div class="header-with-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> Certifications du personnel</div>
+                    <button class="btn-add-small" id="btnOpenAddFormation" style="background:#2ecc71;color:black">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Ajouter formation
+                    </button>
+                </div>
+                <div id="certificationsList">
+                    <div style="color:#888;font-style:italic;text-align:center;padding:20px">Chargement…</div>
+                </div>
             </div>
 
         </div>
@@ -468,6 +490,19 @@ export async function render(container) {
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="addFormationAdminModal">
+        <div class="modal-card-basic">
+            <h2 style="color:#2ecc71;margin-top:0;margin-bottom:20px;border-bottom:1px solid #444;padding-bottom:10px">Ajouter une formation</h2>
+            <div class="form-group"><label>Employé</label><select id="formAdminUserId"></select></div>
+            <div class="form-group"><label>Nom de la formation / certification</label><input type="text" id="formAdminNom" placeholder="Ex: Secourisme, Travail en hauteur..."></div>
+            <div class="form-group"><label>Date d'expiration (optionnel)</label><input type="date" id="formAdminDateExp"></div>
+            <div class="modal-actions">
+                <button class="btn-modal-gray" id="btnCloseAddFormation">Annuler</button>
+                <button class="btn-modal-green" style="flex:1" id="btnSaveFormationAdmin">Ajouter</button>
+            </div>
+        </div>
+    </div>
     `
 
     await init()
@@ -507,6 +542,10 @@ async function init() {
         try { if (confirmAdminCallback) await confirmAdminCallback() }
         finally { if (btn) { btn.disabled = false; btn.style.opacity = '' }; closeConfirmAdminModal() }
     })
+
+    // Certifications modal
+    document.getElementById('btnCloseAddFormation')?.addEventListener('click', () => closeModal('addFormationAdminModal'))
+    document.getElementById('btnSaveFormationAdmin')?.addEventListener('click', saveFormationAdmin)
 
     // Fournisseurs
     document.getElementById('btnAddSupplier').addEventListener('click', addSupplier)
@@ -571,8 +610,10 @@ async function init() {
         loadTools()
         loadCounters()
         initSupportUI()
+        loadAllFormations()
+        document.getElementById('btnOpenAddFormation')?.addEventListener('click', openAddFormationModal)
     } else {
-        ;['toolsPanel', 'countersPanel', 'SupportPanel'].forEach(id => {
+        ;['toolsPanel', 'countersPanel', 'SupportPanel', 'certificationsPanel'].forEach(id => {
             const el = document.getElementById(id)
             if (el) el.style.display = 'none'
         })
@@ -1210,6 +1251,93 @@ async function cleanExpiredLogs() {
         showAlert(`${Number(data || 0)} log(s) supprimé(s) avec succès.`)
         await loadLogsExpiredCount(); await loadTechnicalLogs()
     })
+}
+
+// ── Certifications ──────────────────────────────────────────────────────────
+async function loadAllFormations() {
+    const container = document.getElementById('certificationsList')
+    if (!container) return
+    try {
+        const [formRes, profRes] = await Promise.all([
+            supabase.from('formations').select('id,user_id,nom,date_expiration').order('date_expiration', { ascending: true, nullsFirst: false }),
+            supabase.from('profils').select('id,prenom_nom').order('prenom_nom')
+        ])
+        const profMap = {}
+        ;(profRes.data || []).forEach(p => { profMap[p.id] = p.prenom_nom })
+        allFormationsData = (formRes.data || []).map(f => ({ ...f, prenom_nom: profMap[f.user_id] || 'Inconnu' }))
+        renderAllFormations(container)
+    } catch (e) {
+        container.innerHTML = `<div style="color:var(--btn-red)">Erreur : ${sanitize(e.message)}</div>`
+    }
+}
+
+function renderAllFormations(container) {
+    if (!container) return
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    if (!allFormationsData.length) {
+        container.innerHTML = '<div style="color:#888;font-style:italic;text-align:center;padding:20px">Aucune certification enregistrée.</div>'
+        return
+    }
+    const byUser = {}
+    allFormationsData.forEach(f => {
+        if (!byUser[f.user_id]) byUser[f.user_id] = { name: f.prenom_nom, items: [] }
+        byUser[f.user_id].items.push(f)
+    })
+    container.innerHTML = Object.values(byUser).map(grp => {
+        const rows = grp.items.map(f => {
+            let dotClass = 'cert-nodate', statusText = 'Pas de date'
+            if (f.date_expiration) {
+                const exp = new Date(f.date_expiration); exp.setHours(0, 0, 0, 0)
+                const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24))
+                if (diff < 0)       { dotClass = 'cert-exp';  statusText = `Expirée le ${exp.toLocaleDateString('fr-CA')}` }
+                else if (diff <= 30) { dotClass = 'cert-soon'; statusText = `Expire dans ${diff} j` }
+                else                 { dotClass = 'cert-ok';   statusText = `Valide jusqu'au ${exp.toLocaleDateString('fr-CA')}` }
+            }
+            return `<div class="cert-row">
+                <span class="cert-dot ${dotClass}"></span>
+                <span style="flex:1;color:#ddd;font-size:14px">${sanitize(f.nom)}</span>
+                <span style="font-size:12px;color:#aaa">${sanitize(statusText)}</span>
+                <button class="btn-del-emp" data-cert-del="${f.id}" title="Supprimer"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>`
+        }).join('')
+        return `<div class="cert-emp-group"><div class="cert-emp-name">${sanitize(grp.name)}</div>${rows}</div>`
+    }).join('')
+    container.querySelectorAll('[data-cert-del]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.certDel
+            const item = allFormationsData.find(f => String(f.id) === String(id))
+            showConfirmAdmin(`Supprimer "${sanitize(item?.nom || '')}" ?`, async () => {
+                const { error } = await supabase.from('formations').delete().eq('id', id)
+                if (error) showAlert(friendlyError(error))
+                else loadAllFormations()
+            })
+        })
+    })
+}
+
+async function openAddFormationModal() {
+    const sel = document.getElementById('formAdminUserId')
+    if (!sel) return
+    const { data } = await supabase.from('profils').select('id,prenom_nom').order('prenom_nom')
+    sel.innerHTML = (data || []).filter(p => p.prenom_nom).map(p => `<option value="${sanitize(p.id)}">${sanitize(p.prenom_nom)}</option>`).join('')
+    const nomEl = document.getElementById('formAdminNom')
+    const dateEl = document.getElementById('formAdminDateExp')
+    if (nomEl) nomEl.value = ''
+    if (dateEl) dateEl.value = ''
+    document.getElementById('addFormationAdminModal')?.classList.add('open')
+}
+
+async function saveFormationAdmin() {
+    const userId = document.getElementById('formAdminUserId')?.value
+    const nom = document.getElementById('formAdminNom')?.value.trim()
+    const dateExp = document.getElementById('formAdminDateExp')?.value || null
+    if (!userId || !nom) { showAlert('Veuillez sélectionner un employé et entrer un nom de formation.'); return }
+    const payload = { user_id: userId, nom }
+    if (dateExp) payload.date_expiration = dateExp
+    const { error } = await supabase.from('formations').insert([payload])
+    if (error) { showAlert(friendlyError(error)); return }
+    closeModal('addFormationAdminModal')
+    await loadAllFormations()
 }
 
 // ── Utilitaires ─────────────────────────────────────────────────────────────

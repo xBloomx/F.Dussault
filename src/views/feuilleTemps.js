@@ -125,6 +125,17 @@ export async function render(container) {
             .zoom-controls { display: none !important; }
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .inv-hsup { font-size: 12px; color: #e67e22; margin-top: 2px; white-space: nowrap; }
+        #view-recap { padding: 30px; height: 100%; overflow-y: auto; display: none; flex-direction: column; gap: 20px; }
+        .recap-filters { display: flex; gap: 10px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; flex-wrap: wrap; }
+        .recap-sel { background: var(--bg-dark); color: white; border: 1px solid var(--border); padding: 10px 15px; border-radius: 8px; font-size: 14px; outline: none; cursor: pointer; }
+        .recap-table-wrap { background: var(--bg-panel); border-radius: 12px; overflow: hidden; }
+        .recap-table { width: 100%; border-collapse: collapse; }
+        .recap-table th { text-align: left; padding: 12px 20px; color: #aaa; font-size: 13px; font-weight: bold; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        .recap-table td { padding: 14px 20px; color: white; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .recap-table tr:last-child td { border-bottom: none; }
+        .recap-table tr:hover td { background: rgba(255,255,255,0.03); }
+        .recap-total-row td { font-weight: bold; color: var(--accent); border-top: 2px solid var(--border); font-size: 15px; }
     </style>
 
     <div class="fdt-main">
@@ -150,6 +161,10 @@ export async function render(container) {
                     <svg viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
                     Archives
                 </button>
+                <button id="tab-recap" class="btn-tab" style="display:none">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                    Récapitulatif
+                </button>
             </div>
 
             <div class="toolbar">
@@ -160,6 +175,21 @@ export async function render(container) {
             </div>
             <div id="ts-compteur" style="color:#888;font-size:12px;padding:5px 10px"></div>
             <div class="invoice-list" id="timesheetListContainer"></div>
+        </div>
+
+        <div id="view-recap">
+            <div class="dash-header">
+                <div class="dash-title"><h1>Récapitulatif</h1><p>Heures par employé et par période</p></div>
+            </div>
+            <div class="recap-filters">
+                <label style="color:white;font-weight:bold">Période :</label>
+                <select id="recapMonth" class="recap-sel"></select>
+                <button id="btnRecapRefresh" class="action-btn" style="padding:10px 20px;background:var(--btn-blue);color:white">
+                    <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    Actualiser
+                </button>
+            </div>
+            <div id="recapTableContainer"></div>
         </div>
 
         <div id="note-refus-box">
@@ -274,6 +304,7 @@ async function init(container) {
     // Tabs
     if (canViewAllTimesheets()) {
         container.querySelector('#timesheet-tabs').style.display = 'flex'
+        container.querySelector('#tab-recap').style.display = 'flex'
     } else {
         container.querySelector('#timesheet-tabs').style.display = 'flex'
         container.querySelector('#tab-all').style.display = 'none'
@@ -282,6 +313,8 @@ async function init(container) {
     container.querySelector('#tab-mine').addEventListener('click', () => switchTab('mine', container))
     container.querySelector('#tab-all').addEventListener('click', () => switchTab('all', container))
     container.querySelector('#tab-archives').addEventListener('click', () => switchTab('archives', container))
+    container.querySelector('#tab-recap').addEventListener('click', () => switchTab('recap', container))
+    container.querySelector('#btnRecapRefresh').addEventListener('click', () => loadRecap(container))
     container.querySelector('#searchInput').addEventListener('keyup', () => filterTimesheets(container))
 
     // Dashboard
@@ -345,7 +378,7 @@ async function loadData(reset = true, container) {
     const from = tsPage * TS_PAGE_SIZE
     const to = from + TS_PAGE_SIZE - 1
 
-    let query = supabase.from('feuilles_de_temps').select('id, employe_nom, periode, status, total_heures, author_id, author_name, return_note, is_archived')
+    let query = supabase.from('feuilles_de_temps').select('id, employe_nom, periode, status, total_heures, total_heures_sup, author_id, author_name, return_note, is_archived')
     if (currentInvTab === 'archives') {
         query = query.eq('is_archived', true)
         if (!canSeeAllArchives(currentRole)) query = query.eq('author_id', currentUser.id)
@@ -360,7 +393,7 @@ async function loadData(reset = true, container) {
         tsHasMore = data.length > TS_PAGE_SIZE
         const mapped = data.slice(0, TS_PAGE_SIZE).map(db => ({
             id: db.id, employe: db.employe_nom, periode: db.periode, status: db.status,
-            pagesData: [], total_heures: db.total_heures || 0,
+            pagesData: [], total_heures: db.total_heures || 0, total_heures_sup: db.total_heures_sup || 0,
             authorId: db.author_id, authorName: db.author_name, return_note: db.return_note,
             isArchived: db.is_archived === true
         }))
@@ -373,7 +406,15 @@ function switchTab(tab, container) {
     currentInvTab = tab
     container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
     container.querySelector(`#tab-${tab}`)?.classList.add('active')
-    loadData(true, container)
+    if (tab === 'recap') {
+        container.querySelector('#view-dashboard').style.display = 'none'
+        container.querySelector('#view-recap').style.display = 'flex'
+        loadRecap(container)
+    } else {
+        container.querySelector('#view-dashboard').style.display = 'flex'
+        container.querySelector('#view-recap').style.display = 'none'
+        loadData(true, container)
+    }
 }
 
 // ── Rendu liste ─────────────────────────────────────────────────────────────
@@ -410,7 +451,10 @@ function renderTimesheetList(list, container) {
         div.innerHTML = `
             <div class="inv-id">${sanitize(sheet.periode || 'Période inconnue')}</div>
             <div class="inv-client"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${sanitize(sheet.employe || sheet.authorName || 'Employé')}</div>
-            <div class="inv-hours">${sanitize(String(sheet.total_heures ?? ''))} h</div>
+            <div class="inv-hours">
+                ${sanitize(String(sheet.total_heures ?? ''))} h
+                ${(sheet.total_heures_sup || 0) > 0 ? `<div class="inv-hsup">+${sanitize(String(sheet.total_heures_sup))} h sup.</div>` : ''}
+            </div>
             <div class="inv-status">${badgeHTML}</div>
             <div class="inv-actions">${actionsHTML}</div>
         `
@@ -508,6 +552,11 @@ function showDashboard(viewDash, viewEditor, container) {
     stopAutosave()
     viewDash.style.display = 'flex'
     viewEditor.style.display = 'none'
+    const recapView = container.querySelector('#view-recap')
+    if (recapView) recapView.style.display = 'none'
+    currentInvTab = 'mine'
+    container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
+    container.querySelector('#tab-mine')?.classList.add('active')
     loadData(true, container)
 }
 
@@ -598,6 +647,8 @@ async function saveCurrentTimesheet(isSending, wrapper, viewDash, viewEditor, co
 
     let totalGlobal = 0
     wrapper.querySelectorAll('.heure-input').forEach(inp => { const v = parseFloat(inp.value); if (!isNaN(v)) totalGlobal += v })
+    let totalHSup = 0
+    wrapper.querySelectorAll('.hsup-input').forEach(inp => { const v = parseFloat(inp.value); if (!isNaN(v)) totalHSup += v })
 
     const tsId = currentSheetId || 'TS-' + Date.now()
     const existing = timesheetsData.find(s => s.id === currentSheetId || s.id === tsId)
@@ -606,7 +657,7 @@ async function saveCurrentTimesheet(isSending, wrapper, viewDash, viewEditor, co
 
     const payload = {
         id: tsId, employe_nom: empName, periode: dateStr, pages_data: allPagesData,
-        total_heures: totalGlobal, status: currentStatus,
+        total_heures: totalGlobal, total_heures_sup: totalHSup, status: currentStatus,
         author_id: existing ? existing.authorId : currentUser.id,
         author_name: existing ? existing.authorName : myUserName
     }
@@ -687,6 +738,7 @@ function createTimePageHTML() {
             <td><input type="text" class="cell-input"></td>
             <td><input type="text" class="cell-input" style="text-align:left;padding-left:10px"></td>
             <td><input type="number" step="0.5" class="cell-input heure-input"></td>
+            <td><input type="number" step="0.5" class="cell-input hsup-input" style="background:rgba(230,126,34,0.08)"></td>
         </tr>`
     }
     page.innerHTML = `
@@ -705,7 +757,7 @@ function createTimePageHTML() {
             </div>
         </div>
         <table class="temps-table">
-            <thead><tr><th style="width:15%">Date</th><th style="width:15%"># Bon</th><th style="width:55%">Adresse</th><th style="width:15%">Heures</th></tr></thead>
+            <thead><tr><th style="width:13%">Date</th><th style="width:12%"># Bon</th><th style="width:47%">Adresse</th><th style="width:14%">Heures</th><th style="width:14%">H. Sup.</th></tr></thead>
             <tbody>${rows}</tbody>
         </table>
     `
@@ -721,6 +773,18 @@ function setupInputLogic(pageElement) {
     }
 
     pageElement.querySelectorAll('.date-input').forEach(inp => inp.addEventListener('input', enforceDateFormat))
+
+    pageElement.querySelectorAll('.heure-input').forEach(inp => {
+        inp.addEventListener('change', function () {
+            const row = this.closest('tr')
+            if (!row) return
+            const hsup = row.querySelector('.hsup-input')
+            if (!hsup || hsup.value.trim() !== '') return
+            const val = parseFloat(this.value)
+            if (!isNaN(val) && val > 8) hsup.value = String(+(val - 8).toFixed(1))
+            else if (!isNaN(val)) hsup.value = ''
+        })
+    })
 
     const startInput = pageElement.querySelector('.input-semaine-debut')
     const endInput = pageElement.querySelector('.input-semaine-fin')
@@ -796,6 +860,103 @@ function duplicatePage(wrapper, zoomDisplay) {
 function deletePage(wrapper, container) {
     if (wrapper.children.length > 1) { wrapper.removeChild(wrapper.lastElementChild) }
     else showAlertModal('Impossible de supprimer la dernière page.', container)
+}
+
+// ── Récapitulatif ────────────────────────────────────────────────────────────
+function buildRecapMonthOptions(container) {
+    const sel = container.querySelector('#recapMonth')
+    if (!sel || sel.options.length > 0) return
+    const now = new Date()
+    for (let i = 0; i < 6; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const label = d.toLocaleDateString('fr-CA', { month: 'long', year: 'numeric' })
+        const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        const opt = document.createElement('option')
+        opt.value = value; opt.textContent = label.charAt(0).toUpperCase() + label.slice(1)
+        sel.appendChild(opt)
+    }
+}
+
+async function loadRecap(container) {
+    buildRecapMonthOptions(container)
+    const sel = container.querySelector('#recapMonth')
+    const month = sel?.value
+    if (!month) return
+
+    const [year, mon] = month.split('-').map(Number)
+    const dateFrom = `${year}-${String(mon).padStart(2, '0')}-01`
+    const dateTo = new Date(year, mon, 0).toISOString().split('T')[0]
+
+    const { data, error } = await supabase
+        .from('feuilles_de_temps')
+        .select('employe_nom, author_name, total_heures, total_heures_sup, status, periode')
+        .eq('is_archived', false)
+        .in('status', ['envoye', 'approuve'])
+        .gte('created_at', dateFrom + 'T00:00:00')
+        .lte('created_at', dateTo + 'T23:59:59')
+
+    if (error) { console.error('[recap]', error); return }
+    renderRecap(data || [], container)
+}
+
+function renderRecap(rows, container) {
+    const wrap = container.querySelector('#recapTableContainer')
+    if (!wrap) return
+
+    if (!rows.length) {
+        wrap.innerHTML = '<div style="color:#888;font-style:italic;padding:20px;text-align:center">Aucune feuille soumise pour cette période.</div>'
+        return
+    }
+
+    const byEmp = {}
+    rows.forEach(r => {
+        const name = r.employe_nom || r.author_name || 'Inconnu'
+        if (!byEmp[name]) byEmp[name] = { heures: 0, hsup: 0, count: 0, statuts: new Set() }
+        byEmp[name].heures += r.total_heures || 0
+        byEmp[name].hsup += r.total_heures_sup || 0
+        byEmp[name].count++
+        byEmp[name].statuts.add(r.status)
+    })
+
+    const sortedNames = Object.keys(byEmp).sort()
+    let totalH = 0, totalS = 0, totalF = 0
+    const bodyRows = sortedNames.map(name => {
+        const e = byEmp[name]
+        totalH += e.heures; totalS += e.hsup; totalF += e.count
+        const statutsBadges = [...e.statuts].map(s => {
+            if (s === 'approuve') return '<span style="background:rgba(40,167,69,0.15);color:var(--btn-green);padding:2px 8px;border-radius:6px;font-size:12px;font-weight:bold">Approuvée</span>'
+            return '<span style="background:rgba(52,152,219,0.15);color:var(--btn-blue);padding:2px 8px;border-radius:6px;font-size:12px;font-weight:bold">Envoyée</span>'
+        }).join(' ')
+        return `<tr>
+            <td><strong>${sanitize(name)}</strong></td>
+            <td><strong style="color:var(--accent)">${e.heures.toFixed(1)} h</strong></td>
+            <td>${e.hsup > 0 ? `<span style="color:#e67e22;font-weight:bold">+${e.hsup.toFixed(1)} h</span>` : '<span style="color:#555">—</span>'}</td>
+            <td style="color:#aaa">${e.count} feuille${e.count > 1 ? 's' : ''}</td>
+            <td>${statutsBadges}</td>
+        </tr>`
+    }).join('')
+
+    wrap.innerHTML = `<div class="recap-table-wrap">
+        <table class="recap-table">
+            <thead><tr>
+                <th>Employé</th>
+                <th>Total heures</th>
+                <th>H. supplémentaires</th>
+                <th>Feuilles</th>
+                <th>Statut</th>
+            </tr></thead>
+            <tbody>
+                ${bodyRows}
+                <tr class="recap-total-row">
+                    <td>TOTAL</td>
+                    <td>${totalH.toFixed(1)} h</td>
+                    <td>${totalS > 0 ? `+${totalS.toFixed(1)} h` : '—'}</td>
+                    <td>${totalF} feuille${totalF > 1 ? 's' : ''}</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>`
 }
 
 // ── Autosave ────────────────────────────────────────────────────────────────

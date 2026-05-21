@@ -24,12 +24,13 @@
             background-color: var(--bg-dark);
             color: var(--text-main);
             margin: 0; padding: 0;
-            height: calc(var(--app-height, 100dvh));
+            height: 100dvh;
             display: flex;
             overflow: hidden;
             padding-top: env(safe-area-inset-top, 0px);
             padding-left: env(safe-area-inset-left, 0px);
             padding-right: env(safe-area-inset-right, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         /* ── SIDEBAR ─────────────────────────────────────────────── */
@@ -168,6 +169,7 @@
 
         /* Responsive */
         @media (min-width: 769px) and (max-width: 1024px) {
+            body { padding-left: 0; padding-right: 0; }
             .sidebar { position: relative; left: 0; width: 80px; flex-shrink: 0; }
             .menu-btn { display: none; }
         }
@@ -189,14 +191,14 @@
     </style>
     <!-- emoji-picker-element pour la messagerie -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-  <script type="module" crossorigin src="/assets/main-wCr3GAJ8.js"></script>
+  <script type="module" crossorigin src="/assets/main-kUGNqnlw.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-Cf3xff8G.js">
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-DgFuoWHe.js">
   <link rel="modulepreload" crossorigin href="/assets/dist-DIBucx4m.js">
   <link rel="modulepreload" crossorigin href="/assets/supabase-BHP_DPH_.js">
-  <link rel="modulepreload" crossorigin href="/assets/auth-wlrJYOzK.js">
-  <link rel="modulepreload" crossorigin href="/assets/offlineQueue-DvhPUZVs.js">
-  <link rel="stylesheet" crossorigin href="/assets/main-CG-zuUfs.css">
+  <link rel="modulepreload" crossorigin href="/assets/auth-gDaO509H.js">
+  <link rel="modulepreload" crossorigin href="/assets/offlineQueue-CxE3IgX3.js">
+  <link rel="stylesheet" crossorigin href="/assets/main-DRZ3vjkS.css">
 <script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 <body>
 
@@ -302,14 +304,5 @@
 </div>
 
 
-<script>
-// ── Fix hauteur Safari iOS — barre navigation variable ────────────────────────
-function setAppHeight() {
-    document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px')
-}
-setAppHeight()
-window.addEventListener('resize', setAppHeight)
-window.addEventListener('orientationchange', () => setTimeout(setAppHeight, 100))
-</script>
 </body>
 </html>

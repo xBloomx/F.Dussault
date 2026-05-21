@@ -35,6 +35,7 @@ let _editingMsgId = null
 let _currentlySwipedItem = null
 let _swipeState = null
 let _titleNotifPending = false
+let _chatSearchTerm = ''
 let quickReactions = (() => { try { return JSON.parse(localStorage.getItem('dussault_quick_reacts')) || ['❤️', '👍', '😂', '😮', '😢', '🙏'] } catch { return ['❤️', '👍', '😂', '😮', '😢', '🙏'] } })()
 
 const conversationsData = { 'global': { name: 'Équipe (Général)', isGroup: true, messages: [] } }
@@ -195,6 +196,19 @@ export async function render(container) {
             .message-wrapper { max-width: 85%; }
             .msg-react-btn { opacity: 1; }
         }
+        .btn-chat-search { background: transparent; border: none; color: #888; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 8px; margin-left: auto; transition: 0.2s; }
+        .btn-chat-search:hover, .btn-chat-search.active { color: var(--accent); background: rgba(252,202,70,0.1); }
+        .btn-chat-search svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+        #chatSearchBar { display: none; padding: 8px 16px; background: #262730; border-bottom: 1px solid var(--border-color); align-items: center; gap: 10px; }
+        #chatSearchBar.show { display: flex; }
+        #chatSearchInput { flex: 1; background: var(--bg-dark); border: 1px solid #444; color: white; padding: 10px 15px; border-radius: 8px; font-size: 14px; outline: none; }
+        #chatSearchInput:focus { border-color: var(--accent); }
+        #chatSearchCount { color: #888; font-size: 13px; white-space: nowrap; }
+        .btn-close-chat-search { background: transparent; border: none; color: #888; font-size: 22px; cursor: pointer; padding: 0; line-height: 1; }
+        .btn-close-chat-search:hover { color: white; }
+        .msg-highlight { background: rgba(252,202,70,0.3); border-radius: 2px; }
+        .msg-read-status { font-size: 10px; color: #28a745; margin-top: 3px; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+        .msg-read-status svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.5; }
     </style>
 
     <svg style="display:none">
@@ -236,7 +250,15 @@ export async function render(container) {
                     <button class="btn-back" id="btnBack"><svg><use href="#msg-back"/></svg></button>
                     <div id="chatHeaderAvatar" class="avatar" style="width:40px;height:40px;font-size:15px;margin-right:10px"></div>
                     <div><h2 id="chatHeaderName">Sélectionnez une discussion</h2></div>
+                    <button class="btn-chat-search" id="btnChatSearch" title="Rechercher dans la conversation">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </button>
                 </header>
+                <div id="chatSearchBar">
+                    <input type="text" id="chatSearchInput" placeholder="Rechercher dans la conversation...">
+                    <span id="chatSearchCount"></span>
+                    <button class="btn-close-chat-search" id="btnCloseChatSearch">×</button>
+                </div>
                 <div class="messages-container" id="chatMessages">
                     <div style="text-align:center;color:#888;font-style:italic;margin-top:50px">Aucune conversation sélectionnée.</div>
                 </div>
@@ -406,8 +428,22 @@ async function init(container) {
         }
     })
 
-    // Recherche
+    // Recherche contacts
     container.querySelector('#searchContactInput').addEventListener('keyup', () => filterContacts(container))
+
+    // Recherche in-chat
+    container.querySelector('#btnChatSearch').addEventListener('click', () => {
+        const bar = container.querySelector('#chatSearchBar')
+        const btn = container.querySelector('#btnChatSearch')
+        const isOpen = bar.classList.contains('show')
+        if (isOpen) { closeChatSearch(container) }
+        else { bar.classList.add('show'); btn.classList.add('active'); container.querySelector('#chatSearchInput').focus() }
+    })
+    container.querySelector('#btnCloseChatSearch').addEventListener('click', () => closeChatSearch(container))
+    container.querySelector('#chatSearchInput').addEventListener('input', e => {
+        _chatSearchTerm = e.target.value.trim()
+        if (currentChatId && conversationsData[currentChatId]) renderMessages(conversationsData[currentChatId].messages, false, container)
+    })
 
     renderQuickReactions(container)
     await chargerChatsMasques()
@@ -447,7 +483,7 @@ async function chargerProfilsEmployes() {
 
 async function chargerMessagesSupabase(container) {
     const { data, error } = await supabase.from('message')
-        .select('id, created_at, contenu, expediteur_id, chat_id, edited_at, deleted_at, profils(prenom_nom)')
+        .select('id, created_at, contenu, expediteur_id, chat_id, edited_at, deleted_at, read_by, profils(prenom_nom)')
         .order('created_at', { ascending: true })
 
     if (error) { showAlert(friendlyError(error), container); return }
@@ -474,11 +510,15 @@ async function chargerMessagesSupabase(container) {
             reaction: msgDB.reaction || null,
             type: decodage.type, text: decodage.text, url: decodage.url,
             fileName: decodage.fileName, fileSize: decodage.fileSize,
-            createdAt: msgDB.created_at, editedAt: msgDB.edited_at, deletedAt: msgDB.deleted_at
+            createdAt: msgDB.created_at, editedAt: msgDB.edited_at, deletedAt: msgDB.deleted_at,
+            readBy: Array.isArray(msgDB.read_by) ? msgDB.read_by : []
         })
     })
 
-    if (currentChatId && conversationsData[currentChatId]) renderMessages(conversationsData[currentChatId].messages, true, container)
+    if (currentChatId && conversationsData[currentChatId]) {
+        renderMessages(conversationsData[currentChatId].messages, true, container)
+        markMessagesRead(currentChatId)
+    }
     renderContactList(container)
     ecouterNouveauxMessages(container)
 }
@@ -513,7 +553,8 @@ function ecouterNouveauxMessages(container) {
                 id: newMsg.id, sender: senderName, time: timeStr, isMine: false, reaction: null,
                 type: decodage.type, text: decodage.text, url: decodage.url,
                 fileName: decodage.fileName, fileSize: decodage.fileSize,
-                createdAt: newMsg.created_at, editedAt: newMsg.edited_at, deletedAt: newMsg.deleted_at
+                createdAt: newMsg.created_at, editedAt: newMsg.edited_at, deletedAt: newMsg.deleted_at,
+                readBy: Array.isArray(newMsg.read_by) ? newMsg.read_by : []
             })
 
             if (hiddenChatIds.has(cId)) {
@@ -521,7 +562,10 @@ function ecouterNouveauxMessages(container) {
                 try { await supabase.from('chats_caches').delete().eq('user_id', myUserId).eq('chat_id', cId) } catch (e) { console.warn('[messagerie] Impossible de supprimer le cache chat:', e?.message) }
             }
 
-            if (currentChatId === cId) renderMessages(conversationsData[cId].messages, true, container)
+            if (currentChatId === cId) {
+                renderMessages(conversationsData[cId].messages, true, container)
+                markMessagesRead(cId)
+            }
             renderContactList(container)
             if (currentChatId !== cId) notifierNouveauMessage(senderName, cId, container)
         })
@@ -533,7 +577,7 @@ function ecouterNouveauxMessages(container) {
             const local = chat.messages.find(m => m.id === msg.id || m.id == msg.id)
             if (!local) return
             const d = decoderMessage(msg.contenu)
-            Object.assign(local, { text: d.text, url: d.url, fileName: d.fileName, fileSize: d.fileSize, editedAt: msg.edited_at, deletedAt: msg.deleted_at, reaction: msg.reaction || null })
+            Object.assign(local, { text: d.text, url: d.url, fileName: d.fileName, fileSize: d.fileSize, editedAt: msg.edited_at, deletedAt: msg.deleted_at, reaction: msg.reaction || null, readBy: Array.isArray(msg.read_by) ? msg.read_by : local.readBy || [] })
             if (currentChatId === cId) renderMessages(chat.messages, false, container)
             renderContactList(container)
         })
@@ -674,16 +718,33 @@ function renderContactList(container) {
     attachSwipeListeners(container)
 }
 
+function highlightTerm(text, term) {
+    if (!term || !text) return sanitize(text || '')
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const parts = sanitize(text).split(new RegExp(`(${escaped})`, 'gi'))
+    return parts.map((p, i) => i % 2 === 1 ? `<mark class="msg-highlight">${p}</mark>` : p).join('')
+}
+
 function renderMessages(messages, scroll = false, container) {
     const messagesContainer = container.querySelector('#chatMessages')
     if (!messagesContainer) return
     const scrollPos = messagesContainer.scrollTop
     messagesContainer.innerHTML = ''
-    if (!messages.length) {
-        messagesContainer.innerHTML = '<div style="text-align:center;color:#888;font-style:italic;margin-top:50px">Envoyez un premier message pour démarrer la discussion.</div>'
+
+    const term = _chatSearchTerm.toLowerCase()
+    const filtered = term ? messages.filter(m => m.text && m.text.toLowerCase().includes(term)) : messages
+    const countEl = container.querySelector('#chatSearchCount')
+    if (countEl) countEl.textContent = term ? `${filtered.length} résultat${filtered.length !== 1 ? 's' : ''}` : ''
+
+    const displayList = term ? filtered : messages
+
+    if (!displayList.length) {
+        messagesContainer.innerHTML = term
+            ? '<div style="text-align:center;color:#888;font-style:italic;margin-top:50px">Aucun message ne correspond à votre recherche.</div>'
+            : '<div style="text-align:center;color:#888;font-style:italic;margin-top:50px">Envoyez un premier message pour démarrer la discussion.</div>'
         return
     }
-    messages.forEach(msg => {
+    displayList.forEach(msg => {
         const wrapper = document.createElement('div')
         wrapper.className = `message-wrapper ${msg.isMine ? 'sent' : 'received'}`
         wrapper.dataset.msgId = msg.id
@@ -695,7 +756,8 @@ function renderMessages(messages, scroll = false, container) {
         if (msg.deletedAt) {
             innerBubble = `<div class="message-bubble" style="background:#3a3b46!important;color:#888!important;font-style:italic"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;opacity:0.6;stroke:#888;fill:none;stroke-width:2"><use href="#msg-trash"/></svg>Message supprimé<span class="message-time">${sanitize(msg.time)}</span></div>`
         } else if (msg.type === 'text') {
-            innerBubble = `<div class="message-bubble">${sanitize(msg.text)}<span class="message-time">${sanitize(msg.time)}${editedTag}</span>${reactionHtml}</div>`
+            const textContent = _chatSearchTerm ? highlightTerm(msg.text, _chatSearchTerm) : sanitize(msg.text)
+            innerBubble = `<div class="message-bubble">${textContent}<span class="message-time">${sanitize(msg.time)}${editedTag}</span>${reactionHtml}</div>`
         } else if (msg.type === 'image') {
             const safeUrl = sanitizeUrl(msg.url)
             innerBubble = `<div class="message-bubble bubble-image"><img src="${safeUrl}" data-open-url="${safeUrl}"><span class="message-time">${msg.time}${editedTag}</span>${reactionHtml}</div>`
@@ -705,7 +767,9 @@ function renderMessages(messages, scroll = false, container) {
         }
 
         const reactBtnHtml = msg.deletedAt ? '' : `<button class="msg-react-btn" data-react-msg="${msg.id}"><svg><use href="#msg-smile"/></svg></button>`
-        wrapper.innerHTML = senderHtml + `<div class="message-content-row">${innerBubble}${reactBtnHtml}</div>`
+        const isRead = msg.isMine && !msg.deletedAt && Array.isArray(msg.readBy) && msg.readBy.length > 0
+        const readStatusHtml = isRead ? `<div class="msg-read-status"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/><polyline points="20 10 13 17 9 13"/></svg> Lu</div>` : ''
+        wrapper.innerHTML = senderHtml + `<div class="message-content-row">${innerBubble}${reactBtnHtml}</div>${readStatusHtml}`
         messagesContainer.appendChild(wrapper)
 
         // Event listeners
@@ -735,6 +799,7 @@ function openChat(chatId, container) {
     avatarBox.innerHTML = chat.isGroup ? `<svg><use href="#msg-users"/></svg>` : (chat.name ? chat.name.charAt(0).toUpperCase() : '?')
     renderContactList(container)
     renderMessages(chat.messages || [], true, container)
+    markMessagesRead(chatId)
     if (window.innerWidth <= 900) container.querySelector('#view-dashboard').classList.add('show-chat')
     selectedFiles = []; renderPreviews(container)
 }
@@ -1157,6 +1222,35 @@ function onSwipeClick(e, container) {
     if (_currentlySwipedItem && _currentlySwipedItem !== item) {
         _currentlySwipedItem.classList.remove('swiped'); _currentlySwipedItem = null
     }
+}
+
+// ── Accusés de lecture ────────────────────────────────────────────────────────
+async function markMessagesRead(chatId) {
+    if (!chatId || !myUserId) return
+    const chat = conversationsData[chatId]
+    if (!chat?.messages?.length) return
+    for (const m of chat.messages) {
+        if (m.isMine || m.deletedAt) continue
+        if (!Array.isArray(m.readBy)) m.readBy = []
+        if (m.readBy.includes(myUserId)) continue
+        const newReadBy = [...m.readBy, myUserId]
+        m.readBy = newReadBy
+        // Only update real DB rows (UUIDs or small ints), skip optimistic Date.now() IDs
+        if (typeof m.id !== 'number' || m.id < 2e12) {
+            supabase.from('message').update({ read_by: newReadBy }).eq('id', m.id).then(() => {}).catch(() => {})
+        }
+    }
+}
+
+// ── Recherche in-chat ─────────────────────────────────────────────────────────
+function closeChatSearch(container) {
+    _chatSearchTerm = ''
+    container.querySelector('#chatSearchBar').classList.remove('show')
+    container.querySelector('#btnChatSearch').classList.remove('active')
+    container.querySelector('#chatSearchInput').value = ''
+    const countEl = container.querySelector('#chatSearchCount')
+    if (countEl) countEl.textContent = ''
+    if (currentChatId && conversationsData[currentChatId]) renderMessages(conversationsData[currentChatId].messages, false, container)
 }
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────

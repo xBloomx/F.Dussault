@@ -6,6 +6,7 @@ import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.
 import { withRetry } from '../shared/withRetry.js'
 import { sanitize } from '../shared/sanitize.js'
 import { friendlyError } from '../shared/errorMsg.js'
+import { showToast } from '../shared/toast.js'
 
 // ── État local ──────────────────────────────────────────────────────────────
 let myUserName = ''
@@ -390,6 +391,7 @@ async function loadData() {
     renderTabs()
     renderLegend()
     renderCalendar()
+    checkUpcomingReminders()
 }
 
 // ── Onglets ─────────────────────────────────────────────────────────────────
@@ -830,6 +832,40 @@ function deleteCurrentEvent() {
         closeModal('viewModal')
         await loadData()
     })
+}
+
+// ── Rappels ──────────────────────────────────────────────────────────────────
+function checkUpcomingReminders() {
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const todayStr = today.toISOString().split('T')[0]
+    const tomorrowStr = (() => { const t = new Date(today); t.setDate(today.getDate() + 1); return t.toISOString().split('T')[0] })()
+
+    // Show at most once per day per user
+    const storageKey = `cal_reminders_${todayStr}_${currentUser?.id || ''}`
+    if (localStorage.getItem(storageKey)) return
+    localStorage.setItem(storageKey, '1')
+
+    // Events starting today or tomorrow that involve the current user
+    const relevant = events.filter(e => {
+        if (e.cat_id === 'urgence') return false
+        if (e.start_date !== todayStr && e.start_date !== tomorrowStr) return false
+        const sharedIds = e.shared_with ? e.shared_with.map(s => s.id) : []
+        return e.author_id === currentUser.id || sharedIds.includes(currentUser.id)
+    })
+    const todayEvts    = relevant.filter(e => e.start_date === todayStr)
+    const tomorrowEvts = relevant.filter(e => e.start_date === tomorrowStr)
+
+    if (todayEvts.length)    showToast(`Aujourd'hui : ${todayEvts.map(e => sanitize(e.title)).join(', ')}`, 'warning', 6000)
+    if (tomorrowEvts.length) showToast(`Demain : ${tomorrowEvts.map(e => sanitize(e.title)).join(', ')}`, 'warning', 5000)
+
+    // Certifications expiring within 30 days
+    const expSoon = userFormations.filter(f => {
+        if (!f.date_expiration) return false
+        const exp = new Date(f.date_expiration); exp.setHours(0, 0, 0, 0)
+        const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24))
+        return diff >= 0 && diff <= 30
+    })
+    if (expSoon.length) showToast(`Certif. bientôt expirée(s) : ${expSoon.map(f => sanitize(f.nom)).join(', ')}`, 'warning', 7000)
 }
 
 // ── Utilitaires ─────────────────────────────────────────────────────────────

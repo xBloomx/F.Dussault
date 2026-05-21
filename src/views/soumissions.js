@@ -68,6 +68,8 @@ export async function render(container) {
         .status-convertie { background: rgba(40,167,69,0.15);  color: var(--btn-green); }
         .status-brouillon { background: rgba(136,136,136,0.15); color: #888; }
         .status-archivee  { background: rgba(85,85,85,0.15);   color: #777; }
+        .status-approuvee { background: rgba(40,167,69,0.15);  color: var(--btn-green); }
+        .status-acorriger { background: rgba(255,152,0,0.15);  color: var(--btn-orange); }
         .inv-actions { display: flex; justify-content: flex-end; }
         .btn-icon { background: #444; border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; flex-shrink: 0; transition: 0.2s;}
         .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; }
@@ -199,10 +201,10 @@ export async function render(container) {
                 <div class="select-wrap" id="statusFilterWrap" style="display:none">
                     <select id="statusFilter">
                         <option value="">Tous les statuts</option>
-                        <option value="envoye">Envoyé au bureau</option>
-                        <option value="traite">Traité</option>
-                        <option value="attente">À corriger</option>
-                        <option value="paye">Approuvé</option>
+                        <option value="En attente">En attente</option>
+                        <option value="Approuvée">Approuvée</option>
+                        <option value="A corriger">À corriger</option>
+                        <option value="Convertie">Convertie</option>
                     </select>
                     <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
@@ -228,6 +230,14 @@ export async function render(container) {
                 <button class="action-btn btn-convert" id="btnConvert">
                     <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                     Convertir en facture
+                </button>
+                <button class="action-btn" id="btnApprouver" style="display:none;background:var(--btn-green) !important;color:white !important">
+                    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    Approuver
+                </button>
+                <button class="action-btn" id="btnCorrections" style="display:none;background:var(--btn-orange) !important;color:white !important">
+                    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.22"/></svg>
+                    À corriger
                 </button>
                 <button class="action-btn btn-unlock" id="btnUnlock" style="display:none">
                     <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
@@ -324,6 +334,8 @@ async function init(container) {
         showConfirm('Une fois envoyée, cette soumission sera verrouillée. L\'envoyer au bureau ?', () => saveCurrentQuote(true, quoteContainer, container), container)
     })
     container.querySelector('#btnConvert').addEventListener('click', () => convertToInvoice(quoteContainer, container))
+    container.querySelector('#btnApprouver').addEventListener('click', () => approuverSoumission(container))
+    container.querySelector('#btnCorrections').addEventListener('click', () => demanderCorrections(container))
     container.querySelector('#btnUnlock').addEventListener('click', () => unlockQuote(container))
     container.querySelector('#btnPdf').addEventListener('click', () => exportPdf(quoteContainer))
     container.querySelector('#btnAddPage').addEventListener('click', () => { quoteContainer.appendChild(createQuotePageHTML()); zoomCtrl?.applyZoom(zoomCtrl?.current ?? 1.0) })
@@ -447,6 +459,8 @@ function renderQuoteList(container) {
         if (q.isArchived) statusHTML = `<span class="inv-status status-archivee" style="display:inline-flex">Archivée</span>`
         else if (q.status === 'Convertie') statusHTML = `<span class="status-convertie">Convertie</span>`
         else if (q.status === 'brouillon') statusHTML = `<span class="status-brouillon">Brouillon</span>`
+        else if (q.status === 'Approuvée') statusHTML = `<span class="status-approuvee">Approuvée</span>`
+        else if (q.status === 'A corriger') statusHTML = `<span class="status-acorriger">À corriger</span>`
         else statusHTML = `<span class="status-attente">${!isBureau ? 'Envoyée' : 'En attente'}</span>`
 
         let actionsHTML = '<div style="width:36px"></div>'
@@ -557,7 +571,7 @@ function openExistingQuote(id, container) {
     if (!quote.isArchived && (!quote.status || quote.status === 'brouillon')) startAutosave(quoteContainer)
 }
 
-function openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay) {
+async function openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay) {
     try { localStorage.removeItem('fdussault_draft_soumission_new') } catch {}
     currentQuoteId = null
     viewDash.style.display = 'none'
@@ -567,7 +581,10 @@ function openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay) {
     quoteContainer.appendChild(createQuotePageHTML())
     loadClientNames().then(injectClientDatalist)
     const numInput = quoteContainer.querySelector('.red-quote-input')
-    if (numInput) numInput.value = 'S-' + Date.now().toString().slice(-4)
+    if (numInput) {
+        numInput.value = '…'
+        generateQuoteNumber().then(num => { if (numInput) numInput.value = num })
+    }
 
     const container = quoteContainer.closest('.soum-main').parentElement
     applyEditorSecurity(null, container)
@@ -590,6 +607,7 @@ function applyEditorSecurity(quote, container) {
     const isAuthor = quote ? (quote.authorId === currentUser.id || !quote.authorId) : true
     const isArchived = quote?.isArchived === true
     let canEdit = status === 'brouillon' && isAuthor
+    if (status === 'A corriger' && isAuthor) canEdit = true
     if (isArchived) canEdit = false
 
     const show = el => { if (el) el.style.display = canEdit ? 'flex' : 'none' }
@@ -601,10 +619,16 @@ function applyEditorSecurity(quote, container) {
     show(container.querySelector('#btnClear'))
 
     const btnConvert = container.querySelector('#btnConvert')
-    if (btnConvert) btnConvert.style.display = (status === 'En attente' && isBureau) ? 'flex' : 'none'
+    if (btnConvert) btnConvert.style.display = (status === 'Approuvée' && isBureau) ? 'flex' : 'none'
+
+    const btnApprouver = container.querySelector('#btnApprouver')
+    const btnCorrections = container.querySelector('#btnCorrections')
+    const canApprove = isBureau && status === 'En attente'
+    if (btnApprouver) btnApprouver.style.display = canApprove ? 'flex' : 'none'
+    if (btnCorrections) btnCorrections.style.display = canApprove ? 'flex' : 'none'
 
     const btnUnlock = container.querySelector('#btnUnlock')
-    if (btnUnlock) btnUnlock.style.display = (isBureau && status !== 'brouillon' && status !== 'Convertie' && !isArchived) ? 'flex' : 'none'
+    if (btnUnlock) btnUnlock.style.display = (isBureau && status !== 'brouillon' && status !== 'Convertie' && status !== 'En attente' && !isArchived) ? 'flex' : 'none'
 
     toggleInputs(canEdit, container)
 }
@@ -859,6 +883,45 @@ function clearAutosaveCurrent() {
 
 // ── Zoom — géré par zoomCtrl (zoom.js) ────────────────────────────────────────
 // Voir createZoomController() dans render()
+
+// ── Numérotation & Workflow ───────────────────────────────────────────────────
+async function generateQuoteNumber() {
+    try {
+        const { data } = await supabase.from('soumissions').select('id')
+        let maxNum = 0
+        ;(data || []).forEach(s => {
+            const m = (s.id || '').match(/^S-(\d+)$/)
+            if (m) { const n = parseInt(m[1], 10); if (n > maxNum) maxNum = n }
+        })
+        return `S-${String(maxNum + 1).padStart(4, '0')}`
+    } catch {
+        return `S-${Date.now().toString().slice(-4)}`
+    }
+}
+
+async function approuverSoumission(container) {
+    if (!currentQuoteId) return
+    showConfirm('Approuver cette soumission ?', async () => {
+        const { error } = await supabase.from('soumissions').update({ status: 'Approuvée' }).eq('id', currentQuoteId)
+        if (error) { showAlertModal(friendlyError(error), container); return }
+        const q = quotesData.find(q => q.id === currentQuoteId)
+        if (q) q.status = 'Approuvée'
+        applyEditorSecurity({ status: 'Approuvée', authorId: q?.authorId, isArchived: false }, container)
+        showAlertModal('Soumission approuvée avec succès.', container)
+    }, container)
+}
+
+async function demanderCorrections(container) {
+    if (!currentQuoteId) return
+    showConfirm('Renvoyer cette soumission au terrain pour corrections ?', async () => {
+        const { error } = await supabase.from('soumissions').update({ status: 'A corriger' }).eq('id', currentQuoteId)
+        if (error) { showAlertModal(friendlyError(error), container); return }
+        const q = quotesData.find(q => q.id === currentQuoteId)
+        if (q) q.status = 'A corriger'
+        applyEditorSecurity({ status: 'A corriger', authorId: q?.authorId, isArchived: false }, container)
+        showAlertModal('Soumission renvoyée au terrain pour corrections.', container)
+    }, container)
+}
 
 // ── Utilitaires ───────────────────────────────────────────────────────────────
 function autoResizeTextarea(ta) {
