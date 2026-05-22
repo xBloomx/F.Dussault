@@ -20,20 +20,15 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; }
 
-        html {
-            height: 100%;
-            height: -webkit-fill-available;
-            background-color: #1e1f26;
-        }
+        /* Le fond couvre tout l'écran jusqu'au bord (home indicator inclus) */
+        html { background-color: #1e1f26; }
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-main);
             margin: 0; padding: 0;
-            min-height: 100dvh;
-            min-height: -webkit-fill-available;
-            height: 100%;
+            height: 100dvh;
             display: flex;
             overflow: hidden;
         }
@@ -88,10 +83,13 @@
             flex: 1; display: flex; flex-direction: column;
             position: relative; background-color: var(--bg-dark);
             overflow: hidden;
-            /* Le fond monte derrière la Dynamic Island/notch,
-               le contenu commence en dessous grâce au padding-top */
             padding-top: env(safe-area-inset-top, 0px);
         }
+        /* En PWA standalone : réserve l'espace du home indicator en bas */
+        @media (display-mode: standalone) {
+            .main-content { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        }
+
         #app-loader {
             position: absolute; inset: 0;
             background: var(--bg-dark);
@@ -103,19 +101,14 @@
         #app-loader.hidden { opacity: 0; pointer-events: none; }
 
         #app-container {
-            flex: 1; min-height: 0; overflow: hidden;
+            flex: 1; height: 100%; overflow: hidden;
+            display: flex; flex-direction: column;
             position: relative;
         }
-        /* position:absolute;inset:0 est la méthode la plus fiable sur Safari iOS
-           pour remplir un parent dont la hauteur vient du flex algorithm.
-           Cible seulement le 1er div (container de la vue) — les modales
-           ont position:fixed dans leur propre CSS qui prime de toute façon. */
-        #app-container > div:first-of-type {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            height: auto;
+        /* Wrapper créé dynamiquement par navigateTo — remplit #app-container via flex */
+        .view-container {
+            flex: 1; min-height: 0; overflow: hidden;
+            display: flex; flex-direction: column;
         }
 
         /* ─── Toast : géré par src/shared/styles.css (.shared-toast) ─── */
@@ -364,16 +357,20 @@ const overlay = document.getElementById('overlay')
 async function navigateTo(viewName) {
     if (!MODULE_MAP[viewName]) return
 
-    // Cleanup module précédent
     if (currentCleanup) { try { currentCleanup() } catch {} currentCleanup = null }
 
     appLoader.classList.remove('hidden')
     appContainer.innerHTML = ''
     appContainer.style.opacity = '0'
 
+    // Wrapper flex qui remplit #app-container — résout le bug de hauteur iOS Safari
+    const el = document.createElement('div')
+    el.className = 'view-container'
+    appContainer.appendChild(el)
+
     try {
         const mod = await MODULE_MAP[viewName]()
-        const cleanup = await mod.render(appContainer)
+        const cleanup = await mod.render(el)
         if (typeof cleanup === 'function') currentCleanup = cleanup
     } catch (e) {
         // Module introuvable = SW périmé après déploiement → recharger une seule fois
@@ -386,13 +383,12 @@ async function navigateTo(viewName) {
         }
         sessionStorage.removeItem('sw_reload_attempted')
         console.error('[Router] Erreur chargement module', viewName, e)
-        appContainer.innerHTML = `<div style="color:#ff4d4d;padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
+        el.innerHTML = `<div style="color:#ff4d4d;padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
     }
 
     currentView = viewName
     appLoader.classList.add('hidden')
 
-    // Fade-in — reproduit l'animation opacity 0.18s de l'ancienne version
     requestAnimationFrame(() => {
         appContainer.style.transition = 'opacity 0.18s ease'
         appContainer.style.opacity = '1'
