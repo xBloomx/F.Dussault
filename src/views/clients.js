@@ -112,10 +112,6 @@ export async function render(container) {
         .ci-role { font-size: 12px; color: var(--accent); font-style: italic; background: rgba(252,202,70,0.1); padding: 1px 6px; border-radius: 4px; display: inline-block; }
         .ci-notes { color: #aaa; font-size: 12px; margin-top: 6px; font-style: italic; background: rgba(255,255,255,0.04); padding: 5px 8px; border-radius: 5px; white-space: pre-wrap; }
         .corbeille-item { background: #1a1b23; border: 1px dashed var(--btn-red); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .historique-tabs { display: flex; gap: 0; border-bottom: 2px solid #444; margin-bottom: 12px; }
-        .hist-tab { padding: 8px 18px; background: none; border: none; color: #aaa; font-size: 14px; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: 0.15s; }
-        .hist-tab.active { color: white; border-bottom-color: var(--accent); }
-
         @media (min-width: 769px) and (max-width: 1200px) {
             .clients-main { padding: 20px; }
             .form-row { flex-direction: column; gap: 0; }
@@ -216,15 +212,6 @@ export async function render(container) {
             </div>
             <div class="view-section-title">Notes Dossier</div>
             <div class="box-note" id="vNotes"></div>
-            <div id="vHistoriqueSection" style="display:none">
-                <div class="view-section-title" style="color:var(--btn-blue)">Historique</div>
-                <div class="historique-tabs">
-                    <button class="hist-tab active" data-hist="factures">Factures</button>
-                    <button class="hist-tab" data-hist="soumissions">Soumissions</button>
-                </div>
-                <div id="vFacturesList"></div>
-                <div id="vSoumissionsList" style="display:none"></div>
-            </div>
             <div class="modal-actions">
                 <button class="btn-cancel" id="btnCloseView">Fermer</button>
                 <button class="btn-submit" id="btnSwitchToEdit">
@@ -387,17 +374,6 @@ async function init() {
 
     document.getElementById('btnCloseCorbeille').addEventListener('click', () => closeModal('corbeilleModal'))
     document.getElementById('btnCloseAlert').addEventListener('click', () => closeModal('alertModal'))
-
-    // Onglets historique
-    document.getElementById('vHistoriqueSection').addEventListener('click', e => {
-        const tab = e.target.closest('.hist-tab')
-        if (!tab) return
-        document.querySelectorAll('.hist-tab').forEach(t => t.classList.remove('active'))
-        tab.classList.add('active')
-        const type = tab.dataset.hist
-        document.getElementById('vFacturesList').style.display = type === 'factures' ? '' : 'none'
-        document.getElementById('vSoumissionsList').style.display = type === 'soumissions' ? '' : 'none'
-    })
 
     await loadClients()
 }
@@ -711,54 +687,7 @@ function openViewModal(id) {
             </div>`)
     })
 
-    const nomClient = extra.company || c.nom || ''
-    if (nomClient) loadHistoriqueClient(nomClient)
-    else { const s = document.getElementById('vHistoriqueSection'); if (s) s.style.display = 'none' }
-
     document.getElementById('viewModal').classList.add('open')
-}
-
-async function loadHistoriqueClient(clientNom) {
-    const section = document.getElementById('vHistoriqueSection')
-    const listF = document.getElementById('vFacturesList')
-    const listS = document.getElementById('vSoumissionsList')
-    if (!section || !listF || !listS) return
-
-    listF.innerHTML = '<div style="color:#888;font-size:13px">Chargement...</div>'
-    listS.innerHTML = '<div style="color:#888;font-size:13px">Chargement...</div>'
-    section.style.display = 'block'
-
-    // Reset onglets
-    document.querySelectorAll('.hist-tab').forEach(t => t.classList.remove('active'))
-    document.querySelector('.hist-tab[data-hist="factures"]')?.classList.add('active')
-    listF.style.display = ''
-    listS.style.display = 'none'
-
-    const [{ data: factures }, { data: soumissions }] = await Promise.all([
-        supabase.from('factures').select('id,date,status').ilike('client', `%${clientNom}%`).order('created_at', { ascending: false }).limit(15),
-        supabase.from('soumissions').select('id,date,status').ilike('client', `%${clientNom}%`).order('created_at', { ascending: false }).limit(15)
-    ])
-
-    const statusColors = { brouillon: '#888', envoyee: 'var(--btn-blue)', approuvee: 'var(--btn-green)', renvoye: 'var(--btn-red)', Convertie: 'var(--btn-purple)', acceptee: 'var(--btn-green)', refusee: 'var(--btn-red)' }
-    const statusBg = { brouillon: 'rgba(136,136,136,0.15)', envoyee: 'rgba(52,152,219,0.15)', approuvee: 'rgba(40,167,69,0.15)', renvoye: 'rgba(255,77,77,0.15)', Convertie: 'rgba(156,39,176,0.15)', acceptee: 'rgba(40,167,69,0.15)', refusee: 'rgba(255,77,77,0.15)' }
-
-    const renderRow = (f) => {
-        const color = statusColors[f.status] || '#888'
-        const bg = statusBg[f.status] || 'rgba(136,136,136,0.15)'
-        return `<div style="background:var(--bg-dark);border-radius:8px;padding:10px 15px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid ${color};margin-bottom:6px">
-            <span style="color:white;font-weight:bold;font-family:monospace">${sanitize(f.id)}</span>
-            <span style="color:var(--text-muted);font-size:13px">${sanitize(f.date || '')}</span>
-            <span style="font-size:12px;padding:3px 10px;border-radius:6px;background:${bg};color:${color};font-weight:bold">${sanitize(f.status || '')}</span>
-        </div>`
-    }
-
-    listF.innerHTML = factures?.length
-        ? factures.map(renderRow).join('')
-        : '<div style="color:#888;font-size:13px;font-style:italic">Aucune facture trouvée.</div>'
-
-    listS.innerHTML = soumissions?.length
-        ? soumissions.map(renderRow).join('')
-        : '<div style="color:#888;font-size:13px;font-style:italic">Aucune soumission trouvée.</div>'
 }
 
 // ── Modal édition ───────────────────────────────────────────────────────────
