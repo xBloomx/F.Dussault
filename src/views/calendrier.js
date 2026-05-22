@@ -113,7 +113,7 @@ export async function render(container) {
         @media (max-width: 768px) {
             .cal-main { padding: 12px; gap: 10px; }
             .dash-header { flex-direction: column; align-items: stretch; gap: 10px; }
-            .dash-title h1 { font-size: 24px; }
+            .dash-title h1 { font-size: 28px; }
             .dash-title p { font-size: 13px; margin: 3px 0 0; }
             .dash-header .dash-title { margin-bottom: 0; }
             .dash-header > div:last-child { display: flex; gap: 8px; }
