@@ -32,6 +32,7 @@ function canViewAllTimesheets() {
 // ── Render principal ────────────────────────────────────────────────────────
 export async function render(container) {
     myUserName = currentProfil?.prenom_nom || 'Employé'
+    currentInvTab = 'mine'
 
     container.innerHTML = `
     <style>
