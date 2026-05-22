@@ -112,12 +112,12 @@ export async function render(container) {
         }
         @media (max-width: 768px) {
             .cal-main { padding: 12px; gap: 10px; }
-            .dash-header { flex-direction: row; align-items: center; gap: 10px; flex-wrap: nowrap; }
-            .dash-title h1 { font-size: 18px; }
-            .dash-title p { font-size: 12px; margin: 2px 0 0; }
-            .dash-header .dash-title { margin-bottom: 0; flex: 1; min-width: 0; }
-            .dash-header > div:last-child { display: flex; gap: 8px; flex-shrink: 0; }
-            .dash-header .action-btn { padding: 8px 14px; font-size: 13px; border-radius: 10px; }
+            .dash-header { flex-direction: column; align-items: stretch; gap: 10px; }
+            .dash-title h1 { font-size: 24px; }
+            .dash-title p { font-size: 13px; margin: 3px 0 0; }
+            .dash-header .dash-title { margin-bottom: 0; }
+            .dash-header > div:last-child { display: flex; gap: 8px; }
+            .dash-header .action-btn { flex: 1; justify-content: center; border-radius: 12px; }
             .tabs-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
             .btn-tab { justify-content: center; padding: 11px 8px; font-size: 13px; border-radius: 10px; }
             .btn-tab-dashed { grid-column: 1 / -1; justify-content: center; }
