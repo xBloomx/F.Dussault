@@ -20,18 +20,22 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; }
 
-        /* Le fond couvre tout l'écran jusqu'au bord (home indicator inclus) */
-        html { background-color: #1e1f26; }
+        html {
+            height: 100%;
+            height: -webkit-fill-available;
+            background-color: #1e1f26;
+        }
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-main);
             margin: 0; padding: 0;
-            height: 100dvh;
+            min-height: 100dvh;
+            min-height: -webkit-fill-available;
+            height: 100%;
             display: flex;
             overflow: hidden;
-            /* Zéro padding : fond s'étend derrière Dynamic Island et home indicator */
         }
 
         /* ── SIDEBAR ─────────────────────────────────────────────── */
