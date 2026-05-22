@@ -248,10 +248,6 @@ export async function render(container) {
                 <input type="text" id="edAlert" placeholder="S'affiche en rouge..." style="border-color:var(--btn-red)">
             </div>
             <div class="form-row">
-                <div class="form-group" id="grpCompany" style="flex:2">
-                    <label>Nom de l'entreprise</label>
-                    <input type="text" id="edCompany" placeholder="Ex: Bridgestone">
-                </div>
                 <div class="form-group" style="flex:1">
                     <label>Statut</label>
                     <div class="select-wrap">
@@ -262,6 +258,10 @@ export async function render(container) {
                         </select>
                         <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
+                </div>
+                <div class="form-group" id="grpCompany" style="flex:2">
+                    <label>Nom de l'entreprise</label>
+                    <input type="text" id="edCompany" placeholder="Ex: Bridgestone">
                 </div>
             </div>
             <div class="form-group" id="grpSubcontractor" style="display:none">

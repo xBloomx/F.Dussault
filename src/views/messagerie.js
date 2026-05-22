@@ -89,10 +89,15 @@ export async function render(container) {
         .chat-header h2 { margin: 0; font-size: 18px; color: white; }
         .btn-back { display: none; background: transparent; border: none; color: var(--accent); cursor: pointer; padding-right: 15px; padding-left: 0; }
         .btn-back svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; background: var(--bg-dark); }
-        .message-wrapper { display: flex; flex-direction: column; max-width: 75%; }
-        .message-wrapper.received { align-self: flex-start; }
-        .message-wrapper.sent { align-self: flex-end; align-items: flex-end; }
+        .messages-container { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg-dark); }
+        .messages-track { display: flex; flex-direction: column; gap: 20px; padding: 20px; will-change: transform; }
+        .message-wrapper { display: flex; flex-direction: column; width: 100%; position: relative; }
+        .message-wrapper.received { align-items: flex-start; }
+        .message-wrapper.sent { align-items: flex-end; }
+        .msg-bubble-group { max-width: 75%; display: flex; flex-direction: column; }
+        .sent .msg-bubble-group { align-items: flex-end; }
+        .msg-time-side { position: absolute; right: -72px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #888; white-space: nowrap; pointer-events: none; }
+        .msg-date-sep { align-self: center; background: rgba(255,255,255,0.07); color: #999; font-size: 11px; padding: 3px 14px; border-radius: 10px; margin: 2px 0; user-select: none; }
         .message-sender { font-size: 11px; color: #888; margin-bottom: 5px; margin-left: 5px; }
         .sent .message-sender { display: none; }
         .message-content-row { display: flex; align-items: center; gap: 8px; position: relative; }
@@ -111,9 +116,7 @@ export async function render(container) {
         .file-meta { display: flex; flex-direction: column; flex: 1; min-width: 0; }
         .file-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .file-size { font-size: 11px; opacity: 0.8; }
-        .message-time { font-size: 10px; opacity: 0.7; margin-top: 5px; text-align: right; display: block; }
-        .sent .message-time { color: #333; }
-        .bubble-image .message-time, .bubble-file .message-time { position: absolute; bottom: 8px; right: 10px; background: rgba(0,0,0,0.5); color: white; padding: 2px 5px; border-radius: 4px; }
+        .message-time { display: none; }
         .msg-react-btn { background: transparent; border: none; color: #888; cursor: pointer; padding: 5px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transition: all 0.2s; flex-shrink: 0; }
         .message-content-row:hover .msg-react-btn { opacity: 1; }
         .msg-react-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -193,7 +196,7 @@ export async function render(container) {
             #view-dashboard.show-chat .chat-sidebar { display: none; }
             #view-dashboard.show-chat .chat-main { display: flex; }
             .btn-back { display: flex; }
-            .message-wrapper { max-width: 85%; }
+            .msg-bubble-group { max-width: 85%; }
             .msg-react-btn { opacity: 1; }
         }
         .btn-chat-search { background: transparent; border: none; color: #888; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 8px; margin-left: auto; transition: 0.2s; }
@@ -731,6 +734,10 @@ function renderMessages(messages, scroll = false, container) {
     const scrollPos = messagesContainer.scrollTop
     messagesContainer.innerHTML = ''
 
+    const track = document.createElement('div')
+    track.className = 'messages-track'
+    messagesContainer.appendChild(track)
+
     const term = _chatSearchTerm.toLowerCase()
     const filtered = term ? messages.filter(m => m.text && m.text.toLowerCase().includes(term)) : messages
     const countEl = container.querySelector('#chatSearchCount')
@@ -739,38 +746,54 @@ function renderMessages(messages, scroll = false, container) {
     const displayList = term ? filtered : messages
 
     if (!displayList.length) {
-        messagesContainer.innerHTML = term
+        track.innerHTML = term
             ? '<div style="text-align:center;color:#888;font-style:italic;margin-top:50px">Aucun message ne correspond à votre recherche.</div>'
             : '<div style="text-align:center;color:#888;font-style:italic;margin-top:50px">Envoyez un premier message pour démarrer la discussion.</div>'
         return
     }
+
+    let lastDateKey = null
     displayList.forEach(msg => {
+        // Séparateur de date (style iMessage)
+        if (msg.createdAt) {
+            const msgDate = new Date(msg.createdAt)
+            const dateKey = msgDate.toDateString()
+            if (dateKey !== lastDateKey) {
+                lastDateKey = dateKey
+                const sep = document.createElement('div')
+                sep.className = 'msg-date-sep'
+                sep.textContent = formatMsgDate(msgDate)
+                track.appendChild(sep)
+            }
+        }
+
         const wrapper = document.createElement('div')
         wrapper.className = `message-wrapper ${msg.isMine ? 'sent' : 'received'}`
         wrapper.dataset.msgId = msg.id
         const senderHtml = !msg.isMine ? `<span class="message-sender">${sanitize(msg.sender)}</span>` : ''
         const reactionHtml = (msg.reaction && !msg.deletedAt) ? `<div class="msg-reaction-badge" data-remove-reaction="${msg.id}">${msg.reaction}</div>` : ''
-        const editedTag = (msg.editedAt && !msg.deletedAt) ? `<span style="font-size:10px;opacity:0.6;margin-left:4px;font-style:italic">(modifié)</span>` : ''
+        const editedTag = (msg.editedAt && !msg.deletedAt) ? `<span style="font-size:10px;opacity:0.6;margin-left:4px;font-style:italic"> (modifié)</span>` : ''
 
         let innerBubble = ''
         if (msg.deletedAt) {
-            innerBubble = `<div class="message-bubble" style="background:#3a3b46!important;color:#888!important;font-style:italic"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;opacity:0.6;stroke:#888;fill:none;stroke-width:2"><use href="#msg-trash"/></svg>Message supprimé<span class="message-time">${sanitize(msg.time)}</span></div>`
+            innerBubble = `<div class="message-bubble" style="background:#3a3b46!important;color:#888!important;font-style:italic"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;opacity:0.6;stroke:#888;fill:none;stroke-width:2"><use href="#msg-trash"/></svg>Message supprimé</div>`
         } else if (msg.type === 'text') {
             const textContent = _chatSearchTerm ? highlightTerm(msg.text, _chatSearchTerm) : sanitize(msg.text)
-            innerBubble = `<div class="message-bubble">${textContent}<span class="message-time">${sanitize(msg.time)}${editedTag}</span>${reactionHtml}</div>`
+            innerBubble = `<div class="message-bubble">${textContent}${editedTag}${reactionHtml}</div>`
         } else if (msg.type === 'image') {
             const safeUrl = sanitizeUrl(msg.url)
-            innerBubble = `<div class="message-bubble bubble-image"><img src="${safeUrl}" data-open-url="${safeUrl}"><span class="message-time">${msg.time}${editedTag}</span>${reactionHtml}</div>`
+            innerBubble = `<div class="message-bubble bubble-image"><img src="${safeUrl}" data-open-url="${safeUrl}">${reactionHtml}</div>`
         } else if (msg.type === 'file') {
             const safeUrl = sanitizeUrl(msg.url)
-            innerBubble = `<a href="${safeUrl}" target="_blank" class="message-bubble bubble-file"><div class="file-icon"><svg><use href="#msg-file"/></svg></div><div class="file-meta"><span class="file-name">${sanitize(msg.fileName)}</span><span class="file-size">${sanitize(msg.fileSize)}</span></div><div class="file-download-icon"><svg><use href="#msg-download"/></svg></div><span class="message-time" style="position:absolute;bottom:5px;right:10px;font-size:9px;color:#333">${msg.time}${editedTag}</span>${reactionHtml}</a>`
+            innerBubble = `<a href="${safeUrl}" target="_blank" class="message-bubble bubble-file"><div class="file-icon"><svg><use href="#msg-file"/></svg></div><div class="file-meta"><span class="file-name">${sanitize(msg.fileName)}</span><span class="file-size">${sanitize(msg.fileSize)}</span></div><div class="file-download-icon"><svg><use href="#msg-download"/></svg></div>${reactionHtml}</a>`
         }
 
         const reactBtnHtml = msg.deletedAt ? '' : `<button class="msg-react-btn" data-react-msg="${msg.id}"><svg><use href="#msg-smile"/></svg></button>`
         const isRead = msg.isMine && !msg.deletedAt && Array.isArray(msg.readBy) && msg.readBy.length > 0
         const readStatusHtml = isRead ? `<div class="msg-read-status"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/><polyline points="20 10 13 17 9 13"/></svg> Lu</div>` : ''
-        wrapper.innerHTML = senderHtml + `<div class="message-content-row">${innerBubble}${reactBtnHtml}</div>${readStatusHtml}`
-        messagesContainer.appendChild(wrapper)
+
+        wrapper.innerHTML = `<div class="msg-bubble-group">${senderHtml}<div class="message-content-row">${innerBubble}${reactBtnHtml}</div>${readStatusHtml}</div><span class="msg-time-side">${sanitize(msg.time)}</span>`
+        track.appendChild(wrapper)
 
         // Event listeners
         wrapper.querySelectorAll('[data-remove-reaction]').forEach(el => el.addEventListener('click', () => removeReaction(el.dataset.removeReaction)))
@@ -778,8 +801,11 @@ function renderMessages(messages, scroll = false, container) {
         wrapper.querySelectorAll('[data-open-url]').forEach(el => el.addEventListener('click', () => window.open(el.dataset.openUrl)))
         if (msg.isMine && !msg.deletedAt) attachLongPress(wrapper, msg, container)
     })
+
     if (scroll) messagesContainer.scrollTop = messagesContainer.scrollHeight
     else messagesContainer.scrollTop = scrollPos
+
+    attachSwipeReveal(messagesContainer, track)
 }
 
 function filterContacts(container) {
@@ -1264,6 +1290,55 @@ function showConfirmAction(msg, callback, container) {
     container.querySelector('#confirmActionMsg').textContent = msg
     container._confirmCallback = callback
     container.querySelector('#confirmActionModal').classList.add('open')
+}
+
+// ── Swipe pour révéler l'heure (style iMessage) ──────────────────────────────
+function attachSwipeReveal(messagesContainer, track) {
+    let startX = null, startY = null, isHorizontal = null
+    const MAX = 72
+
+    const onStart = e => {
+        if (e.touches.length !== 1) return
+        startX = e.touches[0].clientX
+        startY = e.touches[0].clientY
+        isHorizontal = null
+        track.style.transition = 'none'
+    }
+    const onMove = e => {
+        if (startX === null) return
+        const dx = e.touches[0].clientX - startX
+        const dy = e.touches[0].clientY - startY
+        if (isHorizontal === null) {
+            if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return
+            isHorizontal = Math.abs(dx) > Math.abs(dy) * 0.9
+            if (!isHorizontal) { startX = null; return }
+        }
+        if (!isHorizontal) return
+        const offset = Math.max(-MAX, Math.min(0, dx))
+        track.style.transform = `translateX(${offset}px)`
+    }
+    const onEnd = () => {
+        startX = null; startY = null; isHorizontal = null
+        track.style.transition = 'transform 0.25s ease'
+        track.style.transform = 'translateX(0)'
+    }
+
+    messagesContainer.addEventListener('touchstart', onStart, { passive: true })
+    messagesContainer.addEventListener('touchmove', onMove, { passive: true })
+    messagesContainer.addEventListener('touchend', onEnd)
+    messagesContainer.addEventListener('touchcancel', onEnd)
+}
+
+function formatMsgDate(date) {
+    const now = new Date(); now.setHours(0, 0, 0, 0)
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1)
+    const d = new Date(date); d.setHours(0, 0, 0, 0)
+    if (d.getTime() === now.getTime()) return "Aujourd'hui"
+    if (d.getTime() === yesterday.getTime()) return 'Hier'
+    const diffDays = Math.round((now - d) / 86400000)
+    if (diffDays < 7) return date.toLocaleDateString('fr-FR', { weekday: 'long' })
+    if (diffDays < 365) return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function closeModal(id, container) {

@@ -57,8 +57,6 @@ export async function render(container) {
         .cal-nav-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
         .cal-nav-btn:hover { background: var(--accent); color: black; }
         .cal-month-title { font-size: 24px; font-weight: bold; color: white; text-transform: capitalize; }
-        .cal-menu-toggle { display: none; background: var(--accent); color: black; border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; align-items: center; justify-content: center; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
-        .cal-menu-toggle svg { width: 22px; height: 22px; stroke: black; stroke-width: 3; stroke-linecap: round; fill: none; display: block; }
         .calendar-wrapper { flex: none; background: var(--bg-panel); border-radius: 12px; border: 1px solid var(--cal-grid-border); overflow-x: auto; display: flex; flex-direction: column; }
         .day-headers { display: grid; grid-template-columns: repeat(7, 1fr); min-width: 700px; }
         .day-header { background: var(--cal-header-bg); color: #aaa; display: flex; align-items: center; justify-content: center; font-weight: bold; border-bottom: 1px solid var(--cal-grid-border); border-right: 1px solid var(--cal-grid-border); padding: 10px 0; }
@@ -89,6 +87,7 @@ export async function render(container) {
         .form-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 14px; font-weight: bold; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 5px; font-family: sans-serif; outline: none; transition: 0.2s; box-sizing: border-box; }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+        .form-group input[type="date"] { color-scheme: dark; cursor: pointer; }
         .select-wrap { position: relative; display: block; }
         .select-wrap select { -webkit-appearance: none; appearance: none; padding-right: 42px; cursor: pointer; }
         .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
@@ -112,11 +111,13 @@ export async function render(container) {
             .cal-main { padding: 20px; gap: 15px; }
         }
         @media (max-width: 768px) {
-            .cal-main { padding: 15px; gap: 12px; }
-            .dash-header { flex-direction: column; align-items: stretch; gap: 12px; }
-            .dash-header .dash-title { margin-bottom: 0; }
-            .dash-header > div:last-child { display: flex; gap: 10px; }
-            .dash-header .action-btn { flex: 1; justify-content: center; border-radius: 12px; }
+            .cal-main { padding: 12px; gap: 10px; }
+            .dash-header { flex-direction: row; align-items: center; gap: 10px; flex-wrap: nowrap; }
+            .dash-title h1 { font-size: 18px; }
+            .dash-title p { font-size: 12px; margin: 2px 0 0; }
+            .dash-header .dash-title { margin-bottom: 0; flex: 1; min-width: 0; }
+            .dash-header > div:last-child { display: flex; gap: 8px; flex-shrink: 0; }
+            .dash-header .action-btn { padding: 8px 14px; font-size: 13px; border-radius: 10px; }
             .tabs-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
             .btn-tab { justify-content: center; padding: 11px 8px; font-size: 13px; border-radius: 10px; }
             .btn-tab-dashed { grid-column: 1 / -1; justify-content: center; }
@@ -127,7 +128,6 @@ export async function render(container) {
             .event-bar { font-size: 10px; padding: 3px 5px; }
             .urgence-badge { top: 4px; right: 4px; width: 20px; height: 20px; font-size: 10px; }
             .modal-card { width: 95%; padding: 20px; }
-            .cal-menu-toggle { display: flex; }
         }
     </style>
 
@@ -159,9 +159,6 @@ export async function render(container) {
             <div class="cal-month-title" id="calTitle">...</div>
             <button class="cal-nav-btn" id="btnNextMonth">
                 <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-            <button class="cal-menu-toggle" id="btnCalMenuToggle" title="Menu">
-                <svg viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>
             </button>
         </div>
 
@@ -236,11 +233,11 @@ export async function render(container) {
             <div style="display:flex;gap:15px">
                 <div class="form-group" style="flex:1">
                     <label>Début</label>
-                    <input type="text" id="evtStart" placeholder="JJ/MM/AAAA" inputmode="numeric" maxlength="10">
+                    <input type="date" id="evtStart">
                 </div>
                 <div class="form-group" style="flex:1">
                     <label>Fin (Inclus)</label>
-                    <input type="text" id="evtEnd" placeholder="JJ/MM/AAAA" inputmode="numeric" maxlength="10">
+                    <input type="date" id="evtEnd">
                 </div>
             </div>
             <div class="form-group" id="grpGuests">
@@ -349,12 +346,6 @@ async function init() {
     document.getElementById('btnNextMonth').addEventListener('click', () => changeMonth(1))
     document.getElementById('btnAddEvent').addEventListener('click', () => openAddModal())
     document.getElementById('btnDeleteCal').addEventListener('click', deleteCurrentCalendar)
-    document.getElementById('btnCalMenuToggle').addEventListener('click', () => {
-        const sidebar = document.getElementById('sidebar')
-        const overlay = document.getElementById('overlay')
-        const menuBtn = document.getElementById('menu-toggle')
-        if (sidebar) { sidebar.classList.add('open'); overlay?.classList.add('active'); menuBtn?.classList.add('hide') }
-    })
 
     // Modales
     document.getElementById('btnCloseNewCal').addEventListener('click', () => closeModal('newCalModal'))
@@ -372,10 +363,6 @@ async function init() {
         if (confirmCallback) confirmCallback()
         closeModal('confirmModal')
     })
-
-    // Auto-format dates
-    document.getElementById('evtStart').addEventListener('keyup', e => autoFormatDate(e.target))
-    document.getElementById('evtEnd').addEventListener('keyup', e => autoFormatDate(e.target))
 
     await fetchTeamMembers()
     await loadData()
@@ -454,10 +441,12 @@ function renderTabs() {
 function renderLegend() {
     const leg = document.getElementById('legendContainer')
     if (!leg) return
-    leg.innerHTML = FIXED_CATEGORIES
-        .filter(cat => cat.id !== 'urgence')
-        .map(cat => `<div class="legend-item"><div class="legend-dot" style="background:${cat.color}"></div> ${cat.name}</div>`)
-        .join('')
+    const noteAndFormation = ['note', 'formation']
+    const others = FIXED_CATEGORIES.filter(cat => cat.id !== 'urgence' && !noteAndFormation.includes(cat.id))
+    const grouped = FIXED_CATEGORIES.filter(cat => noteAndFormation.includes(cat.id))
+    const itemHTML = cat => `<div class="legend-item"><div class="legend-dot" style="background:${cat.color}"></div> ${cat.name}</div>`
+    leg.innerHTML = others.map(itemHTML).join('') +
+        `<div style="display:flex;gap:8px;flex-shrink:0">${grouped.map(itemHTML).join('')}</div>`
 }
 
 // ── Calendrier ──────────────────────────────────────────────────────────────
@@ -691,12 +680,10 @@ function openAddModal(dateStart = '', isUrgence = false, evtToEdit = null) {
     editingEventId = evtToEdit ? evtToEdit.id : null
     isUrgenceMode = isUrgence
 
-    const toDisplay = d => { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d }
-
     document.getElementById('evtTitle').value = evtToEdit ? evtToEdit.title : ''
     document.getElementById('evtNote').value = evtToEdit ? evtToEdit.note : ''
-    document.getElementById('evtStart').value = evtToEdit ? toDisplay(evtToEdit.start_date) : toDisplay(dateStart)
-    document.getElementById('evtEnd').value = evtToEdit ? toDisplay(evtToEdit.end_date) : toDisplay(dateStart)
+    document.getElementById('evtStart').value = evtToEdit ? evtToEdit.start_date : dateStart
+    document.getElementById('evtEnd').value = evtToEdit ? evtToEdit.end_date : dateStart
 
     const grpCat = document.getElementById('grpCategory')
     const selCat = document.getElementById('evtCategory')
@@ -746,9 +733,8 @@ function openAddModal(dateStart = '', isUrgence = false, evtToEdit = null) {
 
 async function saveEvent() {
     const title = document.getElementById('evtTitle').value.trim()
-    const toISO = d => { if (!d) return ''; const p = d.split('/'); return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : d }
-    const start = toISO(document.getElementById('evtStart').value)
-    const end = toISO(document.getElementById('evtEnd').value)
+    const start = document.getElementById('evtStart').value
+    const end = document.getElementById('evtEnd').value
     const note = document.getElementById('evtNote').value.trim()
     if (!title || !start || !end) { openAlert('Remplir Titre et Dates !'); return }
     if (end < start) { openAlert('Date de fin invalide.'); return }

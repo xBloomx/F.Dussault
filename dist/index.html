@@ -7,17 +7,20 @@
 
     <link rel="apple-touch-icon" href="/assets/logo_app.png">
     <link rel="icon" type="image/png" href="/assets/logo_app.png">
-    <link rel="manifest" href="/assets/manifest-LThmKfCU.json">
+    <link rel="manifest" href="/assets/manifest-Dpa7eimP.json">
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="F.Dussault">
     <meta name="theme-color" content="#1e1f26">
-
+
 
     <style>
         *, *::before, *::after { box-sizing: border-box; }
+
+        /* Le fond couvre tout l'écran jusqu'au bord (home indicator inclus) */
+        html { background-color: #1e1f26; }
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -27,10 +30,6 @@
             height: 100dvh;
             display: flex;
             overflow: hidden;
-            padding-top: env(safe-area-inset-top, 0px);
-            padding-left: env(safe-area-inset-left, 0px);
-            padding-right: env(safe-area-inset-right, 0px);
-            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         /* ── SIDEBAR ─────────────────────────────────────────────── */
@@ -40,7 +39,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 0;
+            /* padding-top inclut la safe area pour que les icônes ne passent pas sous la notch */
+            padding: calc(20px + env(safe-area-inset-top, 0px)) 0 20px;
             z-index: 1000;
             transition: left 0.3s ease;
             overflow-y: auto;
@@ -82,6 +82,11 @@
             flex: 1; display: flex; flex-direction: column;
             position: relative; background-color: var(--bg-dark);
             overflow: hidden;
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+        /* En PWA standalone : réserve l'espace du home indicator en bas */
+        @media (display-mode: standalone) {
+            .main-content { padding-bottom: env(safe-area-inset-bottom, 0px); }
         }
 
         #app-loader {
@@ -97,13 +102,19 @@
         #app-container {
             flex: 1; height: 100%; overflow: hidden;
             display: flex; flex-direction: column;
+            position: relative;
+        }
+        /* Wrapper créé dynamiquement par navigateTo — remplit #app-container via flex */
+        .view-container {
+            flex: 1; min-height: 0; overflow: hidden;
+            display: flex; flex-direction: column;
         }
 
         /* ─── Toast : géré par src/shared/styles.css (.shared-toast) ─── */
 
         /* Indicateur connexion */
         #conn-indicator {
-            position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
             background: rgba(30,31,38,0.95); border: 1px solid #333;
             color: #28a745; font-size: 11px; padding: 4px 10px;
             border-radius: 20px; display: flex; align-items: center; gap: 5px;
@@ -118,7 +129,7 @@
             display: none;
             position: fixed; top: 0; left: 0; right: 0;
             background: rgba(192,57,43,0.97);
-            color: white; padding: 7px 16px;
+            color: white; padding: calc(7px + env(safe-area-inset-top, 0px)) 16px 7px;
             font-size: 13px; font-weight: 500;
             text-align: center; z-index: 9998;
             align-items: center; justify-content: center; gap: 8px;
@@ -165,24 +176,22 @@
         /* Mode signature plein écran */
         body.signature-mode-active .sidebar { display: none !important; }
         body.signature-mode-active .menu-btn { display: none !important; }
-        body.signature-mode-active { padding: 0 !important; }
 
         /* Responsive */
         @media (min-width: 769px) and (max-width: 1024px) {
-            body { padding-left: 0; padding-right: 0; }
             .sidebar { position: relative; left: 0; width: 80px; flex-shrink: 0; }
             .menu-btn { display: none; }
         }
         @media (max-width: 768px) {
             .sidebar {
-                position: fixed; top: 0; left: -100px;
-                width: 100px; height: 100vh;
+                position: fixed; top: 0; bottom: 0; left: -100px;
+                width: 100px;
                 background: var(--sidebar-bg);
                 transition: left 0.3s ease;
                 z-index: 1000;
                 box-shadow: 2px 0 10px rgba(0,0,0,0.5);
                 padding-top: calc(20px + env(safe-area-inset-top, 0px));
-                padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+                padding-bottom: 20px;
             }
             .sidebar.open { left: 0; }
             .menu-btn { display: flex; }
@@ -191,7 +200,7 @@
     </style>
     <!-- emoji-picker-element pour la messagerie -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
-  <script type="module" crossorigin src="/assets/main-kUGNqnlw.js"></script>
+  <script type="module" crossorigin src="/assets/main-BbvbVewE.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-Cf3xff8G.js">
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-DgFuoWHe.js">
   <link rel="modulepreload" crossorigin href="/assets/dist-DIBucx4m.js">
@@ -293,6 +302,20 @@
 <div id="overlay"></div>
 <div id="toast-container"></div>
 
+<!-- Bannière installation iOS -->
+<div id="ios-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#23242f;border-top:1px solid #3a3b4a;padding:14px 16px 18px;z-index:9996;align-items:center;gap:14px;box-shadow:0 -4px 20px rgba(0,0,0,0.4)">
+    <div style="width:40px;height:40px;background:#1e1f26;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <img src="/assets/logo_app.png" style="width:32px;height:32px;border-radius:7px;object-fit:contain" onerror="this.style.display='none'">
+    </div>
+    <div style="flex:1;min-width:0">
+        <div style="color:white;font-weight:700;font-size:13px;margin-bottom:3px">Installer F.Dussault</div>
+        <div style="color:#aaa;font-size:11.5px;line-height:1.4">Appuyez sur
+            <svg viewBox="0 0 24 24" width="13" height="13" style="display:inline-block;vertical-align:middle;margin:0 1px;stroke:#fcca46;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            puis <strong style="color:white">« Sur l'écran d'accueil »</strong> pour une expérience plein écran.</div>
+    </div>
+    <button id="ios-install-close" style="background:none;border:none;color:#666;font-size:18px;cursor:pointer;padding:4px 6px;flex-shrink:0;line-height:1" aria-label="Fermer">✕</button>
+</div>
+
 <!-- Bannière hors ligne -->
 <div id="offline-banner">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -302,7 +325,7 @@
     </svg>
     <span id="offline-text">Hors ligne — les modifications sont sauvegardées localement</span>
 </div>
-
+
 
 </body>
 </html>
