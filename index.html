@@ -643,14 +643,13 @@ boot()
     })
 })()
 
-// Nouveau service worker activé → recharger pour utiliser les nouveaux assets
+// Nouveau service worker activé → recharger immédiatement pour les nouveaux assets
 if ('serviceWorker' in navigator) {
-    let swInitialized = false
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!swInitialized) { swInitialized = true; return } // ignorer l'activation initiale
         window.location.reload()
     })
-    navigator.serviceWorker.ready.then(() => { swInitialized = true })
+    // Forcer la vérification de mise à jour à chaque ouverture
+    navigator.serviceWorker.ready.then(reg => reg.update())
 }
 </script>
 
