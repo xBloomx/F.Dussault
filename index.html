@@ -112,9 +112,6 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             height: auto;
-            /* Le fond du container remplit jusqu'au bord physique,
-               le padding empêche le contenu de passer sous le home indicator */
-            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         /* ─── Toast : géré par src/shared/styles.css (.shared-toast) ─── */
@@ -198,7 +195,7 @@
                 z-index: 1000;
                 box-shadow: 2px 0 10px rgba(0,0,0,0.5);
                 padding-top: calc(20px + env(safe-area-inset-top, 0px));
-                padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+                padding-bottom: 20px;
             }
             .sidebar.open { left: 0; }
             .menu-btn { display: flex; }
