@@ -502,8 +502,8 @@ export async function render(container) {
     <div class="modal-overlay" id="toolSettingsModal">
         <div class="modal-card-basic" style="max-width:440px">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;border-bottom:1px solid #444;padding-bottom:14px">
-                <svg viewBox="0 0 24 24" width="22" height="22" style="stroke:#ff9800;fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                <h2 id="toolSettingsTitle" style="color:#ff9800;margin:0;font-size:18px;word-break:break-word;flex:1">Outil</h2>
+                <svg viewBox="0 0 24 24" width="22" height="22" style="stroke:var(--btn-green);fill:none;stroke-width:2;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                <h2 id="toolSettingsTitle" style="color:var(--btn-green);margin:0;font-size:18px;word-break:break-word;flex:1">Outil</h2>
             </div>
 
             <div class="tool-settings-section">
@@ -526,7 +526,7 @@ export async function render(container) {
                     <button class="btn-modal-orange" id="btnResetUsage" style="font-size:12px;padding:6px 12px">⟳ Reset</button>
                 </div>
                 <div style="display:flex;align-items:baseline;gap:6px">
-                    <span id="toolUsageCount" style="font-size:36px;font-weight:bold;color:white;line-height:1">0</span>
+                    <span id="toolUsageCount" style="font-size:22px;font-weight:bold;color:white;line-height:1">0</span>
                     <span style="color:#666;font-size:13px">fois</span>
                 </div>
                 <div style="font-size:11px;color:#555;margin-top:4px">Le reset efface l'historique des transferts.</div>
