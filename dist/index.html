@@ -26,7 +26,12 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-main);
-            margin: 0; padding: 0;
+            margin: 0;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            padding-left: env(safe-area-inset-left, 0px);
+            padding-right: env(safe-area-inset-right, 0px);
+            box-sizing: border-box;
             height: 100dvh;
             display: flex;
             overflow: hidden;
@@ -40,7 +45,7 @@
             flex-direction: column;
             align-items: center;
             /* padding-top inclut la safe area pour que les icônes ne passent pas sous la notch */
-            padding: calc(20px + env(safe-area-inset-top, 0px)) 0 20px;
+            padding: 20px 0;
             z-index: 1000;
             transition: left 0.3s ease;
             overflow-y: auto;
@@ -82,11 +87,6 @@
             flex: 1; display: flex; flex-direction: column;
             position: relative; background-color: var(--bg-dark);
             overflow: hidden;
-            padding-top: env(safe-area-inset-top, 0px);
-        }
-        /* En PWA standalone : réserve l'espace du home indicator en bas */
-        @media (display-mode: standalone) {
-            .main-content { padding-bottom: env(safe-area-inset-bottom, 0px); }
         }
 
         #app-loader {
@@ -191,7 +191,7 @@
                 z-index: 1000;
                 box-shadow: 2px 0 10px rgba(0,0,0,0.5);
                 padding-top: calc(20px + env(safe-area-inset-top, 0px));
-                padding-bottom: 20px;
+                padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
             }
             .sidebar.open { left: 0; }
             .menu-btn { display: flex; }
