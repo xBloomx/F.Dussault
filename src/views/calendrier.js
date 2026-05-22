@@ -441,12 +441,12 @@ function renderTabs() {
 function renderLegend() {
     const leg = document.getElementById('legendContainer')
     if (!leg) return
-    const noteAndFormation = ['note', 'formation']
-    const others = FIXED_CATEGORIES.filter(cat => cat.id !== 'urgence' && !noteAndFormation.includes(cat.id))
-    const grouped = FIXED_CATEGORIES.filter(cat => noteAndFormation.includes(cat.id))
+    const row2Ids = ['perso', 'note', 'formation']
+    const row1 = FIXED_CATEGORIES.filter(cat => cat.id !== 'urgence' && !row2Ids.includes(cat.id))
+    const row2 = FIXED_CATEGORIES.filter(cat => row2Ids.includes(cat.id))
     const itemHTML = cat => `<div class="legend-item"><div class="legend-dot" style="background:${cat.color}"></div> ${cat.name}</div>`
-    leg.innerHTML = others.map(itemHTML).join('') +
-        `<div style="display:flex;gap:8px;flex-shrink:0">${grouped.map(itemHTML).join('')}</div>`
+    leg.innerHTML = row1.map(itemHTML).join('') +
+        `<div style="display:flex;gap:8px;flex-wrap:nowrap;flex-shrink:0">${row2.map(itemHTML).join('')}</div>`
 }
 
 // ── Calendrier ──────────────────────────────────────────────────────────────
