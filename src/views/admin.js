@@ -76,9 +76,9 @@ export async function render(container) {
         .btn-del-emp { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 30px; height: 30px; border-radius: 6px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .btn-del-emp svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-del-emp:hover { background: var(--btn-red); color: white; }
-        .btn-gear-tool { background: rgba(255,152,0,0.12); color: #ff9800; border: 1px solid transparent; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+        .btn-gear-tool { background: rgba(255,255,255,0.07); color: #888; border: 1px solid transparent; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
         .btn-gear-tool svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-gear-tool:hover { background: #ff9800; color: black; }
+        .btn-gear-tool:hover { background: #444; color: white; }
         .tool-settings-section { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #333; }
         .tool-settings-label { color: #aaa; font-size: 12px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .tool-histo-item { background: #252636; border-radius: 6px; padding: 8px 10px; font-size: 12px; color: #ccc; display: flex; justify-content: space-between; align-items: center; }
