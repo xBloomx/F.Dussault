@@ -203,8 +203,8 @@ export async function render(container) {
             <div class="view-row" style="flex-direction:column;align-items:flex-start;gap:10px">
                 <div style="display:flex;width:100%"><div class="view-label">Adresse</div><div class="view-val" id="vAddress">-</div></div>
                 <div class="gps-options">
-                    <a href="#" id="vLinkGoogle" target="_blank" class="gps-btn gps-google">📍 Google Maps</a>
-                    <a href="#" id="vLinkApple" target="_blank" class="gps-btn gps-apple">🗺 Apple Plans</a>
+                    <a href="#" id="vLinkGoogle" target="_blank" class="gps-btn gps-google"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg> Google Maps</a>
+                    <a href="#" id="vLinkApple" target="_blank" class="gps-btn gps-apple"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg> Apple Plans</a>
                 </div>
             </div>
             <div class="view-row" id="vRowVille" style="display:none"><div class="view-label">Ville</div><div class="view-val" id="vVille">-</div></div>
