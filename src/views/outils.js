@@ -64,8 +64,6 @@ export async function render(container) {
         .btn-brise:hover { background: #e67e22; color: white; }
         .btn-repare { background: var(--btn-green); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
         .btn-repare:hover { background: #218838; }
-        .btn-historique { background: rgba(136,136,136,0.12); color: #aaa; border: 1px solid rgba(136,136,136,0.3); padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 13px; }
-        .btn-historique:hover { background: rgba(136,136,136,0.25); color: white; }
         .btn-delete-tool { position: absolute; top: 12px; right: 12px; background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; }
         .btn-delete-tool svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-delete-tool:hover { background: var(--btn-red); color: white; }
@@ -96,19 +94,6 @@ export async function render(container) {
         .btn-close-modal { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #888; font-size: 30px; cursor: pointer; }
         .btn-close-modal:hover { color: white; }
 
-        /* Modal historique */
-        .hist-modal-card { background: var(--bg-panel); width: 90%; max-width: 520px; padding: 30px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); position: relative; border: 1px solid var(--border); max-height: 85vh; overflow-y: auto; }
-        .hist-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .hist-entry { background: var(--bg-dark); border-radius: 10px; padding: 12px 15px; display: flex; flex-direction: column; gap: 3px; border-left: 3px solid var(--border); }
-        .hist-entry.emprunté { border-color: var(--accent); }
-        .hist-entry.retourné { border-color: var(--btn-green); }
-        .hist-entry.transféré { border-color: var(--btn-blue); }
-        .hist-entry.signalé { border-color: #e67e22; }
-        .hist-entry.réparé { border-color: #9b59b6; }
-        .hist-action { font-weight: bold; font-size: 14px; color: white; text-transform: capitalize; }
-        .hist-detail { font-size: 13px; color: #aaa; }
-        .hist-date { font-size: 12px; color: #666; margin-top: 2px; }
-
         @media (min-width: 769px) and (max-width: 1024px) { .outils-main { padding: 20px; } }
         @media (max-width: 768px) {
             .outils-main { padding: 15px; }
@@ -118,7 +103,7 @@ export async function render(container) {
             .tool-item { flex-direction: column; align-items: flex-start; gap: 15px; padding: 15px; }
             .tool-item.has-delete { padding-right: 58px; }
             .tool-actions { align-self: stretch; margin-left: 0; width: 100%; }
-            .btn-return, .btn-transfer, .btn-brise, .btn-repare, .btn-historique { flex: 1; justify-content: center; }
+            .btn-return, .btn-transfer, .btn-brise, .btn-repare { flex: 1; justify-content: center; }
         }
     </style>
 
@@ -260,16 +245,6 @@ export async function render(container) {
         </div>
     </div>
 
-    <!-- Modal historique -->
-    <div class="modal-overlay" id="historiqueModal">
-        <div class="hist-modal-card">
-            <button class="btn-close-modal" id="btnCloseHistorique">×</button>
-            <div style="font-size:20px;font-weight:bold;color:white;margin-bottom:5px">Historique</div>
-            <div id="historiqueToolTitle" style="font-size:15px;color:#aaa;margin-bottom:10px"></div>
-            <div class="hist-list" id="historiqueList"></div>
-        </div>
-    </div>
-
     <!-- Modal alerte -->
     <div class="modal-overlay" id="alertModal">
         <div class="modal-card-basic">
@@ -310,7 +285,6 @@ async function init() {
     document.getElementById('btnAcceptTransfer').addEventListener('click', acceptTransfer)
     document.getElementById('btnCloseBrise').addEventListener('click', () => closeModal('briseModal'))
     document.getElementById('btnConfirmBrise').addEventListener('click', confirmSignalerBrise)
-    document.getElementById('btnCloseHistorique').addEventListener('click', () => closeModal('historiqueModal'))
     document.getElementById('btnCloseAlert').addEventListener('click', () => closeModal('alertModal'))
     document.getElementById('btnCancelConfirm').addEventListener('click', closeConfirmModal)
     document.getElementById('btnConfirmAction').addEventListener('click', async () => {
@@ -415,11 +389,6 @@ function renderTools(list = toolsLog) {
             <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>` : ''
 
-        const histBtn = `<button class="btn-historique" data-historique="${t.id}">
-            <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Historique
-        </button>`
-
         let actionsHTML = ''
         if (t.status === 'active') {
             if (isMyTool) {
@@ -448,8 +417,6 @@ function renderTools(list = toolsLog) {
                 <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="20 6 9 17 4 12"/></svg>
                 Marquer réparé</button>`
         }
-
-        actionsHTML += histBtn
 
         const itemClass = t.status === 'returned' ? 'returned' : t.status === 'en_reparation' ? 'en-reparation' : ''
         const card = document.createElement('div')
@@ -484,7 +451,6 @@ function renderTools(list = toolsLog) {
     activeContainer.querySelectorAll('[data-brise]').forEach(btn => btn.addEventListener('click', () => openBriseModal(btn.dataset.brise)))
     reparationContainer.querySelectorAll('[data-repare]').forEach(btn => btn.addEventListener('click', () => askMarquerRepare(btn.dataset.repare)))
     document.querySelectorAll('[data-delete]').forEach(btn => btn.addEventListener('click', () => askDelete(btn.dataset.delete)))
-    document.querySelectorAll('[data-historique]').forEach(btn => btn.addEventListener('click', () => openHistoriqueModal(btn.dataset.historique)))
 
     if (!hasActive) activeContainer.innerHTML = '<div style="color:#888;font-style:italic;padding:10px">Aucun outil actuellement en utilisation.</div>'
     if (!hasHistory) historyContainer.innerHTML = '<div style="color:#888;font-style:italic;padding:10px">Aucun historique de retour.</div>'
@@ -823,44 +789,6 @@ async function confirmMarquerRepare() {
     if (error) { showAlert(friendlyError(error)); return }
     await loadTools()
     closeConfirmModal()
-}
-
-// ── Modal historique ────────────────────────────────────────────────────────
-function openHistoriqueModal(toolId) {
-    const t = toolsLog.find(x => x.id === toolId)
-    if (!t) return
-
-    document.getElementById('historiqueToolTitle').textContent = t.nom || ''
-
-    const hist = Array.isArray(t.historique_transferts) ? t.historique_transferts : []
-    const list = document.getElementById('historiqueList')
-
-    if (!hist.length) {
-        list.innerHTML = '<div style="color:#888;font-style:italic;padding:10px">Aucun historique disponible pour cet outil.</div>'
-    } else {
-        const colorClass = (action) => {
-            if (action?.includes('emprunté')) return 'emprunté'
-            if (action?.includes('retourné')) return 'retourné'
-            if (action?.includes('transféré')) return 'transféré'
-            if (action?.includes('brisé')) return 'signalé'
-            if (action?.includes('réparé')) return 'réparé'
-            return ''
-        }
-        list.innerHTML = [...hist].reverse().map(h => {
-            let detail = ''
-            if (h.par) detail += `Par : ${sanitize(h.par)}`
-            if (h.de && h.vers) detail += `De ${sanitize(h.de)} → ${sanitize(h.vers)}`
-            if (h.lieu) detail += (detail ? ' · ' : '') + `Lieu : ${sanitize(h.lieu)}`
-            if (h.note) detail += (detail ? ' · ' : '') + `Note : ${sanitize(h.note)}`
-            return `<div class="hist-entry ${colorClass(h.action)}">
-                <div class="hist-action">${sanitize(h.action || '')}</div>
-                ${detail ? `<div class="hist-detail">${detail}</div>` : ''}
-                <div class="hist-date">${sanitize(h.date || '')}</div>
-            </div>`
-        }).join('')
-    }
-
-    document.getElementById('historiqueModal').classList.add('open')
 }
 
 // ── Utilitaires ─────────────────────────────────────────────────────────────
