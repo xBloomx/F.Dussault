@@ -54,7 +54,8 @@ export async function render(container) {
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .toolbar { display: flex; flex-direction: column; gap: 10px; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        .toolbar { display: flex; flex-direction: row; align-items: center; gap: 10px; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        .toolbar .select-wrap { min-width: 200px; flex-shrink: 0; }
         .select-wrap { position: relative; display: block; }
         .select-wrap select { width: 100%; -webkit-appearance: none; appearance: none; padding: 14px 42px 14px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; font-family: inherit; }
         .select-wrap select:focus { border-color: var(--accent); }
