@@ -253,14 +253,6 @@ export async function render(container) {
                 </div>
             </div>
 
-            <div class="settings-card" id="a0ArchivesPanel" style="border-color:#795548;grid-column:1/-1">
-                <div class="card-header" style="color:#795548">
-                    <div class="header-with-icon"><svg viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Nettoyer Archives</div>
-                </div>
-                <p style="color:#aaa;font-size:13px;margin-bottom:15px;line-height:1.4">Supprime <b>définitivement</b> les documents archivés depuis plus d'un an.</p>
-                <div id="archivesExpiredCount" style="font-size:13px;color:#aaa;margin-bottom:10px">Chargement…</div>
-                <button id="btnCleanArchives" style="width:100%;padding:12px;background:transparent;border:2px solid #795548;color:#795548;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.2s">Nettoyer</button>
-            </div>
 
             <div class="settings-card" style="border-color:var(--btn-orange);grid-column:1/-1" id="SupportPanel">
                 <div class="card-header" style="color:var(--btn-orange)">
@@ -643,8 +635,6 @@ async function init() {
     document.getElementById('btnAddTool').addEventListener('click', addTool)
     document.getElementById('newToolInput').addEventListener('keydown', e => { if (e.key === 'Enter') addTool() })
 
-    // Archives
-    document.getElementById('btnCleanArchives').addEventListener('click', cleanExpiredArchives)
 
     // A0 uniquement
     if (currentRole === 'A0') {
@@ -706,7 +696,7 @@ async function init() {
         loadAllFormations()
         document.getElementById('btnOpenAddFormation')?.addEventListener('click', openAddFormationModal)
     } else {
-        ;['toolsPanel', 'countersPanel', 'SupportPanel', 'certificationsPanel', 'a0ArchivesPanel'].forEach(id => {
+        ;['toolsPanel', 'countersPanel', 'SupportPanel', 'certificationsPanel'].forEach(id => {
             const el = document.getElementById(id)
             if (el) el.style.display = 'none'
         })

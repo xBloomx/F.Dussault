@@ -28,6 +28,7 @@ let globalSigCount = 0
 let zoomCtrl = null
 let _onResizeSoum = null
 let clientNameList = []
+let archiveSelection = new Set()
 
 // ── Render principal ────────────────────────────────────────────────────────
 export async function render(container) {
@@ -429,6 +430,7 @@ function mapQuote(db) {
 }
 
 function switchTab(tab, container) {
+    archiveSelection.clear()
     currentQuoteTab = tab
     container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
     const tabEl = container.querySelector(`#tab-${tab}`)
@@ -454,6 +456,20 @@ function renderQuoteList(container) {
     if (baseList.length === 0) {
         listContainer.innerHTML = '<div style="color:#888;text-align:center;padding:20px;font-style:italic">Aucune soumission trouvée.</div>'
         return
+    }
+
+    if (currentQuoteTab === 'archives') {
+        const allIds = baseList.map(q => q.id)
+        const allSel = allIds.length > 0 && allIds.every(id => archiveSelection.has(id))
+        const selBar = document.createElement('div')
+        selBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 14px;margin-bottom:4px;border-bottom:1px solid var(--border,#333);cursor:pointer;'
+        selBar.innerHTML = `<div style="width:20px;height:20px;border-radius:50%;border:2px solid ${allSel ? 'var(--btn-blue,#007bff)' : '#666'};background:${allSel ? 'var(--btn-blue,#007bff)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${allSel ? '<svg viewBox="0 0 24 24" width="11" height="11" style="stroke:white;fill:none;stroke-width:3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div><span style="font-size:13px;color:var(--text-muted,#aaa)">Tout sélectionner</span>${archiveSelection.size > 0 ? `<span style="margin-left:auto;font-size:13px;font-weight:600;color:var(--btn-blue,#007bff)">${archiveSelection.size} sélectionné(s)</span>` : ''}`
+        selBar.addEventListener('click', () => {
+            if (allSel) allIds.forEach(id => archiveSelection.delete(id))
+            else allIds.forEach(id => archiveSelection.add(id))
+            renderQuoteList(container)
+        })
+        listContainer.appendChild(selBar)
     }
 
     baseList.forEach(q => {
@@ -489,10 +505,25 @@ function renderQuoteList(container) {
             <div class="inv-date">${q.date}</div>
             <div class="inv-actions">${actionsHTML}</div>
         `
-        div.addEventListener('click', e => {
-            if (e.target.closest('[data-delete],[data-restore]')) return
-            openExistingQuote(q.id, container)
-        })
+        if (q.isArchived) {
+            const isSel = archiveSelection.has(q.id)
+            if (isSel) div.style.background = 'rgba(30,144,255,0.08)'
+            const dot = document.createElement('div')
+            dot.style.cssText = `width:22px;height:22px;border-radius:50%;border:2px solid ${isSel ? 'var(--btn-blue,#007bff)' : '#666'};background:${isSel ? 'var(--btn-blue,#007bff)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:2px;`
+            if (isSel) dot.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" style="stroke:white;fill:none;stroke-width:3"><polyline points="20 6 9 17 4 12"/></svg>'
+            div.insertBefore(dot, div.firstChild)
+            div.addEventListener('click', e => {
+                if (e.target.closest('[data-restore]')) return
+                if (archiveSelection.has(q.id)) archiveSelection.delete(q.id)
+                else archiveSelection.add(q.id)
+                renderQuoteList(container)
+            })
+        } else {
+            div.addEventListener('click', e => {
+                if (e.target.closest('[data-delete],[data-restore]')) return
+                openExistingQuote(q.id, container)
+            })
+        }
         div.querySelector('[data-delete]')?.addEventListener('click', e => {
             e.stopPropagation()
             confirmAndArchive({ table: 'soumissions', id: q.id, item: q, role: currentRole, userId: currentUser.id, userName: myUserName, onSuccess: () => loadData(true, container), showConfirm: (msg, cb) => showConfirm(msg, cb, container), showAlert: msg => showAlertModal(msg, container) })
@@ -517,6 +548,47 @@ function renderQuoteList(container) {
         })
         listContainer.appendChild(btn)
     }
+    updateQuoteArchiveBar(container)
+}
+
+function updateQuoteArchiveBar(container) {
+    let bar = container.querySelector('#quote-archive-action-bar')
+    if (!bar) {
+        bar = document.createElement('div')
+        bar.id = 'quote-archive-action-bar'
+        container.querySelector('#view-dashboard').appendChild(bar)
+    }
+    if (archiveSelection.size === 0 || currentQuoteTab !== 'archives') {
+        bar.style.display = 'none'
+        return
+    }
+    const canRes = canRestore(currentRole)
+    bar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg-card,#23243a);border-top:2px solid var(--btn-blue,#007bff);flex-wrap:wrap;position:sticky;bottom:0;z-index:50;'
+    bar.innerHTML = `
+        <span style="font-size:14px;font-weight:bold;color:var(--text-main,#eee)">${archiveSelection.size} sélectionné(s)</span>
+        ${canRes ? `<button id="bar-quote-restore" style="background:rgba(40,167,69,0.18);color:#28a745;border:1px solid rgba(40,167,69,0.3);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">↺ Restaurer</button>` : ''}
+        <button id="bar-quote-delete" style="background:rgba(220,53,69,0.18);color:#dc3545;border:1px solid rgba(220,53,69,0.3);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-left:auto">Supprimer définitivement</button>
+    `
+    bar.querySelector('#bar-quote-delete').addEventListener('click', () => {
+        const ids = [...archiveSelection]
+        showConfirm(`Supprimer définitivement ${ids.length} soumission(s) ? Cette action est irréversible.`, async () => {
+            const { error } = await supabase.from('soumissions').delete().in('id', ids)
+            if (error) { showAlertModal('Erreur: ' + error.message, container); return }
+            archiveSelection.clear()
+            loadData(true, container)
+        }, container, 'Suppression définitive')
+    })
+    if (canRes) {
+        bar.querySelector('#bar-quote-restore').addEventListener('click', () => {
+            const ids = [...archiveSelection]
+            showConfirm(`Restaurer ${ids.length} soumission(s) ?`, async () => {
+                const { error } = await supabase.from('soumissions').update({ is_archived: false }).in('id', ids)
+                if (error) { showAlertModal('Erreur: ' + error.message, container); return }
+                archiveSelection.clear()
+                loadData(true, container)
+            }, container, 'Restauration')
+        })
+    }
 }
 
 function filterQuotes(container) {
@@ -538,6 +610,7 @@ function filterQuotes(container) {
         div.addEventListener('click', () => openExistingQuote(q.id, container))
         listContainer.appendChild(div)
     })
+    updateQuoteArchiveBar(container)
 }
 
 // ── Éditeur ─────────────────────────────────────────────────────────────────
