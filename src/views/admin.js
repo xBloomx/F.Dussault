@@ -219,14 +219,14 @@ export async function render(container) {
                 <div id="metiersList"><div style="color:#888;font-style:italic;text-align:center;padding:20px">Chargement…</div></div>
             </div>
 
-            <div class="settings-card" style="border-color:#e67e22;grid-column:1/-1" id="toolsPanel">
-                <div class="card-header" style="color:#e67e22">
+            <div class="settings-card" style="border-color:#17a2b8;grid-column:1/-1" id="toolsPanel">
+                <div class="card-header" style="color:#17a2b8">
                     <div class="header-with-icon"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Outils — Inventaire</div>
                 </div>
                 <p style="color:#aaa;font-size:13px;margin-bottom:12px">Ajoute ici les outils que tu viens d'acheter. Ils apparaîtront dans le module Outils, prêts à être assignés.</p>
                 <div style="display:flex;gap:8px;margin-bottom:15px">
                     <input type="text" id="newToolInput" placeholder="Nom de l'outil (ex: Perceuse Milwaukee)..." style="flex:1;background:#1a1b23;border:1px solid #444;color:white;padding:10px;border-radius:6px;font-size:14px">
-                    <button class="btn-add-small" id="btnAddTool" style="background:#e67e22;color:white">
+                    <button class="btn-add-small" id="btnAddTool" style="background:#17a2b8;color:white">
                         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Ajouter
                     </button>
@@ -253,17 +253,17 @@ export async function render(container) {
                 </div>
             </div>
 
-            <div class="settings-card" id="a0ArchivesPanel" style="border-color:#ff9800;grid-column:1/-1">
-                <div class="card-header" style="color:#ff9800">
+            <div class="settings-card" id="a0ArchivesPanel" style="border-color:#795548;grid-column:1/-1">
+                <div class="card-header" style="color:#795548">
                     <div class="header-with-icon"><svg viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Nettoyer Archives</div>
                 </div>
                 <p style="color:#aaa;font-size:13px;margin-bottom:15px;line-height:1.4">Supprime <b>définitivement</b> les documents archivés depuis plus d'un an.</p>
                 <div id="archivesExpiredCount" style="font-size:13px;color:#aaa;margin-bottom:10px">Chargement…</div>
-                <button id="btnCleanArchives" style="width:100%;padding:12px;background:transparent;border:2px solid #ff9800;color:#ff9800;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.2s">Nettoyer</button>
+                <button id="btnCleanArchives" style="width:100%;padding:12px;background:transparent;border:2px solid #795548;color:#795548;border-radius:8px;font-weight:bold;cursor:pointer;transition:0.2s">Nettoyer</button>
             </div>
 
-            <div class="settings-card" style="border-color:#17a2b8;grid-column:1/-1" id="SupportPanel">
-                <div class="card-header" style="color:#17a2b8">
+            <div class="settings-card" style="border-color:var(--btn-orange);grid-column:1/-1" id="SupportPanel">
+                <div class="card-header" style="color:var(--btn-orange)">
                     <div class="header-with-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg> Tickets de Support</div>
                 </div>
                 <div style="background:#1a1b23;border:1px solid #444;border-radius:8px;overflow:hidden">
