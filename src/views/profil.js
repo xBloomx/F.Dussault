@@ -209,45 +209,31 @@ export async function render(container) {
                 </div>
         </div>
 
-        <!-- ── Bas : signature + certifs + sécurité + support ── -->
+        <!-- ── Bas : signature + sécurité (gauche) | certifs + support (droite) ── -->
         <div class="settings-grid">
 
-            <!-- Signature -->
-            <div class="settings-card" style="border-color:var(--btn-red)">
-                <div class="card-header" style="color:var(--btn-red)">
-                    <div class="card-header-left">
-                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        Ma Signature Officielle
-                    </div>
-                </div>
-                <p style="color:#aaa;font-size:13px;margin-top:0;margin-bottom:15px">Dessinez votre signature. Elle sera apposée au bas de vos documents générés.</p>
-                <div class="signature-container">
-                    <canvas id="sig-canvas"></canvas>
-                </div>
-                <div class="sig-actions">
-                    <button class="btn-clear-sig" id="btnClearSig">Effacer et recommencer</button>
-                    <button class="btn-save-sig" id="btnSaveSig">Sauvegarder</button>
-                </div>
-            </div>
-
-            <!-- Certifications -->
-            <div class="settings-card" style="border-color:var(--btn-green)">
-                <div class="card-header" style="color:var(--btn-green)">
-                    <div class="card-header-left">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
-                        Mes Certifications
-                    </div>
-                    <button class="btn-add-small" id="btnAddFormation">
-                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Ajouter
-                    </button>
-                </div>
-                <p style="color:#aaa;font-size:13px;margin-top:0;margin-bottom:15px">Vos cartes s'afficheront dans le calendrier lors de leur expiration.</p>
-                <div class="formation-list" id="formationList"></div>
-            </div>
-
-            <!-- Sécurité + Support empilés -->
+            <!-- Colonne gauche : Signature + Sécurité -->
             <div style="display:flex;flex-direction:column;gap:20px">
+
+                <!-- Signature -->
+                <div class="settings-card" style="border-color:var(--btn-red)">
+                    <div class="card-header" style="color:var(--btn-red)">
+                        <div class="card-header-left">
+                            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            Ma Signature Officielle
+                        </div>
+                    </div>
+                    <p style="color:#aaa;font-size:13px;margin-top:0;margin-bottom:15px">Dessinez votre signature. Elle sera apposée au bas de vos documents générés.</p>
+                    <div class="signature-container">
+                        <canvas id="sig-canvas"></canvas>
+                    </div>
+                    <div class="sig-actions">
+                        <button class="btn-clear-sig" id="btnClearSig">Effacer et recommencer</button>
+                        <button class="btn-save-sig" id="btnSaveSig">Sauvegarder</button>
+                    </div>
+                </div>
+
+                <!-- Sécurité -->
                 <div class="settings-card" style="border-color:var(--btn-blue)">
                     <div class="card-header" style="color:var(--btn-blue);border-bottom:none;margin-bottom:0">
                         <div class="card-header-left">
@@ -259,9 +245,13 @@ export async function render(container) {
                         <label>Ancien mot de passe</label>
                         <input type="password" id="oldPassword" placeholder="Mot de passe actuel">
                     </div>
-                    <div class="pwd-group" style="margin-bottom:15px">
+                    <div class="pwd-group">
                         <label>Nouveau mot de passe</label>
                         <input type="password" id="newPassword" placeholder="Nouveau (min. 6 car.)">
+                    </div>
+                    <div class="pwd-group" style="margin-bottom:15px">
+                        <label>Confirmer le nouveau mot de passe</label>
+                        <input type="password" id="confirmPassword" placeholder="Répéter le nouveau mot de passe">
                     </div>
                     <button class="btn-update-pwd" id="btnUpdatePwd">
                         <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -269,6 +259,28 @@ export async function render(container) {
                     </button>
                 </div>
 
+            </div>
+
+            <!-- Colonne droite : Certifications (extensible) + Support -->
+            <div style="display:flex;flex-direction:column;gap:20px">
+
+                <!-- Certifications -->
+                <div class="settings-card" style="border-color:var(--btn-green);flex:1">
+                    <div class="card-header" style="color:var(--btn-green)">
+                        <div class="card-header-left">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+                            Mes Certifications
+                        </div>
+                        <button class="btn-add-small" id="btnAddFormation">
+                            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Ajouter
+                        </button>
+                    </div>
+                    <p style="color:#aaa;font-size:13px;margin-top:0;margin-bottom:15px">Vos cartes s'afficheront dans le calendrier lors de leur expiration.</p>
+                    <div class="formation-list" id="formationList"></div>
+                </div>
+
+                <!-- Support Technique -->
                 <div class="settings-card" style="border-color:var(--btn-orange)">
                     <div class="card-header" style="color:var(--btn-orange);border-bottom:none;margin-bottom:0">
                         <div class="card-header-left">
@@ -282,6 +294,7 @@ export async function render(container) {
                         Signaler un problème
                     </button>
                 </div>
+
             </div>
 
         </div>
@@ -572,16 +585,19 @@ async function saveSignature() {
 
 // ── Mot de passe ────────────────────────────────────────────────────────────
 async function updateMyPassword() {
-    const oldPwd = document.getElementById('oldPassword').value
-    const newPwd = document.getElementById('newPassword').value
-    if (!oldPwd || !newPwd) return showAlert('Veuillez remplir les deux champs.')
+    const oldPwd     = document.getElementById('oldPassword').value
+    const newPwd     = document.getElementById('newPassword').value
+    const confirmPwd = document.getElementById('confirmPassword').value
+    if (!oldPwd || !newPwd || !confirmPwd) return showAlert('Veuillez remplir les trois champs.')
     if (newPwd.length < 6) return showAlert('Le nouveau mot de passe doit contenir au moins 6 caractères.')
+    if (newPwd !== confirmPwd) return showAlert('Les deux nouveaux mots de passe ne correspondent pas.')
     const { error: signInError } = await supabase.auth.signInWithPassword({ email: currentUser.email, password: oldPwd })
     if (signInError) return showAlert("L'ancien mot de passe est incorrect.")
     const { error } = await supabase.auth.updateUser({ password: newPwd })
     if (error) { showAlert(friendlyError(error)); return }
-    document.getElementById('oldPassword').value = ''
-    document.getElementById('newPassword').value = ''
+    document.getElementById('oldPassword').value    = ''
+    document.getElementById('newPassword').value    = ''
+    document.getElementById('confirmPassword').value = ''
     showAlert('✅ Mot de passe mis à jour avec succès !')
 }
 
