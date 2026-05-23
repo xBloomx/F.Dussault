@@ -117,13 +117,13 @@ export async function render(container) {
         .perm-form-group { margin-bottom: 15px; }
         .perm-form-group label { display: block; color: var(--text-main); font-size: 14px; font-weight: bold; margin-bottom: 8px; }
         .cert-emp-group { margin-bottom:15px; }
-        .cert-emp-name { color:#ff9800;font-weight:bold;font-size:13px;margin-bottom:7px;padding-bottom:4px;border-bottom:1px dashed #333; }
+        .cert-emp-name { color:white;font-weight:bold;font-size:16px;margin-bottom:7px;padding-bottom:4px;border-bottom:1px dashed #333; }
         .cert-row { display:flex;align-items:center;gap:10px;padding:8px 12px;background:#1a1b23;border:1px solid #444;border-radius:6px;margin-bottom:5px; }
         .cert-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
         .cert-ok { background:var(--btn-green); }
         .cert-soon { background:var(--btn-orange); }
         .cert-exp { background:var(--btn-red); }
-        .cert-nodate { background:#555; }
+        .cert-nodate { background:#17a2b8; }
         @media (min-width: 769px) and (max-width: 1024px) { .admin-main { padding: 20px; } }
         @media (max-width: 768px) { .admin-main { padding: 15px; } .dash-header { padding-right: 70px; } .tabs-container { margin-right: 0; } .settings-grid { grid-template-columns: 1fr; } .admin-danger-row { flex-direction: column; } .admin-danger-row .settings-card { min-width: 0 !important; flex: none !important; width: 100%; } }
     </style>
@@ -1525,18 +1525,18 @@ function renderAllFormations(container) {
     })
     container.innerHTML = Object.values(byUser).map(grp => {
         const rows = grp.items.map(f => {
-            let dotClass = 'cert-nodate', statusText = 'Pas de date'
+            let dotClass = 'cert-nodate', statusText = 'Bonne à vie', statusColor = '#17a2b8'
             if (f.date_expiration) {
                 const exp = new Date(f.date_expiration); exp.setHours(0, 0, 0, 0)
                 const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24))
-                if (diff < 0)       { dotClass = 'cert-exp';  statusText = `Expirée le ${exp.toLocaleDateString('fr-CA')}` }
-                else if (diff <= 30) { dotClass = 'cert-soon'; statusText = `Expire dans ${diff} j` }
-                else                 { dotClass = 'cert-ok';   statusText = `Valide jusqu'au ${exp.toLocaleDateString('fr-CA')}` }
+                if (diff < 0)        { dotClass = 'cert-exp';  statusText = `Expirée le ${exp.toLocaleDateString('fr-CA')}`;   statusColor = 'var(--btn-red)' }
+                else if (diff <= 30) { dotClass = 'cert-soon'; statusText = `Expire dans ${diff} j`;                            statusColor = 'var(--btn-orange)' }
+                else                 { dotClass = 'cert-ok';   statusText = `Valide jusqu'au ${exp.toLocaleDateString('fr-CA')}`; statusColor = 'var(--btn-green)' }
             }
             return `<div class="cert-row">
                 <span class="cert-dot ${dotClass}"></span>
                 <span style="flex:1;color:#ddd;font-size:14px">${sanitize(f.nom)}</span>
-                <span style="font-size:12px;color:#aaa">${sanitize(statusText)}</span>
+                <span style="font-size:12px;color:${statusColor}">${sanitize(statusText)}</span>
                 <button class="btn-del-emp" data-cert-del="${f.id}" title="Supprimer"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
             </div>`
         }).join('')
