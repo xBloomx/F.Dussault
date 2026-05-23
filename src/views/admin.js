@@ -121,9 +121,9 @@ export async function render(container) {
         .cert-row { display:flex;align-items:center;gap:10px;padding:8px 12px;background:#1a1b23;border:1px solid #444;border-radius:6px;margin-bottom:5px; }
         .cert-dot { width:10px;height:10px;border-radius:50%;flex-shrink:0; }
         .cert-ok { background:var(--btn-green); }
-        .cert-soon { background:var(--btn-orange); }
+        .cert-soon { background:#ffc107; }
         .cert-exp { background:var(--btn-red); }
-        .cert-nodate { background:#17a2b8; }
+        .cert-nodate { background:white; }
         @media (min-width: 769px) and (max-width: 1024px) { .admin-main { padding: 20px; } }
         @media (max-width: 768px) { .admin-main { padding: 15px; } .dash-header { padding-right: 70px; } .tabs-container { margin-right: 0; } .settings-grid { grid-template-columns: 1fr; } .admin-danger-row { flex-direction: column; } .admin-danger-row .settings-card { min-width: 0 !important; flex: none !important; width: 100%; } }
     </style>
@@ -1525,12 +1525,12 @@ function renderAllFormations(container) {
     })
     container.innerHTML = Object.values(byUser).map(grp => {
         const rows = grp.items.map(f => {
-            let dotClass = 'cert-nodate', statusText = 'Bonne à vie', statusColor = '#17a2b8'
+            let dotClass = 'cert-nodate', statusText = 'Bonne à vie', statusColor = 'white'
             if (f.date_expiration) {
                 const exp = new Date(f.date_expiration); exp.setHours(0, 0, 0, 0)
                 const diff = Math.ceil((exp - today) / (1000 * 60 * 60 * 24))
-                if (diff < 0)        { dotClass = 'cert-exp';  statusText = `Expirée le ${exp.toLocaleDateString('fr-CA')}`;   statusColor = 'var(--btn-red)' }
-                else if (diff <= 30) { dotClass = 'cert-soon'; statusText = `Expire dans ${diff} j`;                            statusColor = 'var(--btn-orange)' }
+                if (diff < 0)        { dotClass = 'cert-exp';  statusText = `Expirée le ${exp.toLocaleDateString('fr-CA')}`;    statusColor = 'var(--btn-red)' }
+                else if (diff <= 30) { dotClass = 'cert-soon'; statusText = `Expire dans ${diff} j`;                             statusColor = '#ffc107' }
                 else                 { dotClass = 'cert-ok';   statusText = `Valide jusqu'au ${exp.toLocaleDateString('fr-CA')}`; statusColor = 'var(--btn-green)' }
             }
             return `<div class="cert-row">
