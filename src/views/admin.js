@@ -171,10 +171,10 @@ export async function render(container) {
                 </div>
             </div>
 
-            <div class="settings-card" style="border-color:#2ecc71;grid-column:1/-1" id="certificationsPanel">
-                <div class="card-header" style="color:#2ecc71">
+            <div class="settings-card" style="border-color:var(--btn-green);grid-column:1/-1" id="certificationsPanel">
+                <div class="card-header" style="color:var(--btn-green)">
                     <div class="header-with-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg> Certifications du personnel</div>
-                    <button class="btn-add-small" id="btnOpenAddFormation" style="background:#2ecc71;color:black">
+                    <button class="btn-add-small" id="btnOpenAddFormation" style="background:var(--btn-green);color:white">
                         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Ajouter formation
                     </button>
@@ -565,7 +565,7 @@ export async function render(container) {
 
     <div class="modal-overlay" id="addFormationAdminModal">
         <div class="modal-card-basic">
-            <h2 style="color:#2ecc71;margin-top:0;margin-bottom:20px;border-bottom:1px solid #444;padding-bottom:10px">Ajouter une formation</h2>
+            <h2 style="color:var(--btn-green);margin-top:0;margin-bottom:20px;border-bottom:1px solid #444;padding-bottom:10px">Ajouter une formation</h2>
             <div class="form-group"><label>Employé</label><select id="formAdminUserId"></select></div>
             <div class="form-group"><label>Nom de la formation / certification</label><input type="text" id="formAdminNom" placeholder="Ex: Secourisme, Travail en hauteur..."></div>
             <div class="form-group"><label>Date d'expiration (optionnel)</label><input type="date" id="formAdminDateExp" style="padding:18px 12px;font-size:16px;min-height:52px"></div>
