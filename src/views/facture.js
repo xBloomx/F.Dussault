@@ -83,6 +83,10 @@ export async function render(container) {
         .btn-icon { background: #444; border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; }
         .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; }
         .btn-delete:hover { background: var(--btn-red); color: white; }
+        .arc-selectable { position: relative; padding-left: 48px !important; }
+        .arc-check { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; border: 2px solid #444; background: transparent; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s; pointer-events: none; }
+        .arc-selected .arc-check { border-color: var(--btn-blue,#007bff); background: var(--btn-blue,#007bff); }
+        .arc-selected { background: rgba(0,120,255,0.05) !important; border-left-color: var(--btn-blue,#007bff) !important; }
         #view-editor { display: none; flex-direction: column; height: 100%; }
         .top-bar { height: auto; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; background: rgba(30,31,38,0.95); border-bottom: 1px solid #333; z-index: 101; flex-wrap: wrap; }
         .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
@@ -589,8 +593,9 @@ function renderInvoiceList(container, invoiceContainer) {
         const allIds = filtered.map(inv => inv.id)
         const allSel = allIds.length > 0 && allIds.every(id => archiveSelection.has(id))
         const selBar = document.createElement('div')
-        selBar.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 14px;margin-bottom:4px;border-bottom:1px solid var(--border,#333);cursor:pointer;'
-        selBar.innerHTML = `<div style="width:20px;height:20px;border-radius:50%;border:2px solid ${allSel ? 'var(--btn-blue,#007bff)' : '#666'};background:${allSel ? 'var(--btn-blue,#007bff)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${allSel ? '<svg viewBox="0 0 24 24" width="11" height="11" style="stroke:white;fill:none;stroke-width:3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div><span style="font-size:13px;color:var(--text-muted,#aaa)">Tout sélectionner</span>${archiveSelection.size > 0 ? `<span style="margin-left:auto;font-size:13px;font-weight:600;color:var(--btn-blue,#007bff)">${archiveSelection.size} sélectionné(s)</span>` : ''}`
+        selBar.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 16px;margin-bottom:4px;border-bottom:1px solid var(--border,#333);cursor:pointer;user-select:none;'
+        const dotHtml = `<div style="width:22px;height:22px;border-radius:50%;border:2px solid ${allSel ? 'var(--btn-blue,#007bff)' : '#555'};background:${allSel ? 'var(--btn-blue,#007bff)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s">${allSel ? '<svg viewBox="0 0 24 24" width="11" height="11" style="stroke:white;fill:none;stroke-width:3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>`
+        selBar.innerHTML = `${dotHtml}<span style="font-size:13px;color:var(--text-muted,#aaa);font-weight:500">Tout sélectionner</span>${archiveSelection.size > 0 ? `<span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--btn-blue,#007bff);background:rgba(0,120,255,0.12);padding:2px 8px;border-radius:20px">${archiveSelection.size}</span>` : ''}`
         selBar.addEventListener('click', () => {
             if (allSel) allIds.forEach(id => archiveSelection.delete(id))
             else allIds.forEach(id => archiveSelection.add(id))
@@ -640,11 +645,12 @@ function renderInvoiceList(container, invoiceContainer) {
         `
         if (inv.isArchived) {
             const isSel = archiveSelection.has(inv.id)
-            if (isSel) div.style.background = 'rgba(30,144,255,0.08)'
-            const dot = document.createElement('div')
-            dot.style.cssText = `width:22px;height:22px;border-radius:50%;border:2px solid ${isSel ? 'var(--btn-blue,#007bff)' : '#666'};background:${isSel ? 'var(--btn-blue,#007bff)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:2px;`
-            if (isSel) dot.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" style="stroke:white;fill:none;stroke-width:3"><polyline points="20 6 9 17 4 12"/></svg>'
-            div.insertBefore(dot, div.firstChild)
+            div.classList.add('arc-selectable')
+            if (isSel) div.classList.add('arc-selected')
+            const check = document.createElement('div')
+            check.className = 'arc-check'
+            if (isSel) check.innerHTML = '<svg viewBox="0 0 24 24" width="11" height="11" style="stroke:white;fill:none;stroke-width:3"><polyline points="20 6 9 17 4 12"/></svg>'
+            div.appendChild(check)
             div.addEventListener('click', e => {
                 if (e.target.closest('[data-restore]')) return
                 if (archiveSelection.has(inv.id)) archiveSelection.delete(inv.id)
