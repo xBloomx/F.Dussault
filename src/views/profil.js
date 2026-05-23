@@ -30,12 +30,12 @@ export async function render(container) {
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
         .btn-logout-header {
-            background: transparent; color: white; border: 2px solid #555;
+            background: var(--btn-red); color: white; border: 2px solid var(--btn-red);
             padding: 10px 22px; border-radius: 50px; font-weight: bold; font-size: 14px;
             cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; white-space: nowrap;
         }
         .btn-logout-header svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-logout-header:hover { background: var(--btn-red); border-color: var(--btn-red); }
+        .btn-logout-header:hover { opacity: 0.85; }
 
         /* ── Top section ── */
         .profil-top { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
@@ -86,11 +86,6 @@ export async function render(container) {
         .form-row { display: flex; gap: 15px; }
         .form-row .form-group { flex: 1; }
         .info-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 5px; }
-        .btn-cancel-info {
-            background: #2e2f3a; color: white; border: none; padding: 12px 28px;
-            border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .btn-cancel-info:hover { background: #3a3b46; }
         .btn-save-info {
             background: var(--btn-blue); color: white; border: none; padding: 12px 28px;
             border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s;
@@ -269,7 +264,6 @@ export async function render(container) {
                     </div>
                 </div>
                 <div class="info-actions">
-                    <button class="btn-cancel-info" id="btnCancelInfo">Annuler</button>
                     <button class="btn-save-info" id="btnSaveInfo">Enregistrer</button>
                 </div>
             </div>
@@ -434,7 +428,6 @@ async function init() {
 
     document.getElementById('btnLogout').addEventListener('click', logout)
     document.getElementById('btnSaveInfo').addEventListener('click', saveInfoForm)
-    document.getElementById('btnCancelInfo').addEventListener('click', resetInfoForm)
     document.getElementById('btnSaveSig').addEventListener('click', saveSignature)
     document.getElementById('btnClearSig').addEventListener('click', clearSignature)
 
