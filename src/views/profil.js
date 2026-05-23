@@ -39,7 +39,7 @@ export async function render(container) {
 
         /* ── Info card ── */
         .info-card {
-            background: var(--bg-panel); border-radius: 20px; border: 2px solid var(--accent);
+            background: var(--bg-panel); border-radius: 20px; border: 1px solid var(--accent);
             padding: 30px; display: flex; flex-direction: column;
         }
         .info-header {
