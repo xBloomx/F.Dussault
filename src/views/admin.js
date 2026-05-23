@@ -10,6 +10,7 @@ import { friendlyError } from '../shared/errorMsg.js'
 let allLogs = []
 let roleDefinitions = {}
 let suppliersData = []
+let metiersData = []
 let toolsListData = []
 let currentToolSettingsId = null
 let maintenanceActive = false
@@ -17,6 +18,7 @@ let confirmAdminCallback = null
 let allFormationsData = []
 
 const DEFAULT_SUPPLIERS = ['Deschênes', 'Wolseley', 'Plomberie Provinciale']
+const DEFAULT_METIERS = ['Plombier — Apprenti', 'Plombier — Compagnon', 'Plombier — Maître', 'Tuyauteur — Apprenti', 'Tuyauteur — Compagnon', 'Tuyauteur — Maître']
 
 const allPermissions = [
     { id: 'view_all_invoices',     label: 'Voir toutes les factures',             desc: 'Accès à la boîte de réception des factures.' },
@@ -178,6 +180,21 @@ export async function render(container) {
                     </button>
                 </div>
                 <div id="suppliersList"><div style="color:#888;font-style:italic;text-align:center;padding:20px">Chargement…</div></div>
+            </div>
+
+            <div class="settings-card" style="border-color:#9b59b6;grid-column:1/-1" id="metiersPanel">
+                <div class="card-header" style="color:#9b59b6">
+                    <div class="header-with-icon"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> Métiers CCQ</div>
+                </div>
+                <p style="color:#aaa;font-size:13px;margin-bottom:12px">Liste des métiers disponibles dans le profil de chaque employé.</p>
+                <div style="display:flex;gap:8px;margin-bottom:15px">
+                    <input type="text" id="newMetierInput" placeholder="Ex: Plombier — Apprenti..." style="flex:1;background:#1a1b23;border:1px solid #444;color:white;padding:10px;border-radius:6px;font-size:14px">
+                    <button class="btn-add-small" id="btnAddMetier" style="background:#9b59b6;color:white">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Ajouter
+                    </button>
+                </div>
+                <div id="metiersList"><div style="color:#888;font-style:italic;text-align:center;padding:20px">Chargement…</div></div>
             </div>
 
             <div class="settings-card" style="border-color:var(--btn-green);grid-column:1/-1" id="toolsPanel">
@@ -663,9 +680,14 @@ async function init() {
 
     if (hasPermission('manage_suppliers')) {
         loadSuppliers()
+        loadAdminMetiers()
+        document.getElementById('btnAddMetier').addEventListener('click', addMetier)
+        document.getElementById('newMetierInput').addEventListener('keydown', e => { if (e.key === 'Enter') addMetier() })
     } else {
         const sp = document.getElementById('suppliersPanel')
         if (sp) sp.style.display = 'none'
+        const mp = document.getElementById('metiersPanel')
+        if (mp) mp.style.display = 'none'
     }
 
     if (currentRole === 'A0' || currentRole === 'A1') {
@@ -1039,6 +1061,72 @@ async function addSupplier() {
     const ok = await saveSuppliers()
     if (ok) { if (inp) inp.value = ''; renderSuppliers() }
     else suppliersData.pop()
+}
+
+// ── Métiers ──────────────────────────────────────────────────────────────────
+async function loadAdminMetiers() {
+    try {
+        const { data } = await supabase.from('parametres_globaux').select('valeur').eq('cle', 'metiers_liste').maybeSingle()
+        if (data?.valeur) {
+            const parsed = JSON.parse(data.valeur)
+            metiersData = Array.isArray(parsed) ? parsed : [...DEFAULT_METIERS]
+        } else {
+            metiersData = [...DEFAULT_METIERS]
+            await saveMetiers()
+        }
+    } catch { metiersData = [...DEFAULT_METIERS] }
+    renderMetiers()
+}
+
+async function saveMetiers() {
+    const { error } = await supabase.from('parametres_globaux').upsert({ cle: 'metiers_liste', valeur: JSON.stringify(metiersData) }, { onConflict: 'cle' })
+    if (error) { showAlert(friendlyError(error)); return false }
+    return true
+}
+
+function renderMetiers() {
+    const list = document.getElementById('metiersList')
+    if (!list) return
+    if (metiersData.length === 0) { list.innerHTML = '<div style="color:#888;font-style:italic;text-align:center;padding:20px">Aucun métier.</div>'; return }
+    list.innerHTML = metiersData.map((m, idx) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:#1a1b23;border:1px solid #444;border-radius:6px;margin-bottom:6px">
+            <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+                <button data-met-up="${idx}" ${idx === 0 ? 'disabled' : ''} style="background:${idx === 0 ? '#222' : '#333'};color:${idx === 0 ? '#444' : '#bbb'};border:none;border-radius:4px;width:28px;height:22px;display:flex;align-items:center;justify-content:center;cursor:${idx === 0 ? 'default' : 'pointer'};padding:0">▲</button>
+                <button data-met-down="${idx}" ${idx === metiersData.length - 1 ? 'disabled' : ''} style="background:${idx === metiersData.length - 1 ? '#222' : '#333'};color:${idx === metiersData.length - 1 ? '#444' : '#bbb'};border:none;border-radius:4px;width:28px;height:22px;display:flex;align-items:center;justify-content:center;cursor:${idx === metiersData.length - 1 ? 'default' : 'pointer'};padding:0">▼</button>
+            </div>
+            <span style="flex:1;color:#ddd;font-size:14px">${sanitize(m)}</span>
+            <button class="btn-del-emp" data-met-del="${idx}"><svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        </div>`).join('')
+
+    list.querySelectorAll('[data-met-up]').forEach(btn => btn.addEventListener('click', async () => {
+        const i = parseInt(btn.dataset.metUp)
+        if (i <= 0) return
+        ;[metiersData[i - 1], metiersData[i]] = [metiersData[i], metiersData[i - 1]]
+        renderMetiers(); await saveMetiers()
+    }))
+    list.querySelectorAll('[data-met-down]').forEach(btn => btn.addEventListener('click', async () => {
+        const i = parseInt(btn.dataset.metDown)
+        if (i >= metiersData.length - 1) return
+        ;[metiersData[i], metiersData[i + 1]] = [metiersData[i + 1], metiersData[i]]
+        renderMetiers(); await saveMetiers()
+    }))
+    list.querySelectorAll('[data-met-del]').forEach(btn => btn.addEventListener('click', () => {
+        const i = parseInt(btn.dataset.metDel)
+        showConfirmAdmin(`Retirer "${metiersData[i]}" ?`, async () => {
+            metiersData.splice(i, 1); await saveMetiers(); renderMetiers()
+        })
+    }))
+}
+
+async function addMetier() {
+    const inp = document.getElementById('newMetierInput')
+    const name = inp?.value.trim()
+    if (!name) { showAlert('Veuillez entrer un nom de métier.'); return }
+    if (metiersData.some(m => m.toLowerCase() === name.toLowerCase())) { showAlert('Ce métier est déjà dans la liste.'); return }
+    metiersData.push(name)
+    const ok = await saveMetiers()
+    if (ok) { if (inp) inp.value = ''; renderMetiers() }
+    else metiersData.pop()
 }
 
 // ── Outils ───────────────────────────────────────────────────────────────────
