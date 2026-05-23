@@ -66,12 +66,12 @@ export async function render(container) {
 
         /* ── Info card (droite) ── */
         .info-card {
-            background: var(--bg-panel); border-radius: 20px; border: 1px solid #333;
+            background: var(--bg-panel); border-radius: 20px; border: 2px solid var(--accent);
             padding: 30px; display: flex; flex-direction: column;
         }
         .info-header {
             display: flex; align-items: center; gap: 12px;
-            font-size: 20px; font-weight: bold; color: white; margin-bottom: 25px;
+            font-size: 20px; font-weight: bold; color: var(--accent); margin-bottom: 25px;
         }
         .info-header svg { width: 24px; height: 24px; stroke: var(--accent); fill: none; stroke-width: 2; flex-shrink: 0; }
         .form-group { margin-bottom: 18px; }
@@ -121,7 +121,7 @@ export async function render(container) {
         .btn-clear-sig { background: transparent; color: #aaa; border: none; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
         .btn-clear-sig:hover { color: white; }
         .btn-save-sig {
-            background: var(--accent); color: black; border: none; padding: 8px 16px;
+            background: var(--btn-red); color: white; border: none; padding: 8px 16px;
             border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;
         }
         .btn-save-sig:hover { opacity: 0.85; }
@@ -279,8 +279,8 @@ export async function render(container) {
         <div class="settings-grid">
 
             <!-- Signature -->
-            <div class="settings-card" style="border-color:var(--accent)">
-                <div class="card-header" style="color:var(--accent)">
+            <div class="settings-card" style="border-color:var(--btn-red)">
+                <div class="card-header" style="color:var(--btn-red)">
                     <div class="card-header-left">
                         <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         Ma Signature Officielle
