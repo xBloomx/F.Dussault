@@ -37,34 +37,7 @@ export async function render(container) {
         .btn-logout-header svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-logout-header:hover { opacity: 0.85; }
 
-        /* ── Top section ── */
-        .profil-top { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
-
-        /* ── Profile card (gauche) ── */
-        .profile-card {
-            background: var(--bg-panel); border-radius: 20px; border: 1px solid #333;
-            padding: 30px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px;
-        }
-        .avatar-circle {
-            width: 90px; height: 90px; border-radius: 50%;
-            border: 3px solid var(--accent); background: #1a1b23;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 32px; font-weight: bold; color: var(--accent); flex-shrink: 0; letter-spacing: 1px;
-        }
-        .profile-name { font-size: 20px; font-weight: bold; color: white; text-align: center; line-height: 1.3; }
-        .role-badge {
-            background: var(--accent); color: black; font-size: 11px; font-weight: bold;
-            padding: 4px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 5px; }
-        .stat-box {
-            background: #1a1b23; border-radius: 12px; padding: 15px 10px;
-            display: flex; flex-direction: column; align-items: center; gap: 4px; border: 1px solid #2a2b35;
-        }
-        .stat-num { font-size: 28px; font-weight: bold; color: white; line-height: 1; }
-        .stat-label { font-size: 10px; color: #666; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* ── Info card (droite) ── */
+        /* ── Info card ── */
         .info-card {
             background: var(--bg-panel); border-radius: 20px; border: 2px solid var(--accent);
             padding: 30px; display: flex; flex-direction: column;
@@ -161,7 +134,6 @@ export async function render(container) {
 
         @media (min-width: 769px) and (max-width: 1100px) {
             .profil-main { padding: 20px; }
-            .profil-top { grid-template-columns: 240px 1fr; }
             .modal-card-basic { max-width: 500px; }
         }
         @media (max-width: 768px) {
@@ -170,9 +142,6 @@ export async function render(container) {
             .dash-title { padding-right: 80px; width: 100%; }
             .btn-logout-header { width: 42px; height: 42px; justify-content: center; padding: 0; border-radius: 50%; background: var(--btn-red); border-color: var(--btn-red); }
             .btn-logout-header span { display: none; }
-            .profil-top { grid-template-columns: 1fr; }
-            .profile-card { flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 20px; border-radius: 15px; }
-            .stats-grid { max-width: 260px; }
             .settings-grid { grid-template-columns: 1fr; }
             .form-row { flex-direction: column; gap: 0; }
             .info-actions { flex-direction: row; }
@@ -193,36 +162,8 @@ export async function render(container) {
             </button>
         </div>
 
-        <!-- ── Top : carte profil + formulaire info ── -->
-        <div class="profil-top">
-
-            <!-- Carte profil -->
-            <div class="profile-card">
-                <div class="avatar-circle" id="avatarCircle">??</div>
-                <div class="profile-name" id="profileDisplayName">—</div>
-                <div class="role-badge" id="roleBadge">Employé</div>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <span class="stat-num" id="statFeuilles">—</span>
-                        <span class="stat-label">Feuilles</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-num" id="statFactures">—</span>
-                        <span class="stat-label">Factures</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-num" id="statCertifs">—</span>
-                        <span class="stat-label">Certifs</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="stat-num" id="statAns">—</span>
-                        <span class="stat-label">Ans</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Formulaire informations personnelles -->
-            <div class="info-card">
+        <!-- ── Informations personnelles ── -->
+        <div class="info-card">
                 <div class="info-header">
                     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Informations personnelles
@@ -266,7 +207,6 @@ export async function render(container) {
                 <div class="info-actions">
                     <button class="btn-save-info" id="btnSaveInfo">Enregistrer</button>
                 </div>
-            </div>
         </div>
 
         <!-- ── Bas : signature + certifs + sécurité + support ── -->
@@ -536,10 +476,6 @@ async function initProfileData() {
             // Stocker pour le bouton Annuler
             loadedValues = { prenom, nom, telephone: profil.telephone || '', courriel: profil.courriel || '', adresse: profil.adresse || '', numero_ccq: profil.numero_ccq || '', metier: profil.metier || '' }
 
-            // Carte profil
-            const fullName = [prenom, nom].filter(Boolean).join(' ') || profil.prenom_nom || currentUser.email
-            updateProfileCard(fullName, profil.role || currentRole)
-
             // Signature — charger en inversant (fond blanc → transparent sur canvas sombre)
             if (profil.signature_base64) {
                 const img = new Image()
@@ -562,67 +498,10 @@ async function initProfileData() {
             .order('date_expiration', { ascending: true })
         formations = (formData || []).map(f => ({ id: f.id, name: f.nom, dateExp: f.date_expiration, image: f.image_base64 }))
         renderFormations()
-        updateStatCertifs()
-
-        // Stats
-        loadStats()
 
     } catch (e) {
         console.error('Erreur chargement profil:', e)
     }
-}
-
-function updateProfileCard(fullName, role) {
-    const parts = (fullName || '').trim().split(' ').filter(Boolean)
-    const initials = parts.length >= 2
-        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-        : (parts[0]?.[0] || '?').toUpperCase()
-
-    const el = document.getElementById('avatarCircle')
-    const nameEl = document.getElementById('profileDisplayName')
-    const badge = document.getElementById('roleBadge')
-    if (el) el.textContent = initials
-    if (nameEl) nameEl.textContent = fullName || '—'
-    if (badge) {
-        const r = (role || '').toLowerCase()
-        badge.textContent = r.includes('admin') ? 'Administrateur' : r.includes('employe') || r.includes('employé') ? 'Employé' : (role || 'Employé')
-        badge.style.background = r.includes('admin') ? 'var(--accent)' : '#444'
-        badge.style.color = r.includes('admin') ? 'black' : 'white'
-    }
-}
-
-async function loadStats() {
-    // Feuilles de temps
-    try {
-        const { count: feuilles } = await supabase
-            .from('feuilles_de_temps')
-            .select('id', { count: 'exact', head: true })
-            .eq('author_id', currentUser.id)
-        const el = document.getElementById('statFeuilles')
-        if (el) el.textContent = feuilles ?? 0
-    } catch { document.getElementById('statFeuilles').textContent = 0 }
-
-    // Factures (globales — pas de champ user)
-    try {
-        const { count: factures } = await supabase
-            .from('factures')
-            .select('id', { count: 'exact', head: true })
-        const el = document.getElementById('statFactures')
-        if (el) el.textContent = factures ?? 0
-    } catch { document.getElementById('statFactures').textContent = 0 }
-
-    // Ans — calculé depuis created_at du compte
-    try {
-        const createdAt = new Date(currentUser.created_at)
-        const ans = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24 * 365))
-        const el = document.getElementById('statAns')
-        if (el) el.textContent = ans < 1 ? '< 1' : ans
-    } catch { document.getElementById('statAns').textContent = 0 }
-}
-
-function updateStatCertifs() {
-    const el = document.getElementById('statCertifs')
-    if (el) el.textContent = formations.length
 }
 
 // ── Sauvegarde info personnelle ─────────────────────────────────────────────
@@ -646,7 +525,6 @@ async function saveInfoForm() {
         if (error) throw error
 
         loadedValues = { prenom, nom, telephone, courriel, adresse, numero_ccq, metier }
-        updateProfileCard(prenom_nom, currentRole)
         showToast('✅ Informations sauvegardées !')
     } catch (e) {
         showAlert('❌ Erreur : ' + (e.message || friendlyError(e)))
@@ -788,7 +666,6 @@ async function saveFormation() {
     if (error) { showAlert(friendlyError(error)); return }
     formations.push({ id: data.id, name: data.nom, dateExp: data.date_expiration, image: data.image_base64 })
     renderFormations()
-    updateStatCertifs()
     closeModal('formationModal')
     window.dispatchEvent(new CustomEvent('formations_updated'))
 }
@@ -798,7 +675,6 @@ async function deleteFormation(id) {
     if (error) { showAlert(friendlyError(error)); return }
     formations = formations.filter(f => f.id !== id)
     renderFormations()
-    updateStatCertifs()
     window.dispatchEvent(new CustomEvent('formations_updated'))
 }
 
