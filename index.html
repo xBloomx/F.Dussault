@@ -179,6 +179,12 @@
         body.signature-mode-active .sidebar { display: none !important; }
         body.signature-mode-active .menu-btn { display: none !important; }
 
+        /* Overlay redresse téléphone */
+        #portrait-hint { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 99998; color: white; text-align: center; flex-direction: column; justify-content: center; align-items: center; padding: 30px; box-sizing: border-box; }
+        #portrait-hint.show { display: flex; }
+        #portrait-hint .ph-icon { width: 80px; height: 80px; margin-bottom: 25px; color: #fcca46; animation: phRotate 1.8s ease-in-out infinite; }
+        @keyframes phRotate { 0%, 100% { transform: rotate(90deg); } 40%, 60% { transform: rotate(0deg); } }
+
         /* Responsive */
         @media (min-width: 769px) and (max-width: 1024px) {
             .sidebar { position: relative; left: 0; width: 80px; flex-shrink: 0; }
@@ -294,6 +300,15 @@
 </div>
 
 <div id="overlay"></div>
+
+<!-- Overlay redresse téléphone (portrait) -->
+<div id="portrait-hint">
+    <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+    </svg>
+    <h2 style="margin:0 0 10px;font-size:22px;font-weight:bold">Redressez votre téléphone</h2>
+    <p style="color:#aaa;font-size:15px;max-width:280px;line-height:1.5;margin:0">Cette application est conçue pour le mode portrait.</p>
+</div>
 <div id="toast-container"></div>
 
 <!-- Bannière installation iOS -->
@@ -642,6 +657,21 @@ boot()
         banner.style.display = 'none'
         localStorage.setItem('ios_install_dismissed', '1')
     })
+})()
+
+// ── Overlay portrait (redresse le téléphone) ──────────────────────────────────
+;(() => {
+    const hint = document.getElementById('portrait-hint')
+    if (!hint) return
+    function updateHint() {
+        const isMobile = window.innerWidth < 900 || window.matchMedia('(pointer: coarse)').matches
+        const isLandscape = window.innerWidth > window.innerHeight
+        const sigOpen = document.getElementById('sig-fd-modal')?.classList.contains('show')
+        hint.classList.toggle('show', isMobile && isLandscape && !sigOpen)
+    }
+    window.addEventListener('resize', updateHint)
+    window.addEventListener('orientationchange', () => setTimeout(updateHint, 150))
+    updateHint()
 })()
 
 // Nouveau service worker activé → recharger immédiatement pour les nouveaux assets
