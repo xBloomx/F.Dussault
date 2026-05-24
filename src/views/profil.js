@@ -9,7 +9,6 @@ import { friendlyError } from '../shared/errorMsg.js'
 // ── État local ──────────────────────────────────────────────────────────────
 let formations = []
 let currentFormationImageBase64 = null
-let canvas, ctx, drawing, signatureHasData
 let loadedValues = {}
 
 // ── Render principal ────────────────────────────────────────────────────────
@@ -78,21 +77,6 @@ export async function render(container) {
         }
         .card-header-left { display: flex; align-items: center; gap: 10px; }
         .card-header svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
-
-        /* Signature */
-        .signature-container {
-            background: #1a1b23; border-radius: 8px; border: 2px dashed #555;
-            height: 180px; position: relative; margin-bottom: 12px; overflow: hidden;
-        }
-        #sig-canvas { width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
-        .sig-actions { display: flex; justify-content: space-between; align-items: center; }
-        .btn-clear-sig { background: transparent; color: #aaa; border: none; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
-        .btn-clear-sig:hover { color: white; }
-        .btn-save-sig {
-            background: var(--btn-red); color: white; border: none; padding: 8px 16px;
-            border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .btn-save-sig:hover { opacity: 0.85; }
 
         /* Certifications */
         .formation-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; max-height: 260px; overflow-y: auto; padding-right: 2px; }
@@ -213,26 +197,8 @@ export async function render(container) {
         <!-- ── Bas : signature + sécurité (gauche) | certifs + support (droite) ── -->
         <div class="settings-grid">
 
-            <!-- Colonne gauche : Signature + Sécurité -->
+            <!-- Colonne gauche : Sécurité -->
             <div style="display:flex;flex-direction:column;gap:20px">
-
-                <!-- Signature -->
-                <div class="settings-card" style="border-color:var(--btn-red)">
-                    <div class="card-header" style="color:var(--btn-red)">
-                        <div class="card-header-left">
-                            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            Ma Signature Officielle
-                        </div>
-                    </div>
-                    <p style="color:#aaa;font-size:13px;margin-top:0;margin-bottom:15px">Dessinez votre signature. Elle sera apposée au bas de vos documents générés.</p>
-                    <div class="signature-container">
-                        <canvas id="sig-canvas"></canvas>
-                    </div>
-                    <div class="sig-actions">
-                        <button class="btn-clear-sig" id="btnClearSig">Effacer et recommencer</button>
-                        <button class="btn-save-sig" id="btnSaveSig">Sauvegarder</button>
-                    </div>
-                </div>
 
                 <!-- Sécurité -->
                 <div class="settings-card" style="border-color:var(--btn-blue)">
@@ -374,16 +340,8 @@ export async function render(container) {
 
 // ── Init ────────────────────────────────────────────────────────────────────
 async function init() {
-    canvas = document.getElementById('sig-canvas')
-    ctx = canvas.getContext('2d')
-    drawing = false
-    signatureHasData = false
-    const cleanupCanvas = initCanvas()
-
     document.getElementById('btnLogout').addEventListener('click', logout)
     document.getElementById('btnSaveInfo').addEventListener('click', saveInfoForm)
-    document.getElementById('btnSaveSig').addEventListener('click', saveSignature)
-    document.getElementById('btnClearSig').addEventListener('click', clearSignature)
 
     document.getElementById('btnAddFormation').addEventListener('click', openFormationModal)
     document.getElementById('btnCancelFormation').addEventListener('click', () => closeModal('formationModal'))
@@ -401,45 +359,6 @@ async function init() {
     document.getElementById('btnCloseAlert').addEventListener('click', () => closeModal('alertModal'))
 
     await initProfileData()
-    return cleanupCanvas
-}
-
-// ── Canvas signature ────────────────────────────────────────────────────────
-function initCanvas() {
-    function resizeCanvas() {
-        const ratio = Math.max(window.devicePixelRatio || 1, 1)
-        canvas.width = canvas.offsetWidth * ratio
-        canvas.height = canvas.offsetHeight * ratio
-        ctx.scale(ratio, ratio)
-        ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(230,230,230,0.95)'
-    }
-    const onMouseMove = e => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke() }
-    const onMouseUp = () => { drawing = false }
-    setTimeout(resizeCanvas, 100)
-    window.addEventListener('resize', resizeCanvas)
-    function getPos(e) {
-        const rect = canvas.getBoundingClientRect()
-        return {
-            x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
-            y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
-        }
-    }
-    canvas.addEventListener('mousedown', e => { drawing = true; signatureHasData = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y) })
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
-    canvas.addEventListener('touchstart', e => { drawing = true; signatureHasData = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); e.preventDefault() }, { passive: false })
-    canvas.addEventListener('touchmove', e => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault() }, { passive: false })
-    canvas.addEventListener('touchend', () => { drawing = false })
-    return function cleanup() {
-        window.removeEventListener('resize', resizeCanvas)
-        window.removeEventListener('mousemove', onMouseMove)
-        window.removeEventListener('mouseup', onMouseUp)
-    }
-}
-
-function clearSignature() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    signatureHasData = false
 }
 
 // ── Métiers — chargement dynamique depuis Supabase ──────────────────────────
@@ -465,7 +384,7 @@ async function initProfileData() {
     try {
         const { data: profil } = await supabase
             .from('profils')
-            .select('prenom, nom, prenom_nom, telephone, courriel, signature_base64, adresse, numero_ccq, metier, role')
+            .select('prenom, nom, prenom_nom, telephone, courriel, adresse, numero_ccq, metier, role')
             .eq('id', currentUser.id)
             .maybeSingle()
 
@@ -487,21 +406,7 @@ async function initProfileData() {
                 sel.value = profil.metier
             }
 
-            // Stocker pour le bouton Annuler
             loadedValues = { prenom, nom, telephone: profil.telephone || '', courriel: profil.courriel || '', adresse: profil.adresse || '', numero_ccq: profil.numero_ccq || '', metier: profil.metier || '' }
-
-            // Signature — charger en inversant (fond blanc → transparent sur canvas sombre)
-            if (profil.signature_base64) {
-                const img = new Image()
-                img.onload = () => {
-                    ctx.save()
-                    ctx.globalCompositeOperation = 'difference'
-                    ctx.drawImage(img, 0, 0, canvas.offsetWidth, canvas.offsetHeight)
-                    ctx.restore()
-                    signatureHasData = true
-                }
-                img.src = profil.signature_base64
-            }
         }
 
         // Certifications
@@ -555,33 +460,6 @@ function resetInfoForm() {
     document.getElementById('profAdresse').value = loadedValues.adresse    || ''
     document.getElementById('profCCQ').value     = loadedValues.numero_ccq || ''
     document.getElementById('profMetier').value  = loadedValues.metier     || ''
-}
-
-// ── Sauvegarde signature ────────────────────────────────────────────────────
-async function saveSignature() {
-    const btn = document.getElementById('btnSaveSig')
-    btn.disabled = true; btn.textContent = 'Sauvegarde...'
-    try {
-        let sigData = null
-        if (signatureHasData) {
-            const tmp = document.createElement('canvas')
-            tmp.width = canvas.width; tmp.height = canvas.height
-            const tCtx = tmp.getContext('2d')
-            tCtx.fillStyle = 'white'
-            tCtx.fillRect(0, 0, tmp.width, tmp.height)
-            tCtx.drawImage(canvas, 0, 0)
-            sigData = tmp.toDataURL()
-        }
-        const { error } = await supabase.from('profils').update({
-            signature_base64: sigData
-        }).eq('id', currentUser.id)
-        if (error) throw error
-        showToast('✅ Signature sauvegardée !')
-    } catch (e) {
-        showAlert('❌ Erreur : ' + e.message)
-    } finally {
-        btn.disabled = false; btn.textContent = 'Sauvegarder'
-    }
 }
 
 // ── Mot de passe ────────────────────────────────────────────────────────────
