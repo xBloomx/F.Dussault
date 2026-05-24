@@ -29,6 +29,8 @@ let zoomCtrl = null
 let _onResizeSoum = null
 let clientNameList = []
 let archiveSelection = new Set()
+let isPaperMode = false
+let paperPages = []
 
 // ── Render principal ────────────────────────────────────────────────────────
 export async function render(container) {
@@ -150,6 +152,21 @@ export async function render(container) {
         .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: rgba(30,31,38,0.95); padding: 5px 10px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: 1px solid #555; }
         .zoom-controls button { background: var(--accent); border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1e1f26; }
         .zoom-controls span { color: white; font-size: 12px; font-weight: bold; min-width: 45px; text-align: center; }
+        .paper-mode-container { background: #fff; margin: 20px auto; max-width: 800px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow: hidden; }
+        .paper-mode-header { display: flex; gap: 0; background: #fff; border-bottom: 1px solid #e0e0e0; }
+        .paper-mode-header .pmh-field { flex: 1; padding: 10px 14px; border-right: 1px solid #e8e8e8; min-width: 0; }
+        .paper-mode-header .pmh-field:last-child { border-right: none; }
+        .paper-mode-header label { display: block; font-size: 9px; color: #888; font-weight: 700; letter-spacing: 0.8px; margin-bottom: 4px; text-transform: uppercase; }
+        .paper-mode-header input { width: 100%; border: none; outline: none; background: transparent; font-size: 13px; color: #222; font-family: Arial, sans-serif; box-sizing: border-box; }
+        .paper-mode-body { padding: 30px 20px; background: #fff; min-height: 400px; }
+        .paper-add-page-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: calc(100% - 40px); margin: 16px 20px; padding: 14px; background: rgba(91,192,235,0.08); border: 1.5px dashed #5bc0eb; border-radius: 10px; color: #5bc0eb; font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit; }
+        .paper-add-page-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .paper-page-display { position: relative; background: #fff; border-radius: 6px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.15); border: 1px solid #e0e0e0; }
+        .paper-page-display img { width: 100%; height: auto; display: block; }
+        .paper-page-display .ppd-num { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; pointer-events: none; }
+        .pim-progress { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9000; justify-content: center; align-items: center; }
+        .pim-progress.show { display: flex; }
+        .pim-progress-card { background: var(--bg-panel); padding: 30px 40px; border-radius: 12px; text-align: center; color: white; font-size: 16px; }
         .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
         .custom-modal-overlay.open { display: flex; }
         .custom-modal-card { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 12px; border: 1px solid #555; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
@@ -251,6 +268,10 @@ export async function render(container) {
                     Débloquer
                 </button>
                 <div style="flex:1"></div>
+                <button class="action-btn" id="btnPaper" style="background:#e8730a;color:white">
+                    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <span id="btnPaperLabel">Soumission papier</span>
+                </button>
                 <button class="action-btn" id="btnPdf">
                     <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                     PDF / Imprimer
@@ -304,6 +325,9 @@ export async function render(container) {
             </div>
         </div>
     </div>
+
+    <input type="file" id="pim-gallery-input" accept="image/*" multiple style="display:none">
+    <div class="pim-progress" id="pimProgress"><div class="pim-progress-card"><div id="pimProgressText">Téléversement…</div></div></div>
     `
 
     await init(container)
@@ -344,7 +368,9 @@ async function init(container) {
     container.querySelector('#btnApprouver').addEventListener('click', () => approuverSoumission(container))
     container.querySelector('#btnCorrections').addEventListener('click', () => demanderCorrections(container))
     container.querySelector('#btnUnlock').addEventListener('click', () => unlockQuote(container))
-    container.querySelector('#btnPdf').addEventListener('click', () => exportPdf(quoteContainer))
+    container.querySelector('#btnPdf').addEventListener('click', () => exportPdf(quoteContainer, container))
+    container.querySelector('#btnPaper').addEventListener('click', () => togglePaperMode(quoteContainer, viewDash, viewEditor, container))
+    container.querySelector('#pim-gallery-input').addEventListener('change', e => { addPaperPages(e.target.files, quoteContainer); e.target.value = '' })
     container.querySelector('#btnAddPage').addEventListener('click', () => { quoteContainer.appendChild(createQuotePageHTML()); zoomCtrl?.applyZoom(zoomCtrl?.current ?? 1.0) })
     container.querySelector('#btnDupPage').addEventListener('click', () => duplicatePage(quoteContainer, zoomDisplay))
     container.querySelector('#btnDelPage').addEventListener('click', () => deletePage(quoteContainer, container))
@@ -404,7 +430,7 @@ async function loadData(reset = true, container) {
     const from = quotesPage * PAGE_SIZE
     const to = from + PAGE_SIZE - 1
 
-    let query = supabase.from('soumissions').select('id,client,date,status,author_id,author_name,is_archived,input_values,sig_values,page_count')
+    let query = supabase.from('soumissions').select('id,client,date,status,author_id,author_name,is_archived,input_values,sig_values,page_count,is_paper,paper_pages')
     if (currentQuoteTab === 'archives') {
         query = query.eq('is_archived', true)
         if (!canSeeAllArchives(currentRole)) query = query.eq('author_id', currentUser.id)
@@ -429,7 +455,8 @@ function mapQuote(db) {
         id: db.id, client: db.client, date: db.date, status: db.status,
         inputValues: db.input_values || [], sigValues: db.sig_values || [],
         pageCount: db.page_count || 1, authorId: db.author_id, authorName: db.author_name,
-        isArchived: db.is_archived === true
+        isArchived: db.is_archived === true,
+        isPaper: db.is_paper === true, paperPages: db.paper_pages || null
     }
 }
 
@@ -632,7 +659,14 @@ function openExistingQuote(id, container) {
     viewDash.style.display = 'none'
     viewEditor.style.display = 'flex'
     quoteContainer.innerHTML = ''
+    isPaperMode = false; paperPages = []
     quotePageCount = 0; globalSigCount = 0
+
+    if (quote.isPaper && quote.paperPages?.length) {
+        restorePaperMode(quote, quoteContainer, container)
+        applyEditorSecurity(quote, container)
+        return
+    }
 
     for (let i = 0; i < (quote.pageCount || 1); i++) quoteContainer.appendChild(createQuotePageHTML())
     loadClientNames().then(injectClientDatalist)
@@ -677,6 +711,8 @@ async function openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay) {
 
 function showDashboard(viewDash, viewEditor, container) {
     stopAutosave()
+    isPaperMode = false; paperPages = []
+    updatePaperToggleButton(container)
     viewDash.style.display = 'flex'
     viewEditor.style.display = 'none'
     loadData(true, container)
@@ -690,6 +726,25 @@ function applyEditorSecurity(quote, container) {
     let canEdit = status === 'brouillon' && isAuthor
     if (status === 'A corriger' && isAuthor) canEdit = true
     if (isArchived) canEdit = false
+
+    const usePaper = quote?.isPaper === true || isPaperMode
+    const showEl = (id, v) => { const el = container.querySelector(id); if (el) el.style.display = v ? 'flex' : 'none' }
+
+    if (usePaper) {
+        showEl('#btnSave', canEdit)
+        showEl('#btnSend', canEdit)
+        showEl('#btnPaper', canEdit)
+        showEl('#btnAddPage', false)
+        showEl('#btnDupPage', false)
+        showEl('#btnDelPage', false)
+        showEl('#btnClear', false)
+        showEl('#btnConvert', false)
+        showEl('#btnApprouver', false)
+        showEl('#btnCorrections', false)
+        showEl('#btnUnlock', false)
+        updatePaperToggleButton(container)
+        return
+    }
 
     const show = el => { if (el) el.style.display = canEdit ? 'flex' : 'none' }
     show(container.querySelector('#btnSave'))
@@ -738,6 +793,12 @@ function unlockQuote(container) {
 
 // ── Sauvegarde ───────────────────────────────────────────────────────────────
 async function saveCurrentQuote(isSending, quoteContainer, container) {
+    if (isPaperMode) {
+        const viewDash = container.querySelector('#view-dashboard')
+        const viewEditor = container.querySelector('#view-editor')
+        await saveCurrentPaperQuote(isSending, quoteContainer, viewDash, viewEditor, container)
+        return
+    }
     const firstPage = quoteContainer.querySelector('.page')
     if (!firstPage) return false
 
@@ -823,7 +884,30 @@ async function convertToInvoice(quoteContainer, container) {
     }, container, 'Convertir en Facture', true)
 }
 
-function exportPdf(quoteContainer) {
+function exportPdf(quoteContainer, container) {
+    if (isPaperMode) {
+        if (!paperPages.length) { showAlertModal("Ajoutez au moins une photo avant d'exporter.", container); return }
+        const clientInp = quoteContainer.querySelector('.paper-client-input')
+        const dateInp = quoteContainer.querySelector('.paper-date-input')
+        const clientName = clientInp?.value.trim() || ''
+        const dateVal = dateInp?.value || new Date().toISOString().split('T')[0]
+        const tempDiv = document.createElement('div')
+        tempDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:8.5in'
+        paperPages.forEach(p => {
+            const page = document.createElement('div')
+            page.className = 'page'
+            page.style.cssText = 'width:8.5in;height:11in;display:flex;align-items:center;justify-content:center;padding:0.2in;background:white;box-sizing:border-box;overflow:hidden'
+            const img = document.createElement('img')
+            img.src = p.dataUrl || p.url
+            img.style.cssText = 'max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block'
+            page.appendChild(img)
+            tempDiv.appendChild(page)
+        })
+        document.body.appendChild(tempDiv)
+        openPdfPreview({ container: tempDiv, docType: 'soumission', docNumber: currentQuoteId || '', clientName, date: dateVal })
+        setTimeout(() => document.body.removeChild(tempDiv), 3000)
+        return
+    }
     const firstPage = quoteContainer.querySelector('.page')
     if (!firstPage) return
     const inputs = firstPage.querySelectorAll('.top-section input')
@@ -831,6 +915,161 @@ function exportPdf(quoteContainer) {
     const dateVal = inputs[4]?.value.trim() || new Date().toISOString().split('T')[0]
     const numInput = firstPage.querySelector('.red-quote-input')
     openPdfPreview({ container: quoteContainer, docType: 'soumission', docNumber: currentQuoteId || numInput?.value.trim(), clientName, date: dateVal })
+}
+
+// ── Mode papier ─────────────────────────────────────────────────────────────
+function togglePaperMode(quoteContainer, viewDash, viewEditor, container) {
+    if (isPaperMode) {
+        if (paperPages.length > 0) {
+            showConfirm('Revenir au mode numérique va retirer les photos ajoutées.', () => {
+                isPaperMode = false; paperPages = []
+                quoteContainer.innerHTML = ''
+                quotePageCount = 0; globalSigCount = 0
+                quoteContainer.appendChild(createQuotePageHTML())
+                loadClientNames().then(injectClientDatalist)
+                updatePaperToggleButton(container)
+                applyEditorSecurity(null, container)
+                zoomCtrl?.fitToScreen()
+            }, container)
+        } else {
+            isPaperMode = false; paperPages = []
+            quoteContainer.innerHTML = ''
+            quotePageCount = 0; globalSigCount = 0
+            quoteContainer.appendChild(createQuotePageHTML())
+            loadClientNames().then(injectClientDatalist)
+            updatePaperToggleButton(container)
+            applyEditorSecurity(null, container)
+            zoomCtrl?.fitToScreen()
+        }
+    } else {
+        isPaperMode = true; paperPages = []
+        renderPaperEditor(quoteContainer, container)
+        updatePaperToggleButton(container)
+        applyEditorSecurity({ isPaper: true, status: 'brouillon', authorId: currentUser.id }, container)
+    }
+}
+
+function updatePaperToggleButton(container) {
+    const label = container.querySelector('#btnPaperLabel')
+    if (isPaperMode) {
+        if (label) label.textContent = 'Mode numérique'
+    } else {
+        if (label) label.textContent = 'Soumission papier'
+    }
+}
+
+function renderPaperEditor(quoteContainer, container) {
+    quoteContainer.innerHTML = ''
+    loadClientNames().then(injectClientDatalist)
+    const savedDate = new Date().toISOString().split('T')[0]
+    const wrap = document.createElement('div')
+    wrap.className = 'paper-mode-container'
+    wrap.innerHTML = `
+        <div class="paper-mode-header">
+            <div class="pmh-field"><label>Client</label><input type="text" class="paper-client-input" placeholder="Nom du client" list="soum-client-datalist"></div>
+            <div class="pmh-field"><label>Date</label><input type="date" class="paper-date-input" value="${savedDate}"></div>
+        </div>
+        <div class="paper-mode-body" id="paper-mode-body"></div>
+        <button type="button" class="paper-add-page-btn" id="paper-add-page-btn">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Ajouter une page
+        </button>
+    `
+    quoteContainer.appendChild(wrap)
+    wrap.querySelector('#paper-add-page-btn').addEventListener('click', () => container.querySelector('#pim-gallery-input').click())
+    renderPaperPagesInEditor(quoteContainer)
+}
+
+function renderPaperPagesInEditor(quoteContainer) {
+    const body = quoteContainer.querySelector('#paper-mode-body')
+    if (!body) return
+    body.innerHTML = ''
+    if (paperPages.length === 0) {
+        body.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#aaa">
+            <svg viewBox="0 0 24 24" width="48" height="48" style="stroke:#555;fill:none;stroke-width:1.5;margin-bottom:16px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p style="font-size:15px;font-weight:600;margin:0 0 8px">Aucune photo ajoutée</p>
+            <p style="font-size:13px;margin:0">Cliquez sur "Ajouter une page" pour importer des photos de votre soumission papier.</p>
+        </div>`
+        return
+    }
+    const list = document.createElement('div')
+    paperPages.forEach((p, idx) => {
+        const pageEl = document.createElement('div')
+        pageEl.className = 'paper-page-display'
+        pageEl.innerHTML = `
+            <span class="ppd-num">Page ${idx + 1} / ${paperPages.length}</span>
+            <img src="${p.dataUrl || p.url}" alt="Page ${idx + 1}">
+        `
+        list.appendChild(pageEl)
+    })
+    body.appendChild(list)
+}
+
+async function addPaperPages(fileList, quoteContainer) {
+    if (!fileList?.length || !isPaperMode) return
+    for (const file of Array.from(fileList)) {
+        if (!file.type.startsWith('image/')) continue
+        const dataUrl = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(file) })
+        paperPages.push({ file, dataUrl, uploaded: false })
+    }
+    renderPaperPagesInEditor(quoteContainer)
+}
+
+async function uploadAllSoumPaperPages(container) {
+    const progress = container.querySelector('#pimProgress')
+    const progressText = container.querySelector('#pimProgressText')
+    progress?.classList.add('show')
+    try {
+        for (let i = 0; i < paperPages.length; i++) {
+            const p = paperPages[i]
+            if (p.uploaded) continue
+            if (progressText) progressText.textContent = `Téléversement page ${i + 1}/${paperPages.length}…`
+            const ext = (p.file.name.split('.').pop() || 'jpg').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'jpg'
+            const filePath = `soumissions-papier/${currentUser.id}/paper_${Date.now()}_${i}.${ext}`
+            const { error } = await supabase.storage.from('pieces_jointes').upload(filePath, p.file, { contentType: p.file.type })
+            if (error) throw error
+            const { data: { publicUrl } } = supabase.storage.from('pieces_jointes').getPublicUrl(filePath)
+            paperPages[i] = { ...p, url: publicUrl, name: p.file.name, path: filePath, uploaded: true }
+        }
+    } finally { progress?.classList.remove('show') }
+}
+
+async function saveCurrentPaperQuote(isSending, quoteContainer, viewDash, viewEditor, container) {
+    if (paperPages.length === 0) { showAlertModal('Veuillez ajouter au moins une page (photo).', container); return }
+    const btnSave = container.querySelector('#btnSave')
+    const origHTML = btnSave?.innerHTML
+    if (btnSave) { btnSave.disabled = true; btnSave.textContent = 'Sauvegarde...' }
+    try {
+        await uploadAllSoumPaperPages(container)
+        const clientInp = quoteContainer.querySelector('.paper-client-input')
+        const dateInp = quoteContainer.querySelector('.paper-date-input')
+        const client = clientInp?.value.trim() || 'Soumission papier'
+        const date = dateInp?.value || new Date().toISOString().split('T')[0]
+        const quoteId = currentQuoteId || 'SP-' + Date.now().toString().slice(-6)
+        const existing = quotesData.find(q => q.id === currentQuoteId)
+        let currentStatus = existing?.status || 'brouillon'
+        if (isSending) currentStatus = 'En attente'
+        const { error } = await withRetry(() => supabase.from('soumissions').upsert({
+            id: quoteId, client, date, status: currentStatus,
+            input_values: [], sig_values: [], page_count: paperPages.length,
+            author_id: existing ? existing.authorId : currentUser.id,
+            author_name: existing ? existing.authorName : myUserName,
+            is_paper: true,
+            paper_pages: paperPages.map(p => ({ url: p.url, name: p.name || 'page.jpg', path: p.path }))
+        }))
+        if (error) throw error
+        currentQuoteId = quoteId
+        await loadData(true, container)
+        if (isSending) { showAlertModal(`Soumission papier envoyée au bureau !`, container); showDashboard(viewDash, viewEditor, container) }
+        else showAlertModal(`Soumission papier sauvegardée.`, container)
+    } catch (e) { showAlertModal('❌ Erreur : ' + (e.message || 'inconnue'), container) }
+    finally { if (btnSave) { btnSave.disabled = false; btnSave.innerHTML = origHTML } }
+}
+
+function restorePaperMode(quote, quoteContainer, container) {
+    isPaperMode = true
+    paperPages = (quote.paperPages || []).map(p => ({ url: p.url, name: p.name, path: p.path, uploaded: true }))
+    renderPaperEditor(quoteContainer, container)
+    updatePaperToggleButton(container)
 }
 
 // ── Autocomplétion client ────────────────────────────────────────────────────
