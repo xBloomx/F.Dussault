@@ -131,7 +131,6 @@ export async function render(container) {
             .zoom-controls { display: none !important; }
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .inv-hsup { font-size: 12px; color: #e67e22; margin-top: 2px; white-space: nowrap; }
     </style>
 
     <div class="fdt-main">
@@ -437,7 +436,6 @@ function renderTimesheetList(list, container) {
             <div class="inv-client"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${sanitize(sheet.employe || sheet.authorName || 'Employé')}</div>
             <div class="inv-hours">
                 ${sanitize(String(sheet.total_heures ?? ''))} h
-                ${(sheet.total_heures_sup || 0) > 0 ? `<div class="inv-hsup">+${sanitize(String(sheet.total_heures_sup))} h sup.</div>` : ''}
             </div>
             <div class="inv-status">${badgeHTML}</div>
             <div class="inv-actions">${actionsHTML}</div>
@@ -686,8 +684,6 @@ async function saveCurrentTimesheet(isSending, wrapper, viewDash, viewEditor, co
 
     let totalGlobal = 0
     wrapper.querySelectorAll('.heure-input').forEach(inp => { const v = parseFloat(inp.value); if (!isNaN(v)) totalGlobal += v })
-    let totalHSup = 0
-    wrapper.querySelectorAll('.hsup-input').forEach(inp => { const v = parseFloat(inp.value); if (!isNaN(v)) totalHSup += v })
 
     const tsId = currentSheetId || 'TS-' + Date.now()
     const existing = timesheetsData.find(s => s.id === currentSheetId || s.id === tsId)
@@ -696,7 +692,7 @@ async function saveCurrentTimesheet(isSending, wrapper, viewDash, viewEditor, co
 
     const payload = {
         id: tsId, employe_nom: empName, periode: dateStr, pages_data: allPagesData,
-        total_heures: totalGlobal, total_heures_sup: totalHSup, status: currentStatus,
+        total_heures: totalGlobal, total_heures_sup: 0, status: currentStatus,
         author_id: existing ? existing.authorId : currentUser.id,
         author_name: existing ? existing.authorName : myUserName
     }
@@ -777,7 +773,6 @@ function createTimePageHTML() {
             <td><input type="text" class="cell-input"></td>
             <td><input type="text" class="cell-input" style="text-align:left;padding-left:10px"></td>
             <td><input type="number" step="0.5" class="cell-input heure-input"></td>
-            <td><input type="number" step="0.5" class="cell-input hsup-input" style="background:rgba(230,126,34,0.08)"></td>
         </tr>`
     }
     page.innerHTML = `
@@ -796,7 +791,7 @@ function createTimePageHTML() {
             </div>
         </div>
         <table class="temps-table">
-            <thead><tr><th style="width:13%">Date</th><th style="width:12%"># Bon</th><th style="width:47%">Adresse</th><th style="width:14%">Heures</th><th style="width:14%">H. Sup.</th></tr></thead>
+            <thead><tr><th style="width:13%">Date</th><th style="width:12%"># Bon</th><th style="width:61%">Adresse</th><th style="width:14%">Heures</th></tr></thead>
             <tbody>${rows}</tbody>
         </table>
     `
@@ -813,17 +808,6 @@ function setupInputLogic(pageElement) {
 
     pageElement.querySelectorAll('.date-input').forEach(inp => inp.addEventListener('input', enforceDateFormat))
 
-    pageElement.querySelectorAll('.heure-input').forEach(inp => {
-        inp.addEventListener('change', function () {
-            const row = this.closest('tr')
-            if (!row) return
-            const hsup = row.querySelector('.hsup-input')
-            if (!hsup || hsup.value.trim() !== '') return
-            const val = parseFloat(this.value)
-            if (!isNaN(val) && val > 8) hsup.value = String(+(val - 8).toFixed(1))
-            else if (!isNaN(val)) hsup.value = ''
-        })
-    })
 
     const startInput = pageElement.querySelector('.input-semaine-debut')
     const endInput = pageElement.querySelector('.input-semaine-fin')
