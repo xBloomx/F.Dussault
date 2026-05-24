@@ -191,8 +191,6 @@ export async function render(container) {
         .paper-page-display { position: relative; background: #fff; border-radius: 6px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.15); border: 1px solid #e0e0e0; }
         .paper-page-display img { width: 100%; height: auto; display: block; }
         .paper-page-display .ppd-num { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; pointer-events: none; }
-        .paper-page-display .ppd-remove { position: absolute; top: 8px; right: 8px; background: var(--btn-red); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .paper-page-display .ppd-remove svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
         .paper-add-page-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: calc(100% - 40px); margin: 16px 20px; padding: 14px; background: rgba(91,192,235,0.08); border: 1.5px dashed #5bc0eb; border-radius: 10px; color: #5bc0eb; font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit; }
         .paper-add-page-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         #paper-progress { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #1f2027; color: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 9999; text-align: center; display: none; border: 1px solid #3a3b46; }
@@ -1076,10 +1074,8 @@ function renderPaperPagesInEditor(invoiceContainer, container) {
         pageEl.className = 'paper-page-display'
         pageEl.innerHTML = `
             <span class="ppd-num">Page ${idx + 1} / ${paperPages.length}</span>
-            <button type="button" class="ppd-remove" data-remove="${idx}"><svg viewBox="0 0 24 24"><use href="#fic-x"/></svg></button>
             <img src="${p.dataUrl || p.url}" alt="Page ${idx + 1}">
         `
-        pageEl.querySelector('[data-remove]').addEventListener('click', () => { paperPages.splice(idx, 1); renderPaperPagesInEditor(invoiceContainer, container) })
         list.appendChild(pageEl)
     })
     body.appendChild(list)
