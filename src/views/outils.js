@@ -64,7 +64,7 @@ export async function render(container) {
         .btn-brise:hover { background: #e67e22; color: white; }
         .btn-repare { background: var(--btn-green); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
         .btn-repare:hover { background: #218838; }
-        .btn-delete-tool { position: absolute; top: 12px; right: 12px; background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; }
+        .btn-delete-tool { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; }
         .btn-delete-tool svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
         .btn-delete-tool:hover { background: var(--btn-red); color: white; }
 
