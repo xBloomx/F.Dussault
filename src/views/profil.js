@@ -125,8 +125,8 @@ export async function render(container) {
             .profil-main { padding: 15px; }
             .dash-header { flex-wrap: wrap; gap: 10px; }
             .dash-title { padding-right: 80px; width: 100%; }
-            .btn-logout-header { width: 42px; height: 42px; justify-content: center; padding: 0; border-radius: 50%; background: var(--btn-red); border-color: var(--btn-red); }
-            .btn-logout-header span { display: none; }
+            .btn-logout-header { width: 100%; border-radius: 12px; justify-content: center; }
+            .btn-logout-header span { display: flex; }
             .settings-grid { grid-template-columns: 1fr; }
             .form-row { flex-direction: column; gap: 0; }
             .info-actions { flex-direction: row; }
