@@ -108,6 +108,10 @@ export async function render(container) {
         .temps-table th { border: 1px solid black; padding: 8px; font-size: 12px; text-align: center; background: #fff; color: black; font-weight: bold; }
         .temps-table td { border: 1px solid black; padding: 0; height: 28px; background: var(--blue-bg); }
         .cell-input { width: 100%; height: 100%; border: none !important; background: transparent; text-align: center; font-size: 13px; color: black; font-weight: bold; }
+        .heure-input::-webkit-inner-spin-button, .heure-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .heure-input { -moz-appearance: textfield; padding-right: 16px !important; }
+        .td-heure { position: relative; }
+        .h-suffix { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #555; pointer-events: none; font-weight: bold; }
         .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
         .custom-modal-overlay.open { display: flex; }
         .custom-modal-card { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 12px; border: 1px solid #555; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
@@ -772,7 +776,7 @@ function createTimePageHTML() {
             <td><input type="text" class="cell-input date-input" placeholder="JJ/MM/AAAA"></td>
             <td><input type="text" class="cell-input"></td>
             <td><input type="text" class="cell-input" style="text-align:left;padding-left:10px"></td>
-            <td><input type="number" step="0.5" class="cell-input heure-input"></td>
+            <td class="td-heure"><input type="number" step="0.5" class="cell-input heure-input"><span class="h-suffix">h</span></td>
         </tr>`
     }
     page.innerHTML = `
