@@ -83,6 +83,11 @@ async function generatePdfBlob(container) {
                     f.style.boxShadow = 'none'
                     if (!f.value && f.placeholder) f.placeholder = ''
                 })
+
+                clonedDoc.querySelectorAll('.h-suffix').forEach(span => {
+                    const inp = span.closest('td')?.querySelector('input')
+                    if (inp && !inp.value) span.style.display = 'none'
+                })
             }
         })
         const imgData = canvas.toDataURL('image/jpeg', 0.92)
