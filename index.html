@@ -672,6 +672,18 @@ boot()
     window.addEventListener('resize', updateHint)
     window.addEventListener('orientationchange', () => setTimeout(updateHint, 150))
     updateHint()
+
+    // Relancer updateHint quand le modal signature se ferme (après avoir signé)
+    const sigModal = document.getElementById('sig-fd-modal')
+    if (sigModal) {
+        new MutationObserver(updateHint).observe(sigModal, { attributes: true, attributeFilter: ['class'] })
+    } else {
+        // Modal injecté dynamiquement — observer le body jusqu'à ce qu'il apparaisse
+        new MutationObserver((_, obs) => {
+            const m = document.getElementById('sig-fd-modal')
+            if (m) { new MutationObserver(updateHint).observe(m, { attributes: true, attributeFilter: ['class'] }); obs.disconnect() }
+        }).observe(document.body, { childList: true, subtree: true })
+    }
 })()
 
 // Nouveau service worker activé → recharger immédiatement pour les nouveaux assets
