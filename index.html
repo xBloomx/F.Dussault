@@ -659,29 +659,42 @@ boot()
     })
 })()
 
-// ── Overlay portrait (redresse le téléphone) ──────────────────────────────────
+// ── Overlay portrait (redresse le téléphone) — uniquement après signature ──────
 ;(() => {
     const hint = document.getElementById('portrait-hint')
     if (!hint) return
-    function updateHint() {
+
+    let wasOpen = false
+
+    function onSigChange() {
+        const sigOpen = document.getElementById('sig-fd-modal')?.classList.contains('show')
         const isMobile = window.innerWidth < 900 || window.matchMedia('(pointer: coarse)').matches
         const isLandscape = window.innerWidth > window.innerHeight
-        const sigOpen = document.getElementById('sig-fd-modal')?.classList.contains('show')
-        hint.classList.toggle('show', isMobile && isLandscape && !sigOpen)
+        if (sigOpen) {
+            wasOpen = true
+            hint.classList.remove('show')
+        } else if (wasOpen) {
+            wasOpen = false
+            if (isMobile && isLandscape) hint.classList.add('show')
+        }
     }
-    window.addEventListener('resize', updateHint)
-    window.addEventListener('orientationchange', () => setTimeout(updateHint, 150))
-    updateHint()
 
-    // Relancer updateHint quand le modal signature se ferme (après avoir signé)
+    // Cacher l'overlay dès que l'utilisateur redresse le téléphone
+    function hideIfPortrait() {
+        if (window.innerWidth <= window.innerHeight) hint.classList.remove('show')
+    }
+    window.addEventListener('resize', hideIfPortrait)
+    window.addEventListener('orientationchange', () => setTimeout(hideIfPortrait, 150))
+
+    const attachObserver = (modal) => new MutationObserver(onSigChange).observe(modal, { attributes: true, attributeFilter: ['class'] })
+
     const sigModal = document.getElementById('sig-fd-modal')
     if (sigModal) {
-        new MutationObserver(updateHint).observe(sigModal, { attributes: true, attributeFilter: ['class'] })
+        attachObserver(sigModal)
     } else {
-        // Modal injecté dynamiquement — observer le body jusqu'à ce qu'il apparaisse
         new MutationObserver((_, obs) => {
             const m = document.getElementById('sig-fd-modal')
-            if (m) { new MutationObserver(updateHint).observe(m, { attributes: true, attributeFilter: ['class'] }); obs.disconnect() }
+            if (m) { attachObserver(m); obs.disconnect() }
         }).observe(document.body, { childList: true, subtree: true })
     }
 })()
