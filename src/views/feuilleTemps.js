@@ -1,10 +1,10 @@
 // src/views/feuilleTemps.js
-// Migré fidèlement depuis code_feuille_de_temps/code_feuille_de_temps.html
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
 import { sanitize } from '../shared/sanitize.js'
 import { friendlyError } from '../shared/errorMsg.js'
+import { makeAvatar } from '../shared/avatarColor.js'
 import { createAutosave } from '../shared/autosave.js'
 import { canArchive, canSeeAllArchives, canRestore, confirmAndArchive, confirmAndRestore } from '../shared/archive.js'
 import { openPdfPreview } from '../shared/pdfExport.js'
@@ -12,7 +12,7 @@ import { withRetry } from '../shared/withRetry.js'
 import { enqueueOfflineSave } from '../shared/offlineQueue.js'
 import { createZoomController } from '../shared/zoom.js'
 
-// ── État local ──────────────────────────────────────────────────────────────
+// ── État local ───────────────────────────────────────────────────────────────
 let myUserName = 'Employé'
 let currentInvTab = 'mine'
 let timesheetsData = []
@@ -27,76 +27,202 @@ let _onResizeTS = null
 let archiveSelection = new Set()
 let isPaperMode = false
 let paperPages = []
+let fdtPeriodMode = 0
+
+const FDT_PERIODS = [
+    { label: 'SEMAINE EN COURS' },
+    { label: 'MOIS EN COURS' },
+    { label: 'TRIMESTRE EN COURS' },
+    { label: 'ANNÉE EN COURS' },
+    { label: 'ANNÉE PRÉCÉDENTE' },
+]
+
+function parseTimesheetStart(periode) {
+    if (!periode || periode === 'Semaine en cours') return new Date()
+    const m = periode.match(/Du\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+    if (!m) return new Date()
+    return new Date(+m[3], +m[2] - 1, +m[1])
+}
+
+function calcPeriodTotal(mode) {
+    const now = new Date()
+    const y = now.getFullYear()
+    const m = now.getMonth()
+    const q = Math.floor(m / 3)
+    const mine = timesheetsData.filter(s => !s.isArchived && s.authorId === currentUser?.id)
+    return mine.filter(s => {
+        const d = parseTimesheetStart(s.periode)
+        if (mode === 0) {
+            const day = now.getDay() || 7
+            const mon = new Date(now); mon.setDate(now.getDate() - day + 1); mon.setHours(0,0,0,0)
+            const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999)
+            return d >= mon && d <= sun
+        }
+        if (mode === 1) return d.getFullYear() === y && d.getMonth() === m
+        if (mode === 2) return d.getFullYear() === y && Math.floor(d.getMonth() / 3) === q
+        if (mode === 3) return d.getFullYear() === y
+        if (mode === 4) return d.getFullYear() === y - 1
+        return false
+    }).reduce((sum, s) => sum + (s.total_heures || 0), 0)
+}
+
+function periodSubtitle(mode) {
+    const now = new Date()
+    const MOIS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
+    if (mode === 0) {
+        const day = now.getDay() || 7
+        const mon = new Date(now); mon.setDate(now.getDate() - day + 1)
+        const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
+        return `${mon.getDate()} ${MOIS[mon.getMonth()]} – ${sun.getDate()} ${MOIS[sun.getMonth()]} ${sun.getFullYear()}`
+    }
+    if (mode === 1) return `${MOIS[now.getMonth()]} ${now.getFullYear()}`
+    if (mode === 2) {
+        const q = Math.floor(now.getMonth() / 3)
+        const starts = [[0,'Jan','Mar'],[3,'Avr','Jun'],[6,'Jul','Sep'],[9,'Oct','Déc']]
+        const [,s,e] = starts[q]
+        return `T${q+1} · ${s}–${e} ${now.getFullYear()}`
+    }
+    if (mode === 3) return `Jan–Déc ${now.getFullYear()}`
+    if (mode === 4) return `${now.getFullYear() - 1}`
+    return ''
+}
 
 function canViewAllTimesheets() {
     return hasPermission('view_all_timesheets') || hasPermission('approve_timesheets')
 }
 
-// ── Render principal ────────────────────────────────────────────────────────
+const DOT = `<svg width="7" height="7" viewBox="0 0 7 7" style="vertical-align:middle;margin-right:5px;flex-shrink:0"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>`
+
+function formatPeriode(periode) {
+    if (!periode || periode === 'Semaine en cours') return periode || 'Semaine en cours'
+    const m = periode.match(/Du\s+(\d{1,2})\/(\d{1,2})\/(\d{4})\s+au\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/)
+    if (!m) return periode
+    const [,d1,mo1,y1,d2,mo2] = m
+    const start = new Date(+y1, +mo1-1, +d1)
+    const end   = new Date(+y1, +mo2-1, +d2)
+    const thu = new Date(start); thu.setDate(thu.getDate() + 4 - (thu.getDay() || 7))
+    const yearStart = new Date(thu.getFullYear(), 0, 1)
+    const weekNum = Math.ceil((((thu - yearStart) / 86400000) + 1) / 7)
+    const MOIS = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc']
+    const dayRange = start.getMonth() === end.getMonth()
+        ? `${+d1}–${+d2} ${MOIS[start.getMonth()]}`
+        : `${+d1} ${MOIS[start.getMonth()]} – ${+d2} ${MOIS[end.getMonth()]}`
+    return `Sem. ${weekNum} · ${dayRange}`
+}
+
+// ── Render principal ──────────────────────────────────────────────────────────
 export async function render(container) {
     myUserName = currentProfil?.prenom_nom || 'Employé'
     currentInvTab = 'mine'
+    isPaperMode = false
+    paperPages = []
+    currentSheetId = null
+    archiveSelection = new Set()
 
     container.innerHTML = `
     <style>
-        /* --blue-bg défini dans styles.css : #d1e9ff */
-        .fdt-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        .badge-status { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
-        .b-brouillon { background: rgba(136,136,136,0.15); color: #888; }
-        .b-envoye    { background: rgba(52,152,219,0.15);  color: var(--btn-blue); }
-        .b-attente   { background: rgba(252,202,70,0.15);  color: var(--accent); }
-        .b-paye      { background: rgba(40,167,69,0.15);   color: var(--btn-green); }
-        .b-renvoye   { background: rgba(255,77,77,0.15);   color: var(--btn-red); }
-        #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; }
-        .dash-title h1 { margin: 0; font-size: 28px; color: white; }
-        .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
-        .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
-        .btn-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
-        .toolbar { display: flex; gap: 15px; align-items: center; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
+        /* ── Layout de base ── */
+        .fdt-main { background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; font-family: var(--font-sans); }
+
+        /* Badges définis dans styles.css (.badge .badge-grey etc.) */
+
+        /* ── Tabs ── */
+        .tabs-container { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* ── Entête colonnes ── */
+        .ft-list-header { display:grid; grid-template-columns:220px 1fr 150px 90px 80px; gap:14px; padding:0 18px; margin-bottom:-2px; margin-top:-14px; }
+        #ts-compteur { margin-top: -14px; }
+        .ft-list-header span { font-size:10.5px; font-weight:700; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.6px; }
+        .ft-list-header .ft-h-right { text-align:right; }
+
+        /* ── Toolbar ── */
+        .toolbar { display: flex; gap: 10px; align-items: center; background: var(--bg-panel); border: 1px solid var(--border); padding: 10px; border-radius: var(--r-xl,14px); }
+        .select-wrap { position: relative; display: block; min-width: 180px; flex-shrink: 0; }
+        .select-wrap select { width: 100%; -webkit-appearance: none; appearance: none; padding: 10px 36px 10px 14px; background: var(--bg-sunken,#15161c); border: 1px solid var(--border); color: #fff; border-radius: var(--r-lg,10px); font-size: 13px; outline: none; cursor: pointer; font-family: inherit; transition: border-color var(--t-base); }
+        .select-wrap select:focus { border-color: var(--brand-yellow); }
+        .select-wrap .sel-chevron { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 16px; height: 16px; stroke: var(--text-faint); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
-        .search-box input:focus { border-color: var(--accent); }
-        .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
-        .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .invoice-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px; }
-        .invoice-item { background: var(--bg-panel); padding: 12px 20px; border-radius: 10px; display: grid; grid-template-columns: 240px 1fr 130px 100px 44px; align-items: center; gap: 15px; cursor: pointer; border: 1px solid transparent; border-left: 4px solid transparent; transition: 0.2s; }
-        .invoice-item:hover { transform: translateX(5px); background: #343542; border-left-color: var(--accent); background-color: #30313c; border-color: #555;}
-        .inv-id { font-weight: bold; color: var(--accent); font-size: 14px; white-space: nowrap; }
-        .inv-client { font-weight: bold; font-size: 16px; color: white; display: flex; align-items: center; gap: 6px; }
-        .inv-client svg { width: 16px; height: 16px; stroke: #aaa; fill: none; stroke-width: 2; }
-        .inv-hours { font-weight: bold; font-size: 18px; color: var(--accent); text-align: center; }
-        .inv-status { display: flex; align-items: center; }
-        .inv-actions { display: flex; justify-content: flex-end; }
-        .btn-icon { background: #444; border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; }
-        .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; }
-        .btn-delete:hover { background: var(--btn-red); color: white; }
-        .arc-selectable { position: relative; padding-left: 48px !important; }
-        .arc-check { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; border: 2px solid #444; background: transparent; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s; pointer-events: none; }
-        .arc-selected .arc-check { border-color: var(--btn-blue,#007bff); background: var(--btn-blue,#007bff); }
-        .arc-selected { background: rgba(0,120,255,0.05) !important; border-left-color: var(--btn-blue,#007bff) !important; }
-        #view-editor { display: none; flex-direction: column; height: 100%; }
-        #note-refus-box { display: none; background: rgba(255,77,77,0.1); border: 1px solid var(--btn-red); border-radius: 8px; padding: 12px 16px; margin: 10px 20px 0; color: var(--btn-red); }
-        .top-bar { height: auto; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; background: rgba(30,31,38,0.95); border-bottom: 1px solid #333; z-index: 101; flex-wrap: wrap; }
-        .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
-        .action-btn:hover { background: var(--accent-hover); transform: translateY(-1px); background-color: var(--accent-hover);}
-        .action-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-back { background: #6c757d !important; color: white !important; }
-        .btn-save { background: var(--btn-green) !important; color: white !important; }
-        .btn-send { background: var(--btn-blue) !important; color: white !important; }
-        .btn-unlock { background: var(--btn-orange) !important; color: white !important; }
-        @media (max-width: 1024px) {
-            .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
-            .top-bar::-webkit-scrollbar { display: none; }
-            .top-bar .action-btn { flex-shrink: 0; width: auto; margin-bottom: 0; font-size: 11px; padding: 8px 15px; }
+        .search-box input { width: 100%; background: var(--bg-sunken,#15161c); border: 1px solid var(--border); color: #fff; padding: 10px 14px 10px 38px; border-radius: var(--r-lg,10px); font-size: 14px; outline: none; transition: border-color var(--t-base); font-family: inherit; }
+        .search-box input:focus { border-color: var(--brand-yellow); }
+        .search-icon { position: absolute; left: 12px; color: var(--text-faint); pointer-events: none; display: flex; align-items: center; }
+        .search-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+        /* ── Liste feuilles ── */
+        .invoice-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 30px; }
+        .invoice-item {
+            background: var(--bg-panel); padding: 12px 18px; border-radius: var(--r-lg,10px);
+            display: grid; grid-template-columns: 220px 1fr 150px 90px 80px;
+            align-items: center; gap: 14px; cursor: pointer;
+            border: 1px solid var(--border); border-left: 3px solid transparent;
+            transition: background var(--t-base), border-color var(--t-base), transform var(--t-fast);
         }
+        .invoice-item:hover { transform: translateX(3px); background: var(--bg-panel-2); border-left-color: var(--brand-yellow); }
+        .inv-id     { font-weight: 500; color: var(--text-main); font-size: 13px; white-space: nowrap; }
+        .inv-client { font-weight: 700; font-size: 14px; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .inv-hours  { font-weight: 700; font-size: 17px; color: var(--brand-yellow); text-align: center; }
+        .inv-status { display: flex; align-items: center; }
+        .inv-actions { display: flex; justify-content: flex-end; gap: 6px; }
+        .btn-icon   { background: var(--bg-panel-2); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: var(--r-md,8px); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-muted); transition: all var(--t-base); }
+        .btn-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .btn-delete { background: var(--tint-red); color: var(--status-red); border-color: transparent; }
+        .btn-delete:hover { background: var(--status-red); color: #fff; }
+
+        /* Archive selection */
+        .arc-selectable { position: relative; padding-left: 48px !important; }
+        .arc-check { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-strong,#3d3e48); background: transparent; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast); pointer-events: none; }
+        .arc-selected .arc-check { border-color: var(--status-blue); background: var(--status-blue); }
+        .arc-selected { background: rgba(59,130,246,0.05) !important; border-left-color: var(--status-blue) !important; }
+
+        /* Compteur */
+        #ts-compteur { color: var(--text-faint); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 4px; }
+
+        /* ── Éditeur ── */
+        #view-editor { display: none; flex-direction: column; height: 100%; }
+        #note-refus-box { display: none; background: var(--tint-red); border: 1px solid var(--status-red); border-radius: var(--r-lg,10px); padding: 12px 16px; margin: 10px 20px 0; color: var(--status-red); font-size: 13px; }
+
+        .top-bar {
+            height: auto; min-height: 70px; display: flex; align-items: center;
+            justify-content: center; gap: 8px; padding: 10px 18px;
+            background: var(--bg-panel); border-bottom: 1px solid var(--border);
+            z-index: 101; flex-wrap: wrap;
+        }
+        .action-btn {
+            background: var(--brand-yellow); color: var(--text-on-yellow,#1a1b22);
+            border: 1px solid transparent; padding: 8px 14px; border-radius: var(--r-pill,999px);
+            font-weight: 600; font-size: 12px; cursor: pointer;
+            display: flex; align-items: center; gap: 7px; white-space: nowrap;
+            transition: all var(--t-base); font-family: inherit;
+        }
+        .action-btn:hover { background: var(--brand-yellow-hover); }
+        .action-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .btn-back   { background: var(--bg-panel-2) !important; color: var(--text-muted) !important; border: 1px solid var(--border) !important; }
+        .btn-back:hover { background: var(--bg-panel-3) !important; color: #fff !important; }
+        .btn-send   { background: var(--status-green)  !important; color: #fff !important; border-color: transparent !important; }
+        .btn-send:hover { background: #16a34a !important; }
+        .btn-paper  { background: #e8730a !important; color: #fff !important; border-color: transparent !important; }
+        .btn-unlock  { background: var(--status-orange); color: #1a1b22; border-color: transparent; }
+
+        @media (max-width: 1024px) {
+            .top-bar { padding: 10px 80px 10px 10px; gap: 8px; height: 60px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+            .top-bar::-webkit-scrollbar { display: none; }
+            .top-bar .action-btn { flex-shrink: 0; font-size: 11px; padding: 7px 12px; }
+        }
+
+        /* ── Zone scroll / papier ── */
         .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: none; }
         #zoom-wrapper { display: block; width: 8.5in; transform-origin: 0 0; padding-bottom: 50px; }
-        .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: rgba(30,31,38,0.95); padding: 5px 15px; border-radius: 50px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: 1px solid #555; }
-        .zoom-controls button { background: var(--accent); border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1e1f26; }
-        .zoom-controls span { color: white; font-size: 12px; font-weight: bold; min-width: 45px; text-align: center; }
+
+        /* ── Contrôles zoom ── */
+        .zoom-controls {
+            position: fixed; bottom: 20px; right: 20px;
+            background: var(--bg-panel-2); padding: 5px 14px;
+            border-radius: 999px; display: flex; align-items: center; gap: 14px;
+            box-shadow: var(--shadow-md); z-index: 2000; border: 1px solid var(--border);
+        }
+        .zoom-controls button { background: var(--brand-yellow); border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1a1b22; }
+        .zoom-controls span { color: #fff; font-size: 12px; font-weight: 700; min-width: 44px; text-align: center; }
+
+        /* ── Paper mode ── */
         .paper-mode-container { background: #fff; margin: 20px auto; max-width: 800px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow: hidden; }
         .paper-mode-header { display: flex; gap: 0; background: #fff; border-bottom: 1px solid #e0e0e0; }
         .paper-mode-header .pmh-field { flex: 1; padding: 10px 14px; border-right: 1px solid #e8e8e8; min-width: 0; }
@@ -111,7 +237,9 @@ export async function render(container) {
         .paper-page-display .ppd-num { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; pointer-events: none; }
         .pim-progress { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9000; justify-content: center; align-items: center; }
         .pim-progress.show { display: flex; }
-        .pim-progress-card { background: var(--bg-panel); padding: 30px 40px; border-radius: 12px; text-align: center; color: white; font-size: 16px; }
+        .pim-progress-card { background: var(--bg-panel); padding: 30px 40px; border-radius: var(--r-xl,14px); text-align: center; color: #fff; font-size: 16px; border: 1px solid var(--border); }
+
+        /* ── Page papier format lettre (inchangé — document physique) ── */
         .page { width: 8.5in; height: 11in; background: white; color: black; padding: 0.5in; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 auto 20px; flex-shrink: 0; }
         .page input { outline: none; font-family: inherit; }
         .page input:focus { border-bottom: 2px solid #000 !important; background: transparent !important; }
@@ -129,70 +257,146 @@ export async function render(container) {
         .heure-input { -moz-appearance: textfield; padding-right: 16px !important; }
         .td-heure { position: relative; }
         .h-suffix { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #555; pointer-events: none; font-weight: bold; }
-        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
+
+        /* ── Modales ── */
+        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px); box-sizing: border-box; }
         .custom-modal-overlay.open { display: flex; }
-        .custom-modal-card { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 12px; border: 1px solid #555; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
-        .custom-modal-title { font-size: 20px; color: var(--btn-red); margin-bottom: 15px; font-weight: bold; }
-        .custom-modal-msg { color: var(--text-main); margin-bottom: 25px; font-size: 15px; line-height: 1.4; }
+        .custom-modal-card { background: var(--bg-panel); width: 360px; padding: 24px; border-radius: var(--r-xl,14px); border: 1px solid var(--border); text-align: center; box-shadow: var(--shadow-lg); }
+        .custom-modal-title { font-size: 17px; color: var(--status-red); margin-bottom: 14px; font-weight: 700; }
+        .custom-modal-msg { color: var(--text-muted); margin-bottom: 22px; font-size: 14px; line-height: 1.5; }
         .custom-modal-actions { display: flex; justify-content: center; gap: 10px; }
-        .btn-modal-cancel { background: #444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-        .btn-modal-confirm { background: var(--btn-red); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-modal-ok { background: var(--accent); color: black; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-modal-cancel  { background: var(--bg-panel-2); color: var(--text-muted); border: 1px solid var(--border); padding: 10px 18px; border-radius: var(--r-lg,10px); cursor: pointer; font-weight: 600; font-size: 13px; font-family: inherit; }
+        .btn-modal-confirm { background: var(--status-red); color: #fff; border: none; padding: 10px 18px; border-radius: var(--r-lg,10px); cursor: pointer; font-weight: 700; font-size: 13px; font-family: inherit; }
+        .btn-modal-ok { background: var(--brand-yellow); color: #1a1b22; border: none; padding: 10px 28px; border-radius: var(--r-lg,10px); cursor: pointer; font-weight: 700; font-size: 13px; font-family: inherit; }
+
+        /* ── Load more ── */
+        .load-more-btn { width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--r-lg,10px); cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 4px; font-family: inherit; transition: border-color var(--t-base); }
+        .load-more-btn:hover { border-color: var(--brand-yellow); color: var(--brand-yellow); }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* ── Mobile header ── */
+        .fdt-mobile-header { display: none; align-items: center; gap: 10px; }
+        .fdt-mobile-title { flex: 1; font-size: 22px; font-weight: 700; color: #fff; margin: 0; }
+        .fdt-mobile-menu-btn { background: none; border: none; color: var(--text-muted); padding: 4px; cursor: pointer; display: flex; align-items: center; }
+        .fdt-mobile-menu-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+        .fdt-mobile-add-btn { background: var(--brand-yellow); border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .fdt-mobile-add-btn svg { width: 18px; height: 18px; stroke: #1a1b22; fill: none; stroke-width: 2.5; }
+        .fdt-mobile-stats { display: none; font-size: 12px; color: var(--text-faint); margin-top: -6px; }
+        .tab-count { background: rgba(255,255,255,0.12); color: inherit; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+        .tab.active .tab-count { background: rgba(26,27,34,0.14); }
+        /* ── Total banner ── */
+        .fdt-total-banner { display: none; background: var(--brand-yellow); border-radius: var(--r-xl,14px); padding: 18px 20px; flex-direction: column; gap: 4px; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .fdt-total-banner:active { opacity: 0.9; transform: scale(0.99); }
+        .fdt-total-label { font-size: 10px; font-weight: 700; color: #1a1b22; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; }
+        .fdt-total-hours { font-size: 40px; font-weight: 800; color: #1a1b22; line-height: 1; }
+        .fdt-total-sub { font-size: 13px; color: rgba(26,27,34,0.65); font-weight: 500; }
+
         @media (min-width: 769px) and (max-width: 1024px) { #view-dashboard { padding: 20px; } }
         @media (max-width: 768px) {
-            #view-dashboard { padding: 15px; }
-            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
-            .dash-title { padding-right: 80px; width: 100%; }
-            .dash-header .action-btn { width: 100%; justify-content: center; font-size: 14px; }
-            .tabs-container { flex-direction: column; width: 100%; }
-            .btn-tab { width: 100%; justify-content: center; }
-            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "status hours"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; border-left: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
-            .inv-id { grid-area: id; } .inv-client { grid-area: client; } .inv-status { grid-area: status; } .inv-hours { grid-area: hours; text-align: right; }
-            .inv-actions { position: absolute; top: 16px; right: 16px; }
+            #view-dashboard { padding: 16px 16px 12px; gap: 10px; }
+            .fdt-mobile-header { display: flex; }
+            .fdt-mobile-stats { display: block; }
+            .view-header { display: none; }
+            .fdt-total-banner { display: flex; }
+            .tab svg { display: none; }
+            .ft-list-header { display: none; }
+            .tabs-container { flex-wrap: nowrap; overflow-x: auto; }
+            .tabs-container::-webkit-scrollbar { display: none; }
+            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id status" "client hours"; gap: 3px 10px; padding: 14px 16px; position: static; }
+            .inv-id { grid-area: id; align-self: center; }
+            .inv-client { grid-area: client; align-self: end; }
+            .inv-status { grid-area: status; justify-content: flex-end; align-self: start; }
+            .inv-hours { grid-area: hours; text-align: right; align-self: end; font-size: 15px; }
+            .inv-actions { display: none; }
+            #ts-compteur { display: none; }
             .zoom-controls { display: none !important; }
+            .toolbar { padding: 0; background: transparent; border: none; }
+            .search-box input { border-radius: var(--r-xl,14px); padding: 12px 14px 12px 40px; }
+            /* ── Filtre employé compact (visible seulement sur onglet Toutes) ── */
+            #employeeFilterWrap { width: 42px; flex-shrink: 0; }
+            #employeeFilterWrap select { width: 42px; height: 42px; padding: 0; color: transparent; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--r-xl,14px); -webkit-appearance: none; appearance: none; cursor: pointer; }
+            #employeeFilterWrap select option { color: var(--text-main); background: var(--bg-panel); }
+            #employeeFilterWrap .sel-chevron { right: 50%; transform: translate(50%,-50%); }
         }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 
     <div class="fdt-main">
-        <div id="view-dashboard">
-            <div class="dash-header">
-                <div class="dash-title"><h1>Feuilles de Temps</h1><p>Création et suivi de vos heures</p></div>
-                <button class="action-btn" id="btnNewSheet">
-                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Nouvelle Feuille
+        <div id="view-dashboard" class="view">
+            <!-- En-tête mobile -->
+            <div class="fdt-mobile-header">
+                <button class="fdt-mobile-menu-btn" id="fdt-menu-btn" aria-label="Menu">
+                    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <h2 class="fdt-mobile-title">Feuille de temps</h2>
+                <button class="fdt-mobile-add-btn" id="btnNewSheetMobile" aria-label="Nouvelle feuille">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
             </div>
+            <div class="fdt-mobile-stats" id="fdt-mobile-stats"></div>
 
-            <div class="tabs-container" id="timesheet-tabs" style="display:none">
-                <button id="tab-mine" class="btn-tab active">
-                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Mes Feuilles
-                </button>
-                <button id="tab-all" class="btn-tab">
-                    <svg viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
-                    Boîte de réception
-                </button>
-                <button id="tab-archives" class="btn-tab">
-                    <svg viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                    Archives
-                </button>
+            <!-- Banner total période (mobile uniquement) -->
+            <div class="fdt-total-banner" id="fdt-total-banner" style="display:none">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span class="fdt-total-label" id="fdt-total-label">SEMAINE EN COURS</span>
+                    <div id="fdt-period-dots" style="display:flex;gap:4px"></div>
+                </div>
+                <span class="fdt-total-hours" id="fdt-total-hours">— h</span>
+                <span class="fdt-total-sub" id="fdt-total-sub"></span>
+            </div>
+
+            <!-- En-tête desktop -->
+            <div class="view-header">
+                <div>
+                    <h1>Feuille de temps</h1>
+                    <p class="sub" id="fdt-header-stats"></p>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary btn-pill" id="btnNewSheet">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Nouvelle feuille
+                    </button>
+                </div>
             </div>
 
             <div class="toolbar">
                 <div class="search-box">
                     <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-                    <input type="text" id="searchInput" placeholder="Rechercher (Nom, Date...)">
+                    <input type="text" id="searchInput" placeholder="Rechercher par employé ou semaine…">
+                </div>
+                <div class="select-wrap" id="employeeFilterWrap">
+                    <select id="employeeFilter">
+                        <option value="">Tous les employés</option>
+                    </select>
+                    <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
             </div>
-            <div id="ts-compteur" style="color:#888;font-size:12px;padding:5px 10px"></div>
+
+            <div class="tabs-container" id="timesheet-tabs" style="display:none">
+                <button id="tab-mine" class="tab active">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Mes feuilles <span class="tab-count" id="tab-count-mine" style="display:none"></span>
+                </button>
+                <button id="tab-all" class="tab">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                    Toutes <span class="tab-count" id="tab-count-all" style="display:none"></span>
+                </button>
+                <button id="tab-archives" class="tab">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                    Archives
+                </button>
+            </div>
+            <div id="ts-compteur"></div>
+            <div class="ft-list-header">
+                <span>Semaine</span><span>Employé</span><span>Statut</span>
+                <span class="ft-h-right">Heures</span><span>Actions</span>
+            </div>
             <div class="invoice-list" id="timesheetListContainer"></div>
         </div>
 
-
         <div id="note-refus-box">
             <strong>↩️ Renvoyé pour correction :</strong>
-            <div id="note-refus-text" style="color:#ffaaaa;margin-top:5px;font-size:14px"></div>
+            <div id="note-refus-text" style="margin-top:5px;font-size:13px"></div>
         </div>
 
         <div id="view-editor">
@@ -201,11 +405,11 @@ export async function render(container) {
                     <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                     Retour
                 </button>
-                <button class="action-btn" id="btnApprove" style="display:none;background:var(--btn-green);color:white">
+                <button class="action-btn" id="btnApprove" style="display:none;background:var(--status-green)!important;color:#fff!important;border-color:transparent!important">
                     <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     Approuver
                 </button>
-                <button class="action-btn" id="btnReturn" style="display:none;background:var(--btn-red);color:white">
+                <button class="action-btn" id="btnReturn" style="display:none;background:var(--status-red)!important;color:#fff!important;border-color:transparent!important">
                     <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                     Renvoyer
                 </button>
@@ -217,7 +421,7 @@ export async function render(container) {
                     <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     Envoyer au bureau
                 </button>
-                <button class="action-btn" id="btnPaper" style="background:#e8730a;color:white">
+                <button class="action-btn btn-paper" id="btnPaper">
                     <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     <span id="btnPaperLabel">Feuille papier</span>
                 </button>
@@ -252,7 +456,7 @@ export async function render(container) {
                 <button id="btnZoomOut">−</button>
                 <span id="zoom-level">100%</span>
                 <button id="btnZoomIn">+</button>
-                <button id="btnZoomReset" style="font-size:14px">↺</button>
+                <button id="btnZoomReset" style="font-size:13px">↺</button>
             </div>
         </div>
     </div>
@@ -272,7 +476,7 @@ export async function render(container) {
     <!-- Modal alerte -->
     <div class="custom-modal-overlay" id="alertModal">
         <div class="custom-modal-card">
-            <div class="custom-modal-title" style="color:var(--accent)">Information</div>
+            <div class="custom-modal-title" style="color:var(--brand-yellow)">Information</div>
             <div class="custom-modal-msg" id="alertMsg"></div>
             <div class="custom-modal-actions"><button class="btn-modal-ok" id="btnAlertOk">Compris</button></div>
         </div>
@@ -280,13 +484,14 @@ export async function render(container) {
 
     <!-- Modal refus -->
     <div class="custom-modal-overlay" id="refusModal">
-        <div class="custom-modal-card" style="width:420px;text-align:left">
+        <div class="custom-modal-card" style="width:430px;text-align:left">
             <div class="custom-modal-title">↩️ Renvoyer pour correction</div>
-            <p style="color:#aaa;font-size:14px;margin-bottom:15px">Expliquez à l'employé ce qui doit être corrigé :</p>
-            <textarea id="refusNote" placeholder="Ex: Il manque les heures du mercredi 15..." style="width:100%;height:100px;background:var(--bg-dark);color:white;border:1px solid var(--border);padding:12px;border-radius:8px;font-family:sans-serif;font-size:14px;outline:none;resize:none;box-sizing:border-box"></textarea>
-            <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
-                <button style="background:#444;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer" id="btnCloseRefus">Annuler</button>
-                <button style="background:var(--btn-red);color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold" id="btnConfirmRefus">↩️ Renvoyer</button>
+            <p style="color:var(--text-muted);font-size:13px;margin-bottom:14px">Expliquez à l'employé ce qui doit être corrigé :</p>
+            <textarea id="refusNote" placeholder="Ex: Il manque les heures du mercredi 15…"
+                style="width:100%;height:100px;background:var(--bg-sunken,#15161c);color:#fff;border:1px solid var(--border);padding:12px;border-radius:var(--r-lg,10px);font-family:inherit;font-size:14px;outline:none;resize:none;box-sizing:border-box;transition:border-color var(--t-base)"></textarea>
+            <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+                <button class="btn-modal-cancel" id="btnCloseRefus">Annuler</button>
+                <button class="btn-modal-confirm" id="btnConfirmRefus">↩️ Renvoyer</button>
             </div>
         </div>
     </div>
@@ -294,7 +499,6 @@ export async function render(container) {
     <input type="file" id="pim-gallery-input" accept="image/*" multiple style="display:none">
     <div class="pim-progress" id="pimProgress"><div class="pim-progress-card"><div id="pimProgressText">Téléversement…</div></div></div>
     `
-
     await init(container)
     return cleanup
 }
@@ -318,9 +522,16 @@ async function init(container) {
     container.querySelector('#tab-all').addEventListener('click', () => switchTab('all', container))
     container.querySelector('#tab-archives').addEventListener('click', () => switchTab('archives', container))
     container.querySelector('#searchInput').addEventListener('keyup', () => filterTimesheets(container))
+    container.querySelector('#employeeFilter')?.addEventListener('change', () => filterTimesheets(container))
 
     // Dashboard
     container.querySelector('#btnNewSheet').addEventListener('click', () => openNewTimesheet(viewDash, viewEditor, wrapper, zoomDisplay, container))
+    container.querySelector('#btnNewSheetMobile')?.addEventListener('click', () => openNewTimesheet(viewDash, viewEditor, wrapper, zoomDisplay, container))
+    container.querySelector('#fdt-menu-btn')?.addEventListener('click', () => document.getElementById('topbar-mobile-menu-btn')?.click())
+    container.querySelector('#fdt-total-banner')?.addEventListener('click', () => {
+        fdtPeriodMode = (fdtPeriodMode + 1) % FDT_PERIODS.length
+        refreshTotalBanner(container)
+    })
 
     // Éditeur
     container.querySelector('#btnBack').addEventListener('click', () => askGoBack(wrapper, viewDash, viewEditor, container))
@@ -368,6 +579,7 @@ async function init(container) {
     container.querySelector('#btnConfirmRefus').addEventListener('click', () => confirmerRefus(viewDash, viewEditor, container))
 
     await loadData(true, container)
+    return cleanup
 }
 
 function cleanup() {
@@ -410,10 +622,25 @@ async function loadData(reset = true, container) {
 function switchTab(tab, container) {
     archiveSelection.clear()
     currentInvTab = tab
-    container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
+    container.querySelectorAll('.tab').forEach(b => b.classList.remove('active'))
     container.querySelector(`#tab-${tab}`)?.classList.add('active')
     container.querySelector('#view-dashboard').style.display = 'flex'
     loadData(true, container)
+}
+
+function refreshTotalBanner(container) {
+    const total = calcPeriodTotal(fdtPeriodMode)
+    const period = FDT_PERIODS[fdtPeriodMode]
+    const labelEl = container.querySelector('#fdt-total-label')
+    const hoursEl = container.querySelector('#fdt-total-hours')
+    const subEl   = container.querySelector('#fdt-total-sub')
+    const dotsEl  = container.querySelector('#fdt-period-dots')
+    if (labelEl) labelEl.textContent = period.label
+    if (hoursEl) hoursEl.textContent = `${total} h`
+    if (subEl)   subEl.textContent   = periodSubtitle(fdtPeriodMode)
+    if (dotsEl)  dotsEl.innerHTML    = FDT_PERIODS.map((_, i) =>
+        `<span style="width:5px;height:5px;border-radius:50%;background:rgba(26,27,34,${i === fdtPeriodMode ? '0.6' : '0.25'});display:inline-block"></span>`
+    ).join('')
 }
 
 // ── Rendu liste ─────────────────────────────────────────────────────────────
@@ -422,8 +649,36 @@ function renderTimesheetList(list, container) {
     listContainer.innerHTML = ''
     const isBureau = canViewAllTimesheets()
 
+    const totalAll = timesheetsData.length
     const compteur = container.querySelector('#ts-compteur')
-    if (compteur) compteur.textContent = `${timesheetsData.length} feuille(s) chargée(s)${tsHasMore ? ' — il y en a plus' : ''}`
+    if (compteur) compteur.textContent = ''
+    const headerStats = container.querySelector('#fdt-header-stats')
+    if (headerStats) {
+        const total = list.length
+        const pending = list.filter(s => s.status === 'envoye').length
+        const approved = list.filter(s => s.status === 'approuve').length
+        headerStats.textContent = `${total} feuille${total !== 1 ? 's' : ''} · ${pending} en attente · ${approved} approuvée${approved !== 1 ? 's' : ''}`
+    }
+
+    // Mobile stats & tab counts
+    const mobileStats = container.querySelector('#fdt-mobile-stats')
+    if (mobileStats) mobileStats.textContent = `${totalAll} feuille${totalAll > 1 ? 's' : ''} chargée${totalAll > 1 ? 's' : ''}`
+    const countMine = container.querySelector('#tab-count-mine')
+    const countAll  = container.querySelector('#tab-count-all')
+    if (countMine) countMine.textContent = currentInvTab === 'mine' ? (list?.length ?? total) : ''
+    if (countAll)  countAll.textContent  = currentInvTab === 'all'  ? (list?.length ?? total) : ''
+
+    // Mobile total banner — total par période
+    const banner = container.querySelector('#fdt-total-banner')
+    if (banner && window.innerWidth <= 768) {
+        const mine = timesheetsData.filter(s => !s.isArchived && s.authorId === currentUser?.id)
+        if (mine.length > 0) {
+            banner.style.display = 'flex'
+            refreshTotalBanner(container)
+        } else {
+            banner.style.display = 'none'
+        }
+    }
 
     if (list.length === 0) { listContainer.innerHTML = '<div style="color:#888;text-align:center;padding:20px;font-style:italic">Aucune feuille trouvée.</div>'; return }
 
@@ -444,15 +699,23 @@ function renderTimesheetList(list, container) {
 
     list.forEach(sheet => {
         let badgeHTML = ''
-        if (sheet.isArchived) badgeHTML = `<span class="badge-status" style="background:#555">Archivée</span>`
-        else if (sheet.status === 'brouillon') badgeHTML = `<span class="badge-status b-brouillon">Brouillon</span>`
-        else if (sheet.status === 'envoye') badgeHTML = `<span class="badge-status b-envoye">${!isBureau ? 'Envoyée' : 'En attente'}</span>`
-        else if (sheet.status === 'approuve') badgeHTML = `<span class="badge-status b-paye">Approuvée</span>`
-        else if (sheet.status === 'renvoye') badgeHTML = `<span class="badge-status b-renvoye">Renvoyée</span>`
+        if (sheet.isArchived)                        badgeHTML = `<span class="badge badge-grey">${DOT}Archivée</span>`
+        else if (currentInvTab === 'mine') {
+            if      (sheet.status === 'brouillon')   badgeHTML = `<span class="badge badge-grey">${DOT}Brouillon</span>`
+            else if (sheet.status === 'renvoye')     badgeHTML = `<span class="badge badge-orange">${DOT}À corriger</span>`
+            else                                     badgeHTML = `<span class="badge badge-blue">${DOT}Envoyé</span>`
+        } else {
+            if      (sheet.status === 'brouillon')   badgeHTML = `<span class="badge badge-grey">${DOT}Brouillon</span>`
+            else if (sheet.status === 'envoye')      badgeHTML = `<span class="badge badge-blue">${DOT}${!isBureau ? 'Envoyée' : 'En attente'}</span>`
+            else if (sheet.status === 'approuve')    badgeHTML = `<span class="badge badge-green">${DOT}Approuvée</span>`
+            else if (sheet.status === 'renvoye')     badgeHTML = `<span class="badge badge-orange">${DOT}Renvoyée</span>`
+        }
 
         let actionsHTML = '<div style="width:36px"></div>'
         if (sheet.isArchived) {
             if (canRestore(currentRole)) actionsHTML = `<button class="btn-icon" style="background:rgba(40,167,69,0.15);color:#28a745" data-restore="${sheet.id}">↺</button>`
+        } else if (isBureau && (sheet.status === 'envoye' || sheet.status === 'attente')) {
+            actionsHTML = `<button class="btn-icon" style="color:var(--status-green);border-color:var(--status-green)" title="Approuver" data-approve="${sheet.id}"><svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2.5"><polyline points="20 6 9 17 4 12"/></svg></button>`
         } else {
             const verdict = canArchive(sheet, currentRole, currentUser.id)
             if (verdict.allowed) actionsHTML = `<button class="btn-icon btn-delete" data-delete="${sheet.id}">
@@ -460,15 +723,14 @@ function renderTimesheetList(list, container) {
             </button>`
         }
 
+        const empName = sheet.employe || sheet.authorName || 'Employé'
         const div = document.createElement('div')
         div.className = 'invoice-item'
         div.innerHTML = `
-            <div class="inv-id">${sanitize(sheet.periode || 'Période inconnue')}</div>
-            <div class="inv-client"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${sanitize(sheet.employe || sheet.authorName || 'Employé')}</div>
-            <div class="inv-hours">
-                ${sanitize(String(sheet.total_heures ?? ''))} h
-            </div>
+            <div class="inv-id">${sanitize(formatPeriode(sheet.periode || 'Période inconnue'))}</div>
+            <div class="inv-client">${makeAvatar(empName)} ${sanitize(empName)}</div>
             <div class="inv-status">${badgeHTML}</div>
+            <div class="inv-hours">${sanitize(String(sheet.total_heures ?? ''))} h</div>
             <div class="inv-actions">${actionsHTML}</div>
         `
         if (sheet.isArchived) {
@@ -486,7 +748,7 @@ function renderTimesheetList(list, container) {
                 filterTimesheets(container)
             })
         } else {
-            div.addEventListener('click', e => { if (e.target.closest('[data-delete],[data-restore]')) return; openExistingTimesheet(sheet.id, container) })
+            div.addEventListener('click', e => { if (e.target.closest('[data-delete],[data-restore],[data-approve]')) return; openExistingTimesheet(sheet.id, container) })
         }
         div.querySelector('[data-delete]')?.addEventListener('click', e => {
             e.stopPropagation()
@@ -495,6 +757,12 @@ function renderTimesheetList(list, container) {
         div.querySelector('[data-restore]')?.addEventListener('click', e => {
             e.stopPropagation()
             confirmAndRestore({ table: 'feuilles_de_temps', id: sheet.id, role: currentRole, onSuccess: () => loadData(true, container), showConfirm: (msg, cb) => showConfirmModal(msg, cb, container), showAlert: msg => showAlertModal(msg, container) })
+        })
+        div.querySelector('[data-approve]')?.addEventListener('click', async e => {
+            e.stopPropagation()
+            const { error } = await supabase.from('feuilles_de_temps').update({ status: 'approuve', return_note: null }).eq('id', sheet.id)
+            if (error) { showAlertModal(friendlyError(error), container); return }
+            loadData(true, container)
         })
         listContainer.appendChild(div)
     })
@@ -557,16 +825,33 @@ function updateTsArchiveBar(container) {
 
 function filterTimesheets(container) {
     const term = container.querySelector('#searchInput')?.value.toLowerCase() || ''
+    const empFilter = container.querySelector('#employeeFilter')?.value || ''
     const isBureau = canViewAllTimesheets()
+
+    const empWrap = container.querySelector('#employeeFilterWrap')
+    const empSelect = container.querySelector('#employeeFilter')
+    if (empSelect && empWrap) {
+        if (isBureau && currentInvTab !== 'mine') {
+            empWrap.style.display = ''
+            const currentVal = empSelect.value
+            const names = [...new Set(timesheetsData.map(s => s.employe || s.authorName || '').filter(Boolean))].sort()
+            empSelect.innerHTML = '<option value="">Tous les employés</option>' + names.map(n => `<option value="${n}"${n === currentVal ? ' selected' : ''}>${n}</option>`).join('')
+        } else {
+            empWrap.style.display = 'none'
+        }
+    }
+
     let base = currentInvTab === 'archives' ? timesheetsData
         : (!isBureau || currentInvTab === 'mine') ? timesheetsData.filter(s => s.authorId === currentUser.id || !s.authorId)
         : timesheetsData.filter(s => s.status !== 'brouillon')
-    const filtered = base.filter(s => (s.employe || s.authorName || '').toLowerCase().includes(term) || (s.periode || '').toLowerCase().includes(term))
+    let filtered = base.filter(s => (s.employe || s.authorName || '').toLowerCase().includes(term) || (s.periode || '').toLowerCase().includes(term))
+    if (empFilter) filtered = filtered.filter(s => (s.employe || s.authorName || '') === empFilter)
     renderTimesheetList(filtered, container)
 }
 
 // ── Éditeur ─────────────────────────────────────────────────────────────────
 function openNewTimesheet(viewDash, viewEditor, wrapper, zoomDisplay, container) {
+    document.body.classList.add('detail-mode')
     try { localStorage.removeItem('fdussault_draft_feuille_de_temps_new') } catch {}
     currentSheetId = null
     viewDash.style.display = 'none'
@@ -581,6 +866,7 @@ function openNewTimesheet(viewDash, viewEditor, wrapper, zoomDisplay, container)
 }
 
 async function openExistingTimesheet(id, container) {
+    document.body.classList.add('detail-mode')
     const sheet = timesheetsData.find(s => s.id === id)
     if (!sheet) return
     currentSheetId = id
@@ -626,13 +912,14 @@ async function openExistingTimesheet(id, container) {
 }
 
 function showDashboard(viewDash, viewEditor, container) {
+    document.body.classList.remove('detail-mode')
     stopAutosave()
     isPaperMode = false; paperPages = []
     updatePaperToggleButton(container)
     viewDash.style.display = 'flex'
     viewEditor.style.display = 'none'
     currentInvTab = 'mine'
-    container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
+    container.querySelectorAll('.tab').forEach(b => b.classList.remove('active'))
     container.querySelector('#tab-mine')?.classList.add('active')
     loadData(true, container)
 }

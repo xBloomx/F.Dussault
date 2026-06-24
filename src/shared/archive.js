@@ -23,7 +23,7 @@ export function canArchive(item, role, userId) {
 }
 
 export function canSeeAllArchives(role) {
-    return hasPermission('view_archives_all') || role === 'A0' || role === 'A1'
+    return role === 'A0' || role === 'A1' || role === 'A2'
 }
 
 export function canRestore(role) {

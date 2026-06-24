@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>F.Dussault</title>
 
+    <!-- Inter + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="apple-touch-icon" href="/assets/logo_app.png">
     <link rel="icon" type="image/png" href="/assets/logo_app.png">
     <link rel="manifest" href="/manifest.json">
@@ -13,19 +18,15 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="F.Dussault">
-    <meta name="theme-color" content="#1e1f26">
+    <meta name="theme-color" content="#1a1b22">
 
     <link rel="stylesheet" href="/src/shared/styles.css">
 
     <style>
-        *, *::before, *::after { box-sizing: border-box; }
-
-        /* Le fond couvre tout l'écran jusqu'au bord (home indicator inclus) */
-        html { background-color: #1e1f26; }
-
+        html { background: #1a1b22; }
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg-dark);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+            background: var(--bg-dark);
             color: var(--text-main);
             margin: 0;
             padding-top: env(safe-area-inset-top, 0px);
@@ -38,182 +39,16 @@
             display: flex;
             overflow: hidden;
         }
-
-        /* ── SIDEBAR ─────────────────────────────────────────────── */
-        .sidebar {
-            width: 80px;
-            background-color: var(--sidebar-bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* padding-top inclut la safe area pour que les icônes ne passent pas sous la notch */
-            padding: 20px 0;
-            z-index: 1000;
-            transition: left 0.3s ease;
-            overflow-y: auto;
-            overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
-            flex-shrink: 0;
-        }
-        .sidebar::-webkit-scrollbar { display: none; }
-        .sidebar-top { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
-        .sidebar-bottom { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; margin-top: auto; padding-top: 15px; }
-
-        .nav-btn {
-            position: relative;
-            background: none; border: none; cursor: pointer;
-            padding: 10px; border-radius: 10px;
-            transition: 0.2s;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .nav-btn:hover { background-color: rgba(255,255,255,0.3); }
-        .nav-btn.active { background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .nav-btn img, .nav-btn svg { width: 30px; height: 30px; object-fit: contain; display: block; transition: transform 0.2s ease; }
-        .nav-btn:hover img, .nav-btn:hover svg { transform: scale(1.15); }
-        .nav-btn svg { stroke: black; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; fill: none; }
-
-        /* Badge messagerie */
-        .notif-badge {
-            position: absolute; top: 4px; right: 4px;
-            background: #ff4d4d; color: white;
-            font-size: 10px; font-weight: bold;
-            min-width: 16px; height: 16px; border-radius: 8px;
-            display: none; align-items: center; justify-content: center;
-            padding: 0 4px; line-height: 1;
-            border: 2px solid var(--sidebar-bg);
-        }
-        .notif-badge.visible { display: flex; }
-
-        /* ── MAIN CONTENT ─────────────────────────────────────────── */
-        .main-content {
-            flex: 1; display: flex; flex-direction: column;
-            position: relative; background-color: var(--bg-dark);
-            overflow: hidden;
-        }
-
-        #app-loader {
-            position: absolute; inset: 0;
-            background: var(--bg-dark);
-            z-index: 500;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            transition: opacity 0.3s ease;
-        }
-        #app-loader.hidden { opacity: 0; pointer-events: none; }
-
-        #app-container {
-            flex: 1; height: 100%; overflow: hidden;
-            display: flex; flex-direction: column;
-            position: relative;
-        }
-        /* Wrapper créé dynamiquement par navigateTo — remplit #app-container via flex */
-        .view-container {
-            flex: 1; min-height: 0; overflow: hidden;
-            display: flex; flex-direction: column;
-        }
-
-        /* ─── Toast : géré par src/shared/styles.css (.shared-toast) ─── */
-
-        /* Indicateur connexion */
-        #conn-indicator {
-            position: fixed; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
-            background: rgba(30,31,38,0.95); border: 1px solid #333;
-            color: #28a745; font-size: 11px; padding: 4px 10px;
-            border-radius: 20px; display: flex; align-items: center; gap: 5px;
-            z-index: 500; opacity: 0; transition: opacity 0.3s; pointer-events: none;
-        }
-        #conn-indicator.offline { color: #ff4d4d; }
-        #conn-indicator.show { opacity: 1; }
-        #conn-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-
-        /* Bannière hors ligne persistante */
-        #offline-banner {
-            display: none;
-            position: fixed; top: 0; left: 0; right: 0;
-            background: rgba(192,57,43,0.97);
-            color: white; padding: calc(7px + env(safe-area-inset-top, 0px)) 16px 7px;
-            font-size: 13px; font-weight: 500;
-            text-align: center; z-index: 9998;
-            align-items: center; justify-content: center; gap: 8px;
-        }
-        #offline-banner.show { display: flex; }
-        #offline-banner svg { flex-shrink: 0; }
-
-        /* Menu hamburger mobile */
-        .menu-btn {
-            display: none;
-            position: fixed;
-            top: calc(25px + env(safe-area-inset-top, 0px));
-            right: calc(25px + env(safe-area-inset-right, 0px));
-            z-index: 1100;
-            background-color: var(--accent);
-            border: none; width: 48px; height: 48px;
-            border-radius: 12px; cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            transition: opacity 0.15s ease, transform 0.15s ease;
-            justify-content: center; align-items: center;
-        }
-        .menu-btn:active { transform: scale(0.90); }
-        .menu-btn svg { width: 26px; height: 26px; stroke: black; stroke-width: 3; stroke-linecap: round; display: block; }
-        .menu-btn.hide { opacity: 0; pointer-events: none; transform: scale(0.5); }
-
-        #overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.6);
-            display: none; z-index: 900;
-            backdrop-filter: blur(2px);
-        }
-        #overlay.active { display: block; }
-
-        /* Écran maintenance */
-        #maintenance-screen {
-            display: none;
-            position: fixed; inset: 0;
-            background-color: #1e1f26;
-            z-index: 999999;
-            flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; padding: 20px;
-        }
-
-        /* Mode signature plein écran */
-        body.signature-mode-active .sidebar { display: none !important; }
-        body.signature-mode-active .menu-btn { display: none !important; }
-
-        /* Overlay redresse téléphone */
-        #portrait-hint { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 99998; color: white; text-align: center; flex-direction: column; justify-content: center; align-items: center; padding: 30px; box-sizing: border-box; }
-        #portrait-hint.show { display: flex; }
-        #portrait-hint .ph-icon { width: 80px; height: 80px; margin-bottom: 25px; color: #fcca46; animation: phRotate 1.8s ease-in-out infinite; }
-        @keyframes phRotate { 0%, 100% { transform: rotate(90deg); } 40%, 60% { transform: rotate(0deg); } }
-
-        /* Responsive */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .sidebar { position: relative; left: 0; width: 80px; flex-shrink: 0; }
-            .menu-btn { display: none; }
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed; top: 0; bottom: 0; left: -100px;
-                width: 100px;
-                background: var(--sidebar-bg);
-                transition: left 0.3s ease;
-                z-index: 1000;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-                padding-top: calc(20px + env(safe-area-inset-top, 0px));
-                padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-            }
-            .sidebar.open { left: 0; }
-            .menu-btn { display: flex; }
-            .main-content { width: 100%; }
-        }
     </style>
-    <!-- emoji-picker-element pour la messagerie -->
+
+    <!-- emoji-picker-element -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 </head>
 <body>
 
 <!-- Loader initial -->
-<div id="security-loader" style="position:fixed;inset:0;background:#1e1f26;z-index:99999;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:opacity 0.4s ease">
-    <img src="/assets/logo+nom.png" alt="Logo F.Dussault" style="width:220px;height:auto;margin-bottom:25px;display:block">
+<div id="security-loader">
+    <img src="/assets/logo+nom.png" alt="Logo F.Dussault" style="width:200px;height:auto;margin-bottom:24px;display:block">
     <svg width="200" height="3" viewBox="0 0 200 3">
         <rect width="200" height="3" fill="rgba(255,255,255,0.05)" rx="1.5"/>
         <rect width="70" height="3" fill="#fcca46" rx="1.5">
@@ -227,67 +62,160 @@
 
 <!-- Écran maintenance -->
 <div id="maintenance-screen">
-    <svg style="width:100px;height:100px;color:#fcca46;stroke:currentColor;stroke-width:2;fill:none;margin-bottom:20px" viewBox="0 0 24 24">
+    <svg style="width:80px;height:80px;color:#fcca46;stroke:currentColor;stroke-width:2;fill:none;margin-bottom:20px" viewBox="0 0 24 24">
         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
         <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
     </svg>
-    <h1 style="color:white;margin:0 0 10px;font-size:32px;font-weight:bold">Maintenance en cours</h1>
-    <p style="color:#aaa;font-size:16px;max-width:400px;line-height:1.5;margin:0 auto">L'application F.Dussault est temporairement indisponible pour une mise à jour.</p>
-    <p style="color:#666;font-size:13px;margin-top:30px">Veuillez réessayer plus tard.</p>
+    <h1 style="color:#fff;margin:0 0 10px;font-size:28px;font-weight:700">Maintenance en cours</h1>
+    <p style="color:var(--text-muted);font-size:15px;max-width:380px;line-height:1.5;margin:0 auto">L'application F.Dussault est temporairement indisponible pour une mise à jour.</p>
 </div>
 
-<!-- Hamburger -->
-<button id="menu-toggle" class="menu-btn" title="Ouvrir le menu" aria-label="Menu">
+<!-- Hamburger (mobile) -->
+<button id="menu-toggle" class="menu-btn" title="Menu" aria-label="Menu">
     <svg viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>
 </button>
 
-<!-- Sidebar -->
+<!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
 <aside id="sidebar" class="sidebar">
+
+    <!-- Drawer header (mobile only) -->
+    <div class="sidebar-drawer-header">
+        <div class="sidebar-drawer-logo" id="sidebar-mob-logo">FD</div>
+        <div class="sidebar-drawer-info">
+            <div class="sidebar-drawer-name" id="sidebar-mob-name">F.Dussault</div>
+            <div class="sidebar-drawer-sub" id="sidebar-mob-sub">Plomberie · Chauffage</div>
+        </div>
+    </div>
+
+    <!-- Brand (desktop only) -->
+    <div class="sidebar-brand" title="F.Dussault">FD</div>
+
+    <!-- Navigation principale -->
     <div class="sidebar-top">
-        <button class="nav-btn active" data-view="accueil" title="Accueil" aria-label="Accueil">
-            <img src="/assets/logo_accueil.png" alt="Accueil" onerror="this.style.display='none'">
+        <button class="nav-btn active" data-view="accueil" data-label="Accueil" title="Accueil" aria-label="Accueil">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <img class="nav-png" src="/assets/logo_accueil.png" alt="Accueil" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Accueil</span>
         </button>
-        <button class="nav-btn" data-view="facture" title="Factures" aria-label="Factures">
-            <img src="/assets/logo_facture.png" alt="Factures" onerror="this.style.display='none'">
+
+        <button class="nav-btn" data-view="facture" data-label="Factures" title="Factures" aria-label="Factures">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <img class="nav-png" src="/assets/logo_facture.png" alt="Factures" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Factures</span>
+            <span class="sidebar-count" id="sidebar-count-facture"></span>
         </button>
-        <button class="nav-btn hidden" id="btn-nav-soumissions" data-view="soumissions" title="Soumissions" aria-label="Soumissions">
-            <img src="/assets/logo_soumission.png" alt="Soumissions" onerror="this.style.display='none'">
+
+        <button class="nav-btn hidden" id="btn-nav-soumissions" data-view="soumissions" data-label="Soumissions" title="Soumissions" aria-label="Soumissions">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <img class="nav-png" src="/assets/logo_soumission.png" alt="Soumissions" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Soumissions</span>
         </button>
-        <button class="nav-btn" data-view="feuilleTemps" title="Feuille de temps" aria-label="Feuille de temps">
-            <img src="/assets/logo_feuille_de_temps.png" alt="Feuille de temps" onerror="this.style.display='none'">
+
+        <button class="nav-btn" data-view="feuilleTemps" data-label="Feuille de temps" title="Feuille de temps" aria-label="Feuille de temps">
+            <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <img class="nav-png" src="/assets/logo_feuille_de_temps.png" alt="Feuille de temps" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Feuille de temps</span>
         </button>
-        <button class="nav-btn" id="btn-nav-messagerie" data-view="messagerie" title="Messagerie" aria-label="Messagerie">
-            <img src="/assets/logo_messagerie.png" alt="Messagerie" onerror="this.style.display='none'">
-            <span class="notif-badge" id="badge-messagerie">0</span>
+
+        <button class="nav-btn" id="btn-nav-messagerie" data-view="messagerie" data-label="Messagerie" title="Messagerie" aria-label="Messagerie">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            <img class="nav-png" src="/assets/logo_messagerie.png" alt="Messagerie" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label" style="font-size:16px;font-weight:600">Messagerie</span>
+            <span class="notif-badge" id="badge-messagerie" style="display:none">0</span>
         </button>
-        <button class="nav-btn hidden" id="btn-nav-courriel" data-view="courriel" title="Boîte Courriel" aria-label="Boîte Courriel">
-            <img src="/assets/logo_courriel.png" alt="Boîte Courriel" onerror="this.style.display='none'">
+
+        <button class="nav-btn hidden" id="btn-nav-courriel" data-view="courriel" data-label="Boîte courriel" title="Boîte courriel" aria-label="Boîte courriel">
+            <svg class="nav-svg" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,6 12,13 22,6"/></svg>
+            <img class="nav-png" src="/assets/logo_courriel.png" alt="Courriel" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Boîte courriel</span>
+            <span class="sidebar-count" id="sidebar-count-courriel"></span>
         </button>
-        <button class="nav-btn" data-view="calendrier" title="Calendrier" aria-label="Calendrier">
-            <img src="/assets/logo_calendrier.png" alt="Calendrier" onerror="this.style.display='none'">
+
+        <button class="nav-btn" data-view="calendrier" data-label="Calendrier" title="Calendrier" aria-label="Calendrier">
+            <svg class="nav-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <img class="nav-png" src="/assets/logo_calendrier.png" alt="Calendrier" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Calendrier</span>
         </button>
-        <button class="nav-btn" data-view="clients" title="Clients" aria-label="Clients">
-            <img src="/assets/logo_client.png" alt="Clients" onerror="this.style.display='none'">
+
+        <button class="nav-btn" data-view="clients" data-label="Clients" title="Clients" aria-label="Clients">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <img class="nav-png" src="/assets/logo_client.png" alt="Clients" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Clients</span>
         </button>
-        <button class="nav-btn" data-view="outils" title="Outils" aria-label="Outils">
-            <img src="/assets/logo_outils.png" alt="Outils" onerror="this.style.display='none'">
+
+        <button class="nav-btn" data-view="outils" data-label="Banque d'outils" title="Banque d'outils" aria-label="Banque d'outils">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            <img class="nav-png" src="/assets/logo_outils.png" alt="Outils" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Banque d'outils</span>
         </button>
-        <button class="nav-btn hidden" id="btn-nav-po" data-view="po" title="Bons de commande" aria-label="Bons de commande">
-            <img src="/assets/logo_po.png" alt="Bons de commande" onerror="this.style.display='none'">
+
+        <button class="nav-btn hidden" id="btn-nav-po" data-view="po" data-label="Bons de commande" title="Bons de commande" aria-label="Bons de commande">
+            <svg class="nav-svg" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            <img class="nav-png" src="/assets/logo_po.png" alt="PO" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Bons de commande</span>
         </button>
     </div>
+
+    <!-- Navigation bas (Admin + Profil) -->
     <div class="sidebar-bottom">
-        <button class="nav-btn hidden" id="btn-nav-admin" data-view="admin" title="Administration" aria-label="Administration">
-            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div class="sidebar-divider"></div>
+
+        <button class="nav-btn hidden" id="btn-nav-admin" data-view="admin" data-label="Administration" title="Administration" aria-label="Administration">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            <span class="nav-label">Administration</span>
         </button>
-        <button class="nav-btn" data-view="profil" title="Profil personnel" aria-label="Profil personnel">
-            <img src="/assets/logo_profil.png" alt="Profil" onerror="this.style.display='none'">
+
+        <button class="nav-btn" data-view="profil" data-label="Profil personnel" title="Profil personnel" aria-label="Profil personnel">
+            <svg class="nav-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <img class="nav-png" src="/assets/logo_profil.png" alt="Profil" style="display:none;width:24px;height:24px;object-fit:contain">
+            <span class="nav-label">Profil personnel</span>
         </button>
     </div>
 </aside>
 
-<!-- Contenu principal -->
+<!-- ══ MAIN CONTENT ══════════════════════════════════════════════ -->
 <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar" id="app-topbar">
+        <!-- Mobile brand (hidden on desktop) -->
+        <div class="topbar-mobile-brand">
+            <div class="topbar-mobile-logo" id="topbar-mobile-logo">FD</div>
+            <span class="topbar-mobile-company">F.Dussault</span>
+        </div>
+
+        <div class="topbar-left">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-faint)"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span style="color:var(--text-faint)">F.Dussault</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-faint)"><polyline points="9 18 15 12 9 6"/></svg>
+            <span class="topbar-crumb-active" id="topbar-crumb">Accueil</span>
+        </div>
+        <div class="topbar-right">
+            <button class="topbar-iconbtn topbar-mobile-menu-btn" id="topbar-mobile-menu-btn" title="Menu" aria-label="Ouvrir le menu">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <button class="topbar-iconbtn topbar-mobile-search-btn" id="topbar-mobile-search-btn" title="Rechercher" aria-label="Rechercher">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <div class="topbar-search-wrap">
+                <svg class="topbar-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input class="topbar-search" type="text" placeholder="Rechercher dans l'app…" aria-label="Recherche">
+                <button id="topbar-search-close" style="display:none;background:none;border:none;color:var(--text-faint);font-size:20px;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0">×</button>
+            </div>
+            <button class="topbar-iconbtn" id="topbar-notif-btn" title="Notifications">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </button>
+            <div class="topbar-user" id="topbar-user">
+                <div class="topbar-ava" id="topbar-ava">FD</div>
+                <div>
+                    <div class="topbar-who" id="topbar-name">F. Dussault</div>
+                    <div class="topbar-role" id="topbar-role">A1 · Admin</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- App loader -->
     <div id="app-loader">
         <svg width="200" height="3" viewBox="0 0 200 3">
             <rect width="200" height="3" fill="rgba(255,255,255,0.05)" rx="1.5"/>
@@ -296,54 +224,87 @@
             </rect>
         </svg>
     </div>
+
     <div id="app-container"></div>
 </div>
 
 <div id="overlay"></div>
 
-<!-- Overlay redresse téléphone (portrait) -->
+<!-- Mobile bottom nav -->
+<nav id="bottom-nav">
+    <button class="nav-btn" data-view="accueil" data-label="Accueil" aria-label="Accueil">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Accueil</span>
+    </button>
+    <button class="nav-btn" data-view="facture" data-label="Factures" aria-label="Factures">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Factures</span>
+    </button>
+    <button class="nav-btn" data-view="calendrier" data-label="Calendrier" aria-label="Agenda">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Agenda</span>
+    </button>
+    <button class="nav-btn" data-view="messagerie" data-label="Messagerie" aria-label="Messages">
+        <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        <span>Messages</span>
+        <span class="bnav-badge" id="bnav-badge-messagerie"></span>
+    </button>
+    <button class="nav-btn" data-view="profil" data-label="Profil personnel" aria-label="Profil">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profil</span>
+    </button>
+</nav>
+
+<!-- Portrait hint -->
 <div id="portrait-hint">
-    <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
-    </svg>
-    <h2 style="margin:0 0 10px;font-size:22px;font-weight:bold">Redressez votre téléphone</h2>
-    <p style="color:#aaa;font-size:15px;max-width:280px;line-height:1.5;margin:0">Cette application est conçue pour le mode portrait.</p>
+    <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+    <h2 style="margin:0 0 10px;font-size:22px;font-weight:700">Redressez votre téléphone</h2>
+    <p style="color:var(--text-muted);font-size:15px;max-width:280px;line-height:1.5;margin:0">Cette application est conçue pour le mode portrait.</p>
 </div>
+
 <div id="toast-container"></div>
 
-<!-- Bannière installation iOS -->
-<div id="ios-install-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#23242f;border-top:1px solid #3a3b4a;padding:14px 16px 18px;z-index:9996;align-items:center;gap:14px;box-shadow:0 -4px 20px rgba(0,0,0,0.4)">
-    <div style="width:40px;height:40px;background:#1e1f26;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <img src="/assets/logo_app.png" style="width:32px;height:32px;border-radius:7px;object-fit:contain" onerror="this.style.display='none'">
-    </div>
-    <div style="flex:1;min-width:0">
-        <div style="color:white;font-weight:700;font-size:13px;margin-bottom:3px">Installer F.Dussault</div>
-        <div style="color:#aaa;font-size:11.5px;line-height:1.4">Appuyez sur
-            <svg viewBox="0 0 24 24" width="13" height="13" style="display:inline-block;vertical-align:middle;margin:0 1px;stroke:#fcca46;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-            puis <strong style="color:white">« Sur l'écran d'accueil »</strong> pour une expérience plein écran.</div>
-    </div>
-    <button id="ios-install-close" style="background:none;border:none;color:#666;font-size:18px;cursor:pointer;padding:4px 6px;flex-shrink:0;line-height:1" aria-label="Fermer">✕</button>
+<!-- Offline banner -->
+<div id="offline-banner">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+    <span id="offline-text">Hors ligne — les modifications sont sauvegardées localement</span>
 </div>
 
-<!-- Bannière hors ligne -->
-<div id="offline-banner">
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-        <line x1="1" y1="1" x2="23" y2="23"/>
-        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M8.53 16.11a6 6 0 0 1 6.95 0"/>
-        <line x1="12" y1="20" x2="12.01" y2="20"/>
-    </svg>
-    <span id="offline-text">Hors ligne — les modifications sont sauvegardées localement</span>
+<!-- iOS Install Banner -->
+<div id="ios-install-banner">
+    <div style="width:40px;height:40px;background:var(--bg-sunken);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <img src="/assets/logo_app.png" style="width:30px;height:30px;border-radius:7px;object-fit:contain" onerror="this.style.display='none'">
+    </div>
+    <div style="flex:1;min-width:0">
+        <div style="color:#fff;font-weight:700;font-size:13px;margin-bottom:3px">Installer F.Dussault</div>
+        <div style="color:var(--text-muted);font-size:11.5px;line-height:1.4">Appuyez sur
+            <svg viewBox="0 0 24 24" width="13" height="13" style="display:inline-block;vertical-align:middle;margin:0 1px;stroke:var(--brand-yellow);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            puis <strong style="color:#fff">« Sur l'écran d'accueil »</strong>
+        </div>
+    </div>
+    <button id="ios-install-close" style="background:none;border:none;color:var(--text-faint);font-size:18px;cursor:pointer;padding:4px 6px;flex-shrink:0;line-height:1">✕</button>
 </div>
 
 <script type="module">
 import { installConsoleFilter } from '/src/shared/consoleFilter.js'
-import { loadSession, watchSession, currentUser, currentRole, currentProfil, hasPermission, invalidateRolesCache, reloadRolesConfig } from '/src/auth.js'
+import { loadSession, watchSession, currentUser, currentRole, currentProfil, hasPermission, invalidateRolesCache, reloadRolesConfig, getRoleLabel } from '/src/auth.js'
 import { supabase } from '/src/supabase.js'
 import { hasPendingOfflineSaves, getPendingCount, flushOfflineQueue } from '/src/shared/offlineQueue.js'
+import { initGlobalSearch, hidePanel as hideSearchPanel } from '/src/shared/globalSearch.js'
+import { initNotifications, markNotifSeen } from '/src/shared/notifications.js'
 
 installConsoleFilter()
 
-// ── Modules lazy ────────────────────────────────────────────────────────────
+// ── Breadcrumb labels ──────────────────────────────────────────
+const VIEW_LABELS = {
+    accueil: 'Accueil', facture: 'Factures', soumissions: 'Soumissions',
+    feuilleTemps: 'Feuille de temps', messagerie: 'Messagerie',
+    courriel: 'Boîte courriel', calendrier: 'Calendrier',
+    clients: 'Clients', outils: 'Outils', po: 'Bons de commande',
+    admin: 'Administration', profil: 'Profil personnel',
+}
+
+// ── Modules lazy ───────────────────────────────────────────────
 const MODULE_MAP = {
     accueil:      () => import('/src/views/accueil.js'),
     facture:      () => import('/src/views/facture.js'),
@@ -359,27 +320,38 @@ const MODULE_MAP = {
     profil:       () => import('/src/views/profil.js'),
 }
 
-// ── État ────────────────────────────────────────────────────────────────────
+// ── État ───────────────────────────────────────────────────────
 let currentView = 'accueil'
 let currentCleanup = null
 const appContainer = document.getElementById('app-container')
-const appLoader = document.getElementById('app-loader')
-const mainLoader = document.getElementById('security-loader')
-const sidebar = document.getElementById('sidebar')
-const menuBtn = document.getElementById('menu-toggle')
-const overlay = document.getElementById('overlay')
+const appLoader    = document.getElementById('app-loader')
+const mainLoader   = document.getElementById('security-loader')
+const sidebar      = document.getElementById('sidebar')
+const menuBtn      = document.getElementById('menu-toggle')
+const overlay      = document.getElementById('overlay')
+const topbarCrumb  = document.getElementById('topbar-crumb')
 
-// ── Router ──────────────────────────────────────────────────────────────────
+// ── Router ─────────────────────────────────────────────────────
 async function navigateTo(viewName) {
     if (!MODULE_MAP[viewName]) return
-
     if (currentCleanup) { try { currentCleanup() } catch {} currentCleanup = null }
+
+    // Fermer la barre de recherche mobile si elle était ouverte
+    closeMobileSearch()
+    hideSearchPanel()
+    document.body.classList.remove('detail-mode')
+    const inp = document.querySelector('.topbar-search')
+    if (inp) { inp.value = ''; }
+
+    document.body.dataset.view = viewName
 
     appLoader.classList.remove('hidden')
     appContainer.innerHTML = ''
     appContainer.style.opacity = '0'
 
-    // Wrapper flex qui remplit #app-container — résout le bug de hauteur iOS Safari
+    // Breadcrumb
+    if (topbarCrumb) topbarCrumb.textContent = VIEW_LABELS[viewName] || viewName
+
     const el = document.createElement('div')
     el.className = 'view-container'
     appContainer.appendChild(el)
@@ -389,44 +361,41 @@ async function navigateTo(viewName) {
         const cleanup = await mod.render(el)
         if (typeof cleanup === 'function') currentCleanup = cleanup
     } catch (e) {
-        // Module introuvable = SW périmé après déploiement → recharger une seule fois
         if (e instanceof TypeError && e.message.includes('Failed to fetch dynamically imported module')) {
             if (!sessionStorage.getItem('sw_reload_attempted')) {
                 sessionStorage.setItem('sw_reload_attempted', '1')
-                window.location.reload()
-                return
+                window.location.reload(); return
             }
         }
         sessionStorage.removeItem('sw_reload_attempted')
-        console.error('[Router] Erreur chargement module', viewName, e)
-        el.innerHTML = `<div style="color:#ff4d4d;padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
+        console.error('[Router]', viewName, e)
+        el.innerHTML = `<div style="color:var(--status-red);padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
     }
 
     currentView = viewName
+    markNotifSeen(viewName)
     appLoader.classList.add('hidden')
-
     requestAnimationFrame(() => {
         appContainer.style.transition = 'opacity 0.18s ease'
         appContainer.style.opacity = '1'
     })
 }
 
-// ── Sidebar nav ─────────────────────────────────────────────────────────────
+// ── Sidebar nav ─────────────────────────────────────────────────
 document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
     btn.addEventListener('click', () => {
         const view = btn.dataset.view
 
-        // Badge messagerie
         if (view === 'messagerie') {
             const badge = document.getElementById('badge-messagerie')
-            if (badge) { badge.textContent = '0'; badge.classList.remove('visible') }
+            if (badge) { badge.textContent = '0'; badge.style.display = 'none' }
+            const bnavBadge = document.getElementById('bnav-badge-messagerie')
+            if (bnavBadge) { bnavBadge.textContent = ''; bnavBadge.style.display = 'none' }
         }
 
-        // Highlight actif
         document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.remove('active'))
-        btn.classList.add('active')
+        document.querySelectorAll(`.nav-btn[data-view="${view}"]`).forEach(b => b.classList.add('active'))
 
-        // Fermer sidebar mobile
         if (window.innerWidth <= 768) {
             sidebar.classList.remove('open')
             overlay.classList.remove('active')
@@ -437,95 +406,143 @@ document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
     })
 })
 
-// ── Menu hamburger ───────────────────────────────────────────────────────────
+// ── Hamburger ───────────────────────────────────────────────────
 menuBtn.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active'); menuBtn.classList.add('hide') })
 overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); menuBtn.classList.remove('hide') })
+document.getElementById('topbar-mobile-menu-btn')?.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active') })
+function closeMobileSearch() {
+    const sw = document.querySelector('.topbar-search-wrap')
+    const closeBtn = document.getElementById('topbar-search-close')
+    if (sw) sw.classList.remove('mobile-open')
+    if (closeBtn) closeBtn.style.display = 'none'
+}
+document.getElementById('topbar-mobile-search-btn')?.addEventListener('click', () => {
+    const sw = document.querySelector('.topbar-search-wrap')
+    const inp = document.querySelector('.topbar-search')
+    const closeBtn = document.getElementById('topbar-search-close')
+    if (!sw || !inp) return
+    if (sw.classList.contains('mobile-open')) {
+        closeMobileSearch()
+    } else {
+        sw.classList.add('mobile-open')
+        if (closeBtn) closeBtn.style.display = 'block'
+        inp.focus()
+    }
+})
+document.getElementById('topbar-search-close')?.addEventListener('click', () => closeMobileSearch())
+document.querySelector('.topbar-search')?.addEventListener('blur', () => {
+    if (window.innerWidth <= 768) setTimeout(() => closeMobileSearch(), 200)
+})
 
-// ── Badge messagerie via événement DOM ──────────────────────────────────────
+// ── Topbar: update user info after login ────────────────────────
+function updateTopbarUser() {
+    const ava       = document.getElementById('topbar-ava')
+    const mobileAva = document.getElementById('topbar-mobile-logo')
+    const name      = document.getElementById('topbar-name')
+    const role      = document.getElementById('topbar-role')
+    if (!currentProfil) return
+    const initials = (currentProfil.prenom_nom || 'FD').split(' ').map(w=>w[0]).slice(0,2).join('')
+    if (ava)       ava.textContent  = initials
+    if (mobileAva) mobileAva.textContent = initials
+    if (name) name.textContent = currentProfil.prenom_nom || 'F. Dussault'
+    if (role) role.textContent = `${currentProfil.role || 'A1'} · ${getRoleLabel(currentProfil.role)}`
+    // Drawer mobile header
+    const sidebarLogo = document.getElementById('sidebar-mob-logo')
+    const sidebarName = document.getElementById('sidebar-mob-name')
+    const sidebarSub  = document.getElementById('sidebar-mob-sub')
+    if (sidebarLogo) sidebarLogo.textContent = initials
+    if (sidebarName) sidebarName.textContent = currentProfil.prenom_nom || 'F.Dussault'
+    if (sidebarSub)  sidebarSub.textContent  = `${currentProfil.role || 'A1'} · ${getRoleLabel(currentProfil.role)}`
+}
+
+// ── Badge messagerie ─────────────────────────────────────────────
 window.addEventListener('new_message_notif', () => {
     if (currentView !== 'messagerie') {
         const badge = document.getElementById('badge-messagerie')
-        if (badge) { badge.textContent = (parseInt(badge.textContent) || 0) + 1; badge.classList.add('visible') }
+        if (badge) {
+            badge.textContent = (parseInt(badge.textContent) || 0) + 1
+            badge.style.display = 'flex'
+        }
+        const bnavBadge = document.getElementById('bnav-badge-messagerie')
+        if (bnavBadge) {
+            bnavBadge.textContent = (parseInt(bnavBadge.textContent) || 0) + 1
+            bnavBadge.style.display = 'flex'
+        }
     }
 })
 
-// ── Permissions sidebar ──────────────────────────────────────────────────────
+// ── Badge courriel (sidebar drawer) ──────────────────────────────
+window.addEventListener('sidebar_courriel_count', (e) => {
+    const count = e.detail?.count || 0
+    const el = document.getElementById('sidebar-count-courriel')
+    if (!el) return
+    if (count > 0) { el.textContent = count; el.style.display = 'flex' }
+    else { el.textContent = ''; el.style.display = 'none' }
+})
+
+// ── Permissions ──────────────────────────────────────────────────
 function appliquerPermissions() {
-    const btnAdmin = document.getElementById('btn-nav-admin')
-    const btnPo = document.getElementById('btn-nav-po')
+    const btnAdmin       = document.getElementById('btn-nav-admin')
+    const btnPo          = document.getElementById('btn-nav-po')
     const btnSoumissions = document.getElementById('btn-nav-soumissions')
-    const btnCourriel = document.getElementById('btn-nav-courriel')
-    if (btnAdmin) btnAdmin.classList.toggle('hidden', !hasPermission('view_admin'))
-    if (btnPo) btnPo.classList.toggle('hidden', !hasPermission('access_po_tab'))
+    const btnCourriel    = document.getElementById('btn-nav-courriel')
+    if (btnAdmin)       btnAdmin.classList.toggle('hidden', !hasPermission('view_admin'))
+    if (btnPo)          btnPo.classList.toggle('hidden', !hasPermission('access_po_tab'))
     if (btnSoumissions) btnSoumissions.classList.toggle('hidden', !hasPermission('access_soumissions_tab'))
-    if (btnCourriel) btnCourriel.classList.toggle('hidden', !hasPermission('access_courriel_tab'))
+    if (btnCourriel)    btnCourriel.classList.toggle('hidden', !hasPermission('access_courriel_tab'))
 }
 
-// ── Permissions updated (admin) ──────────────────────────────────────────────
 window.addEventListener('permissions_updated', async () => {
-    // Invalider le cache des rôles et le recharger depuis la DB
     await reloadRolesConfig()
     appliquerPermissions()
 })
 
-// ── PWA shortcuts (?view=factures) ──────────────────────────────────────────
+// ── PWA shortcuts ─────────────────────────────────────────────────
 function handlePWAShortcut() {
     const v = new URLSearchParams(window.location.search).get('view')
     if (!v) return
-    const map = {
-        factures: 'facture', soumissions: 'soumissions', temps: 'feuilleTemps',
-        feuilles: 'feuilleTemps', messagerie: 'messagerie', courriel: 'courriel',
-        calendrier: 'calendrier', clients: 'clients', client: 'clients',
-        po: 'po', outils: 'outils', admin: 'admin', profil: 'profil', parametres: 'profil'
-    }
+    const map = { factures:'facture', soumissions:'soumissions', temps:'feuilleTemps', feuilles:'feuilleTemps', messagerie:'messagerie', courriel:'courriel', calendrier:'calendrier', clients:'clients', client:'clients', po:'po', outils:'outils', admin:'admin', profil:'profil', parametres:'profil' }
     const target = map[v.toLowerCase()]
     if (!target) return
     const btn = document.querySelector(`.nav-btn[data-view="${target}"]`)
     if (btn && !btn.classList.contains('hidden')) btn.click()
 }
 
-// ── Toast global ─────────────────────────────────────────────────────────────
+// ── Toast global ──────────────────────────────────────────────────
 window.showToast = function(msg, type = 'info', duration = 3000) {
     if (type !== 'error' && type !== 'warning' && type !== 'success') return
     const tc = document.getElementById('toast-container')
-    const t = document.createElement('div')
+    const t  = document.createElement('div')
     t.className = `shared-toast ${type}`
     t.textContent = msg
     tc.appendChild(t)
     requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')))
-    setTimeout(() => {
-        t.classList.remove('show')
-        setTimeout(() => t.remove(), 300)
-    }, duration)
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300) }, duration)
 }
 
-// ── Toggle hamburger mobile depuis les modules (modales ouvertes/fermées) ────
-// Reproduit le comportement postMessage({ type: 'toggle_menu' }) de l'ancienne version
+// ── Modal observer (hide hamburger when modal open) ───────────────
 window.addEventListener('toggle_menu', (e) => {
-    if (window.innerWidth > 768) return  // desktop : hamburger n'existe pas
-    if (e.detail?.action === 'hide') {
-        menuBtn.style.display = 'none'
-    } else {
-        menuBtn.style.display = ''
-    }
-})
-
-// MutationObserver : cache/montre automatiquement le hamburger quand une modale
-// plein-écran s'ouvre/ferme dans un module (classe .open sur .modal-overlay)
-const _modalObserver = new MutationObserver(() => {
     if (window.innerWidth > 768) return
-    const hasOpenModal = document.querySelector(
-        '.modal-overlay.open, .custom-modal-overlay.open, #sig-fd-modal.show'
-    )
-    menuBtn.style.display = hasOpenModal ? 'none' : ''
+    menuBtn.style.display = e.detail?.action === 'hide' ? 'none' : ''
+})
+const _modalObserver = new MutationObserver((mutations) => {
+    if (window.innerWidth > 768) return
+    const relevant = mutations.some(m => m.target !== document.body && (
+        m.target.classList.contains('modal-overlay') ||
+        m.target.classList.contains('custom-modal-overlay') ||
+        m.target.id === 'sig-fd-modal'
+    ))
+    if (!relevant) return
+    const hasOpen = document.querySelector('.modal-overlay.open, .custom-modal-overlay.open, #sig-fd-modal.show')
+    menuBtn.style.display = hasOpen ? 'none' : ''
 })
 _modalObserver.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] })
 
-// ── Connexion online/offline ─────────────────────────────────────────────────
+// ── Connexion ─────────────────────────────────────────────────────
 const connIndicator = document.getElementById('conn-indicator')
-const connText = document.getElementById('conn-text')
+const connText      = document.getElementById('conn-text')
 const offlineBanner = document.getElementById('offline-banner')
-const offlineText = document.getElementById('offline-text')
+const offlineText   = document.getElementById('offline-text')
 let connTimer = null
 
 function showConnStatus(online) {
@@ -535,80 +552,58 @@ function showConnStatus(online) {
     if (online) {
         offlineBanner?.classList.remove('show')
         connTimer = setTimeout(() => connIndicator.classList.remove('show'), 2000)
-    } else {
-        offlineBanner?.classList.add('show')
-    }
+    } else { offlineBanner?.classList.add('show') }
 }
 
 window.addEventListener('online', async () => {
     if (!hasPendingOfflineSaves()) { showConnStatus(true); return }
     const n = getPendingCount()
     if (offlineText) offlineText.textContent = `Reconnecté — synchronisation de ${n} document(s)...`
-    const { flushed, failed } = await flushOfflineQueue(
-        async (table, payload) => supabase.from(table).upsert(payload)
-    )
+    const { flushed, failed } = await flushOfflineQueue(async (table, payload) => supabase.from(table).upsert(payload))
     showConnStatus(true)
     if (flushed > 0) window.showToast(`${flushed} document(s) synchronisé(s) avec succès.`, 'success', 4000)
-    if (failed > 0) window.showToast(`${failed} synchronisation(s) échouée(s). Ouvrez et sauvegardez manuellement.`, 'error', 6000)
+    if (failed > 0)  window.showToast(`${failed} synchronisation(s) échouée(s). Ouvrez et sauvegardez manuellement.`, 'error', 6000)
     if (offlineText) offlineText.textContent = 'Hors ligne — les modifications sont sauvegardées localement'
 })
-
 window.addEventListener('offline', () => showConnStatus(false))
 
-// ── Mode maintenance live (admin toggle → tous les users connectés) ───────────
+// ── Maintenance toggle ─────────────────────────────────────────────
 window.addEventListener('toggle_maintenance', (e) => {
     const active = e.detail?.active
-    const maintenanceScreen = document.getElementById('maintenance-screen')
-    if (!maintenanceScreen) return
-    if (active) {
-        // A0 n'est jamais bloqué par la maintenance
-        if (currentRole === 'A0') return
-        maintenanceScreen.style.display = 'flex'
-        menuBtn.style.display = 'none'
-    } else {
-        maintenanceScreen.style.display = 'none'
-        if (window.innerWidth <= 768) menuBtn.style.display = 'flex'
-    }
+    const ms = document.getElementById('maintenance-screen')
+    if (!ms) return
+    if (active) { if (currentRole === 'A0') return; ms.style.display = 'flex'; menuBtn.style.display = 'none' }
+    else { ms.style.display = 'none'; if (window.innerWidth <= 768) menuBtn.style.display = 'flex' }
 })
 
-// ── Cascade formations (Profil → Accueil + Calendrier rechargent) ─────────────
+// ── Formations cascade ─────────────────────────────────────────────
 window.addEventListener('formations_updated', () => {
-    // Si l'accueil ou le calendrier est actuellement affiché, forcer un rechargement
-    const view = currentView
-    if (view === 'accueil' || view === 'calendrier') {
-        navigateTo(view)
-    }
+    if (currentView === 'accueil' || currentView === 'calendrier') navigateTo(currentView)
 })
 
-// ── Mode signature plein écran (modules → index.html) ─────────────────────────
+// ── Signature plein écran ──────────────────────────────────────────
 window.addEventListener('signature_mode', (e) => {
-    const action = e.detail?.action
-    if (action === 'enter') {
+    const topbar = document.getElementById('app-topbar')
+    if (e.detail?.action === 'enter') {
         document.body.classList.add('signature-mode-active')
         menuBtn.classList.add('hide')
+        if (topbar) topbar.style.display = 'none'
     } else {
         document.body.classList.remove('signature-mode-active')
         menuBtn.classList.remove('hide')
+        if (topbar) topbar.style.display = ''
     }
 })
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// ── Boot ───────────────────────────────────────────────────────────
 async function boot() {
     try {
-        // Vérifier la session SANS appeler getUser() qui peut causer des locks
         const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
-            window.location.replace('/login.html')
-            return
-        }
+        if (!session) { window.location.replace('/login.html'); return }
 
         const user = await loadSession()
-        if (!user) {
-            window.location.replace('/login.html')
-            return
-        }
+        if (!user) { window.location.replace('/login.html'); return }
 
-        // Vérifier maintenance
         if (currentRole !== 'A0') {
             const { data: param } = await supabase.from('parametres_globaux').select('valeur').eq('cle', 'mode_maintenance').maybeSingle()
             if (param?.valeur === 'true') {
@@ -621,93 +616,63 @@ async function boot() {
         }
 
         appliquerPermissions()
-
-        // Surveiller l'expiration de session — redirige vers login si SIGNED_OUT
+        updateTopbarUser()
         watchSession(() => { window.location.replace('/login.html') })
-
         if (!navigator.onLine) showConnStatus(false)
 
         mainLoader.style.opacity = '0'
         setTimeout(() => mainLoader.style.display = 'none', 400)
 
         handlePWAShortcut()
+        initGlobalSearch(navigateTo)
+        initNotifications(navigateTo)
         if (currentView === 'accueil') await navigateTo('accueil')
 
-    } catch (e) {
-        console.warn('[Boot] Erreur critique:', e?.message)
-        // NE PAS rediriger ici — évite la boucle infinie
-    }
+    } catch (e) { console.warn('[Boot]', e?.message) }
 }
 
 boot()
 
-// ── Bannière installation iOS ─────────────────────────────────────────────────
+// ── iOS Install banner ─────────────────────────────────────────────
 ;(() => {
     const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
     const isStandalone = navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches
-    const dismissed = localStorage.getItem('ios_install_dismissed')
-    if (!isIOS || isStandalone || dismissed) return
-
+    if (!isIOS || isStandalone || localStorage.getItem('ios_install_dismissed')) return
     const banner = document.getElementById('ios-install-banner')
     if (!banner) return
-    // Afficher après 3s pour laisser l'app charger
     setTimeout(() => { banner.style.display = 'flex' }, 3000)
-
     document.getElementById('ios-install-close').addEventListener('click', () => {
         banner.style.display = 'none'
         localStorage.setItem('ios_install_dismissed', '1')
     })
 })()
 
-// ── Overlay portrait (redresse le téléphone) — uniquement après signature ──────
+// ── Portrait hint ──────────────────────────────────────────────────
 ;(() => {
     const hint = document.getElementById('portrait-hint')
     if (!hint) return
-
     let wasOpen = false
-
     function onSigChange() {
         const sigOpen = document.getElementById('sig-fd-modal')?.classList.contains('show')
-        const isMobile = window.innerWidth < 900 || window.matchMedia('(pointer: coarse)').matches
         const isLandscape = window.innerWidth > window.innerHeight
-        if (sigOpen) {
-            wasOpen = true
-            hint.classList.remove('show')
-        } else if (wasOpen) {
-            wasOpen = false
-            if (isMobile && isLandscape) hint.classList.add('show')
-        }
+        const isMobile = window.innerWidth < 900
+        if (sigOpen) { wasOpen = true; hint.classList.remove('show') }
+        else if (wasOpen) { wasOpen = false; if (isMobile && isLandscape) hint.classList.add('show') }
     }
-
-    // Cacher l'overlay dès que l'utilisateur redresse le téléphone
-    function hideIfPortrait() {
-        if (window.innerWidth <= window.innerHeight) hint.classList.remove('show')
-    }
+    function hideIfPortrait() { if (window.innerWidth <= window.innerHeight) hint.classList.remove('show') }
     window.addEventListener('resize', hideIfPortrait)
     window.addEventListener('orientationchange', () => setTimeout(hideIfPortrait, 150))
-
-    const attachObserver = (modal) => new MutationObserver(onSigChange).observe(modal, { attributes: true, attributeFilter: ['class'] })
-
+    const attachObs = (modal) => new MutationObserver(onSigChange).observe(modal, { attributes: true, attributeFilter: ['class'] })
     const sigModal = document.getElementById('sig-fd-modal')
-    if (sigModal) {
-        attachObserver(sigModal)
-    } else {
-        new MutationObserver((_, obs) => {
-            const m = document.getElementById('sig-fd-modal')
-            if (m) { attachObserver(m); obs.disconnect() }
-        }).observe(document.body, { childList: true, subtree: true })
-    }
+    if (sigModal) attachObs(sigModal)
+    else new MutationObserver((_, obs) => { const m = document.getElementById('sig-fd-modal'); if (m) { attachObs(m); obs.disconnect() } }).observe(document.body, { childList: true, subtree: true })
 })()
 
-// Nouveau service worker activé → recharger immédiatement pour les nouveaux assets
+// ── SW update ──────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload()
-    })
-    // Forcer la vérification de mise à jour à chaque ouverture
+    navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload())
     navigator.serviceWorker.ready.then(reg => reg.update())
 }
 </script>
-
 </body>
 </html>

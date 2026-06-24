@@ -1,5 +1,4 @@
 // src/views/facture.js
-// Migré fidèlement depuis code_facture/code_facture.html
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
@@ -13,7 +12,7 @@ import { withRetry } from '../shared/withRetry.js'
 import { enqueueOfflineSave } from '../shared/offlineQueue.js'
 import { createZoomController } from '../shared/zoom.js'
 
-// ── État local ──────────────────────────────────────────────────────────────
+// ── État local ───────────────────────────────────────────────────────────────
 let myUserName = 'Employé'
 let currentInvTab = 'mine'
 let invoicesData = []
@@ -23,104 +22,135 @@ let hasMore = false
 let currentInvoiceId = null
 let autosave = null
 let confirmCallback = null
-let zoomCtrl = null        // contrôleur zoom interne (zoom.js)
+let zoomCtrl = null
 let isPaperMode = false
 let paperPages = []
 let invoicePageCount = 0
 let globalSigCount = 0
 let archiveSelection = new Set()
-// Références aux window listeners pour cleanup propre
 let _onResizeFact = null
 let _onClickFact = null
+let _searchDebounce = null
 let clientNameList = []
 
-// ── Render principal ────────────────────────────────────────────────────────
+// ── Render principal ──────────────────────────────────────────────────────────
 export async function render(container) {
     myUserName = currentProfil?.prenom_nom || 'Employé'
     currentInvTab = 'mine'
+    currentInvoiceId = null
+    isPaperMode = false
+    paperPages = []
+    invoicePageCount = 0
+    globalSigCount = 0
+    archiveSelection = new Set()
+    stopAutosave()
 
     container.innerHTML = `
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
-        .fact-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        .badge-status { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
-        .b-brouillon { background: rgba(136,136,136,0.15); color: #888; }
-        .b-envoye   { background: rgba(52,152,219,0.15);  color: var(--btn-blue); }
-        .b-traite   { background: rgba(156,39,176,0.15);  color: var(--btn-purple); }
-        .b-paye     { background: rgba(40,167,69,0.15);   color: var(--btn-green); }
-        .b-renvoye  { background: rgba(253,126,20,0.15);  color: var(--btn-orange); }
-        .b-paper { background: rgba(91,192,235,0.15); color: #5bc0eb; border: 1px solid rgba(91,192,235,0.4); }
+        .fact-main { background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; font-family: var(--font-sans); }
+
+        /* ── Badges statut (extra — les globaux sont dans styles.css) ── */
+        .b-paper     { background: rgba(91,192,235,0.14); color: #5bc0eb; }
         .badges-wrap { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-        #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; }
-        .dash-title h1 { margin: 0; font-size: 28px; color: white; }
-        .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .toolbar { display: flex; flex-direction: row; align-items: center; gap: 10px; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
-        .toolbar .select-wrap { min-width: 200px; flex-shrink: 0; }
+
+        /* ── Tabs ── */
+        .tabs-container { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tab-count { background: rgba(255,255,255,0.12); color: inherit; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+        .tab.active .tab-count { background: rgba(26,27,34,0.14); }
+
+        /* ── En-tête colonnes ── */
+        .inv-list-header { display: grid; grid-template-columns: 100px 1fr 150px 90px 38px; gap: 14px; padding: 0 18px; margin-bottom: -2px; margin-top: -14px; }
+        #inv-compteur { margin-top: -14px; }
+        .inv-list-header span { font-size: 10.5px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.6px; }
+        .inv-list-header .inv-h-right { text-align: right; }
+
+        /* ── Toolbar ── */
+        .toolbar { display: flex; flex-direction: row; align-items: center; gap: 10px; background: var(--bg-panel); border: 1px solid var(--border); padding: 10px; border-radius: var(--r-xl,14px); }
+        .toolbar .select-wrap { min-width: 180px; flex-shrink: 0; }
         .select-wrap { position: relative; display: block; }
-        .select-wrap select { width: 100%; -webkit-appearance: none; appearance: none; padding: 14px 42px 14px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; font-family: inherit; }
-        .select-wrap select:focus { border-color: var(--accent); }
-        .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-        .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin: 1px 0; padding-left: 10px; }
+        .select-wrap select { width: 100%; -webkit-appearance: none; appearance: none; padding: 10px 36px 10px 14px; background: var(--bg-sunken,#15161c); border: 1px solid var(--border); color: #fff; border-radius: var(--r-lg,10px); font-size: 13px; outline: none; cursor: pointer; font-family: inherit; transition: border-color var(--t-base); }
+        .select-wrap select:focus { border-color: var(--brand-yellow); }
+        .select-wrap .sel-chevron { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 16px; height: 16px; stroke: var(--text-faint); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        .discrete-stats { color: var(--text-faint); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 4px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
-        .search-box input:focus { border-color: var(--accent); }
-        .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
-        .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
-        .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
-        .btn-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
-        .invoice-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px; }
-        .invoice-item { background: var(--bg-panel); padding: 12px 20px; border-radius: 10px; display: grid; grid-template-columns: 80px 1fr 140px 130px 100px 44px; align-items: center; gap: 15px; cursor: pointer; border: 1px solid transparent; border-left: 4px solid transparent; transition: 0.2s; }
-        .invoice-item:hover { transform: translateX(5px); background: #343542; border-left-color: var(--accent); background-color: #30313c; border-color: #555;}
-        .inv-id { font-weight: bold; color: var(--accent); font-size: 15px; }
-        .inv-client { font-weight: bold; font-size: 16px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .inv-author { font-size: 14px; color: #888; font-style: italic; }
-        .inv-status { display: flex; align-items: center; }
-        .inv-date { color: #aaa; font-size: 14px; text-align: right; }
-        .inv-actions { display: flex; justify-content: flex-end; }
-        .btn-icon { background: #444; border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; }
-        .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; }
-        .btn-delete:hover { background: var(--btn-red); color: white; }
+        .search-box input { width: 100%; background: var(--bg-sunken,#15161c); border: 1px solid var(--border); color: #fff; padding: 10px 14px 10px 38px; border-radius: var(--r-lg,10px); font-size: 14px; outline: none; transition: border-color var(--t-base); font-family: inherit; }
+        .search-box input:focus { border-color: var(--brand-yellow); }
+        .search-icon { position: absolute; left: 12px; color: var(--text-faint); pointer-events: none; display: flex; align-items: center; }
+        .search-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+        /* ── Liste factures ── */
+        .invoice-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 30px; }
+        .invoice-item { background: var(--bg-panel); padding: 12px 18px; border-radius: var(--r-lg,10px); display: grid; grid-template-columns: 100px 1fr 150px 90px 38px; align-items: center; gap: 14px; cursor: pointer; border: 1px solid var(--border); border-left: 3px solid transparent; transition: background var(--t-base), border-color var(--t-base), transform var(--t-fast); }
+        .invoice-item:hover { transform: translateX(3px); background: var(--bg-panel-2); border-left-color: var(--brand-yellow); }
+        .inv-id          { font-weight: 700; color: var(--brand-yellow); font-size: 13px; font-family: var(--font-mono); }
+        .inv-col-client  { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .inv-client      { font-weight: 700; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .inv-author      { font-size: 12px; color: var(--text-faint); }
+        .inv-status      { display: flex; align-items: center; }
+        .inv-date        { color: var(--text-muted); font-size: 13px; text-align: right; }
+        .inv-actions     { display: flex; justify-content: flex-end; }
+        .btn-icon   { background: var(--bg-panel-2); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: var(--r-md,8px); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-muted); transition: all var(--t-base); }
+        .btn-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .btn-delete { background: var(--tint-red); color: var(--status-red); border-color: transparent; }
+        .btn-delete:hover { background: var(--status-red); color: #fff; }
+
+        /* Archive selection */
         .arc-selectable { position: relative; padding-left: 48px !important; }
-        .arc-check { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; border: 2px solid #444; background: transparent; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s; pointer-events: none; }
-        .arc-selected .arc-check { border-color: var(--btn-blue,#007bff); background: var(--btn-blue,#007bff); }
-        .arc-selected { background: rgba(0,120,255,0.05) !important; border-left-color: var(--btn-blue,#007bff) !important; }
+        .arc-check { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-strong,#3d3e48); background: transparent; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast); pointer-events: none; }
+        .arc-selected .arc-check { border-color: var(--status-blue); background: var(--status-blue); }
+        .arc-selected { background: rgba(59,130,246,0.05) !important; border-left-color: var(--status-blue) !important; }
+
+        /* Load more */
+        .load-more-btn { width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--r-lg,10px); cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 4px; font-family: inherit; transition: border-color var(--t-base); }
+        .load-more-btn:hover { border-color: var(--brand-yellow); color: var(--brand-yellow); }
+
+        /* ── Éditeur ── */
         #view-editor { display: none; flex-direction: column; height: 100%; }
-        .top-bar { height: auto; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; background: rgba(30,31,38,0.95); border-bottom: 1px solid #333; z-index: 101; flex-wrap: wrap; }
-        .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
-        .action-btn:hover { background: var(--accent-hover); transform: translateY(-1px); background-color: var(--accent-hover);}
-        .action-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-back { background: #6c757d !important; color: white !important; }
-        .btn-save { background: var(--btn-green) !important; color: white !important; }
-        .btn-send { background: var(--btn-blue) !important; color: white !important; }
-        .btn-unlock { background: var(--btn-orange) !important; color: white !important; }
-        .btn-return { background: var(--btn-red) !important; color: white !important; }
-        @media (min-width: 769px) and (max-width: 1024px) {
-            #view-dashboard { padding: 20px; }
-            .toolbar { flex-direction: row; align-items: center; }
-            .select-wrap { min-width: 180px; flex-shrink: 0; }
-            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
-            .inv-id { grid-area: id; font-size: inherit; } .inv-client { grid-area: client; font-size: inherit; } .inv-author { grid-area: author; font-size: inherit; }
-            .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; font-size: inherit; }
-            .inv-actions { position: absolute; top: 16px; right: 16px; }
-        }
+        .top-bar { height: auto; min-height: 70px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; background: var(--bg-panel); border-bottom: 1px solid var(--border); z-index: 101; flex-wrap: wrap; }
+        .action-btn { background: var(--brand-yellow); color: var(--text-on-yellow,#1a1b22); border: 1px solid transparent; padding: 8px 14px; border-radius: var(--r-pill,999px); font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 7px; white-space: nowrap; transition: all var(--t-base); font-family: inherit; }
+        .action-btn:hover { background: var(--brand-yellow-hover); }
+        .action-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .btn-back   { background: var(--bg-panel-2) !important; color: var(--text-muted) !important; border: 1px solid var(--border) !important; }
+        .btn-back:hover { background: var(--bg-panel-3) !important; color: #fff !important; }
+        .btn-send   { background: var(--status-green)  !important; color: #fff !important; border-color: transparent !important; }
+        .btn-send:hover { background: #16a34a !important; }
+        .btn-paper  { background: #e8730a !important; color: #fff !important; border-color: transparent !important; }
+        .btn-unlock { background: var(--status-orange) !important; color: #1a1b22 !important; border-color: transparent !important; }
+        .btn-return { background: var(--status-red) !important; color: #fff !important; border-color: transparent !important; }
         @media (max-width: 1024px) {
-            .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+            .top-bar { padding: 10px 80px 10px 10px; gap: 8px; height: 60px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
             .top-bar::-webkit-scrollbar { display: none; }
-            .top-bar .action-btn, .office-status-panel { flex-shrink: 0; width: auto; margin-bottom: 0; }
-            .top-bar .action-btn { font-size: 11px; padding: 8px 15px; }
+            .top-bar .action-btn, .office-status-panel { flex-shrink: 0; font-size: 11px; padding: 7px 12px; }
         }
-        .office-status-panel { background: #1a1b23; border: 1px solid #555; padding: 9px 20px; border-radius: 50px; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; cursor: pointer; color: white; font-weight: bold; font-size: 14px; }
-        .office-status-panel svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .status-dropdown { position: fixed; background: rgba(43,44,54,0.98); backdrop-filter: blur(10px); border: 1px solid #555; border-radius: 16px; overflow: hidden; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 9999; min-width: 200px; flex-direction: column; }
+
+        /* Office status panel */
+        .office-status-panel { background: var(--bg-sunken,#15161c); border: 1px solid var(--border); padding: 8px 16px; border-radius: var(--r-pill,999px); display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; cursor: pointer; color: #fff; font-weight: 600; font-size: 12px; transition: background var(--t-base); }
+        .office-status-panel:hover { background: var(--bg-panel-2); }
+        .office-status-panel svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .status-dropdown { position: fixed; background: var(--bg-panel-2); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: var(--r-xl,14px); overflow: hidden; display: none; box-shadow: var(--shadow-lg); z-index: 9999; min-width: 200px; flex-direction: column; }
         .status-dropdown.show { display: flex; }
-        .status-option { padding: 16px 20px; color: white; cursor: pointer; transition: 0.2s; font-size: 15px; font-weight: bold; border-bottom: 1px solid #3a3b46; }
-        .status-option:hover { background: #3a3b46; color: var(--accent); }
-        .correction-banner { background: rgba(255,77,77,0.15); border: 1px dashed var(--btn-red); padding: 15px; margin: 20px auto 0; max-width: 8.5in; border-radius: 8px; color: white; line-height: 1.5; font-size: 14px; display: flex; gap: 10px; }
+        .status-option { padding: 14px 18px; color: var(--text-muted); cursor: pointer; transition: background var(--t-fast); font-size: 13px; font-weight: 600; border-bottom: 1px solid var(--border); }
+        .status-option:last-child { border-bottom: none; }
+        .status-option:hover { background: var(--bg-panel-3); color: #fff; }
+
+        /* ── Scroll/zoom ── */
         .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: none; }
         #invoice-container { display: block; width: 8.5in; transform-origin: 0 0; padding-bottom: 50px; }
+        .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel-2); padding: 5px 14px; border-radius: 999px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow-md); z-index: 2000; border: 1px solid var(--border); }
+        .zoom-controls button { background: var(--brand-yellow); border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1a1b22; }
+        .zoom-controls span { color: #fff; font-size: 12px; font-weight: 700; min-width: 44px; text-align: center; }
+
+        /* Bannière correction */
+        .correction-banner { background: var(--tint-red); border: 1px solid var(--status-red); border-radius: var(--r-lg,10px); padding: 12px 16px; margin: 0 0 14px; color: var(--status-red); font-size: 13px; display: flex; align-items: flex-start; gap: 10px; }
+
+        /* Paper progress */
+        #paper-progress { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: var(--bg-panel); color: #fff; padding: 24px 36px; border-radius: var(--r-xl,14px); box-shadow: var(--shadow-lg); z-index: 9999; text-align: center; display: none; border: 1px solid var(--border); }
+        #paper-progress.show { display: block; }
+        #paper-progress .pp-spinner { width: 32px; height: 32px; margin: 0 auto 12px; border: 3px solid var(--border); border-top-color: var(--status-blue); border-radius: 50%; animation: pp-spin 0.8s linear infinite; }
+        @keyframes pp-spin { to { transform: rotate(360deg); } }
+
+        /* ── Page papier ── */
         .page { width: 8.5in; height: 11in; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 auto 20px; color: black; padding: 0.25in; flex-shrink: 0; }
         input { outline: none; border-radius: 0; }
         input:focus { background-color: transparent !important; border-bottom: 2px solid #000 !important; }
@@ -160,56 +190,83 @@ export async function render(container) {
         .sig-text { font-size: 10px; font-weight: bold; margin-top: 2px; }
         .invoice-num-box { text-align: right; padding-bottom: 5px; display: flex; justify-content: flex-end; align-items: flex-end; }
         .red-invoice-input { color: #dc3545; font-weight: bold; font-size: 18px; font-family: 'Courier New', monospace; text-align: right; border: none; background: var(--blue-bg); width: 100%; margin: 0; padding: 0 5px; }
-        .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: rgba(30,31,38,0.95); padding: 5px 10px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: 1px solid #555; }
-        .zoom-controls button { background: var(--accent); border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 18px; cursor: pointer; color: #1e1f26; display: flex; align-items: center; justify-content: center; }
-        .zoom-controls span { color: white; font-size: 12px; font-weight: bold; min-width: 45px; text-align: center; }
-        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
+
+        /* ── Modales ── */
+        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px); box-sizing: border-box; }
         .custom-modal-overlay.open { display: flex; }
-        .custom-modal-card { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 12px; border: 1px solid #555; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
-        .custom-modal-title { font-size: 20px; color: var(--btn-red); margin-bottom: 15px; font-weight: bold; }
-        .custom-modal-msg { color: var(--text-main); margin-bottom: 25px; font-size: 15px; line-height: 1.4; }
+        .custom-modal-card { background: var(--bg-panel); width: 360px; padding: 24px; border-radius: var(--r-xl,14px); border: 1px solid var(--border); text-align: center; box-shadow: var(--shadow-lg); }
+        .custom-modal-title { font-size: 17px; color: var(--brand-yellow); margin-bottom: 14px; font-weight: 700; }
+        .custom-modal-msg { color: var(--text-muted); margin-bottom: 22px; font-size: 14px; line-height: 1.5; }
         .custom-modal-actions { display: flex; justify-content: center; gap: 10px; }
-        .btn-modal-cancel { background: #444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-        .btn-modal-confirm { background: var(--btn-red); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-modal-ok { background: var(--accent); color: black; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        /* Mode papier */
-        .paper-mode-container { background: #fff; margin: 20px auto; max-width: 800px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow: hidden; }
-        .paper-mode-header { display: flex; gap: 0; background: #fff; border-bottom: 1px solid #e0e0e0; }
-        .paper-mode-header .pmh-field { flex: 1; padding: 10px 14px; border-right: 1px solid #e8e8e8; min-width: 0; }
-        .paper-mode-header .pmh-field:last-child { border-right: none; }
-        .paper-mode-header label { display: block; font-size: 9px; color: #888; font-weight: 700; letter-spacing: 0.8px; margin-bottom: 4px; text-transform: uppercase; }
-        .paper-mode-header input { width: 100%; border: none; outline: none; background: transparent; font-size: 13px; color: #222; font-family: Arial, sans-serif; box-sizing: border-box; }
-        .paper-mode-header input.paper-numero-input { color: #dc3545; font-weight: 700; }
-        .paper-mode-body { padding: 30px 20px; background: #fff; min-height: 400px; }
-        .paper-drop-zone { background: #fff; color: #222; border: 1.5px dashed #c4d4dd; border-radius: 14px; padding: 24px 20px; text-align: center; max-width: 360px; margin: 60px auto; }
-        .paper-drop-zone .pdz-text { color: #333; font-weight: 600; font-size: 13px; margin-bottom: 18px; line-height: 1.4; }
-        .paper-drop-zone .pdz-actions { display: flex; align-items: center; justify-content: center; gap: 12px; }
-        .paper-drop-zone .pdz-camera { background: #cfe6f5; color: #2a7da8; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
-        .paper-drop-zone .pdz-camera svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .paper-drop-zone .pdz-deposer { background: #5bc0eb; color: white; border: none; padding: 12px 22px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
-        .paper-pages-list { padding: 16px 20px; background: #f8f9fa; border-top: 1px solid #e8e8e8; }
-        .paper-page-display { position: relative; background: #fff; border-radius: 6px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.15); border: 1px solid #e0e0e0; }
-        .paper-page-display img { width: 100%; height: auto; display: block; }
-        .paper-page-display .ppd-num { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; pointer-events: none; }
-        .paper-add-page-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: calc(100% - 40px); margin: 16px 20px; padding: 14px; background: rgba(91,192,235,0.08); border: 1.5px dashed #5bc0eb; border-radius: 10px; color: #5bc0eb; font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit; }
-        .paper-add-page-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-        #paper-progress { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #1f2027; color: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 9999; text-align: center; display: none; border: 1px solid #3a3b46; }
-        #paper-progress.show { display: block; }
-        #paper-progress .pp-spinner { width: 32px; height: 32px; margin: 0 auto 12px; border: 3px solid #444; border-top-color: #5bc0eb; border-radius: 50%; animation: pp-spin 0.8s linear infinite; }
-        @keyframes pp-spin { to { transform: rotate(360deg); } }
-        @media (max-width: 768px) {
-            #view-dashboard { padding: 15px; }
-            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
-            .dash-title { padding-right: 80px; width: 100%; }
-            .dash-header .action-btn { width: 100%; justify-content: center; font-size: 14px; }
-            .tabs-container { flex-direction: column; width: 100%; }
-            .btn-tab { width: 100%; justify-content: center; }
-            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; border-left: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
-            .inv-id { grid-area: id; } .inv-client { grid-area: client; } .inv-author { grid-area: author; } .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; }
-            .inv-actions { position: absolute; top: 16px; right: 16px; }
-            .zoom-controls { display: none !important; }
-        }
+        .btn-modal-cancel  { background: var(--bg-panel-2); color: var(--text-muted); border: 1px solid var(--border); padding: 10px 18px; border-radius: var(--r-lg,10px); cursor: pointer; font-weight: 600; font-size: 13px; font-family: inherit; }
+        .btn-modal-confirm { background: var(--status-red); color: #fff; border: none; padding: 10px 18px; border-radius: var(--r-lg,10px); cursor: pointer; font-weight: 700; font-size: 13px; font-family: inherit; }
+        .btn-modal-ok { background: var(--brand-yellow); color: #1a1b22; border: none; padding: 10px 28px; border-radius: var(--r-lg,10px); cursor: pointer; font-weight: 700; font-size: 13px; font-family: inherit; }
+
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            #view-dashboard { padding: 20px; }
+            .invoice-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "clientcell clientcell" "status date"; gap: 4px 12px; padding: 16px; position: relative; }
+            .inv-id { grid-area: id; } .inv-col-client { grid-area: clientcell; }
+            .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; }
+            .inv-actions { position: absolute; top: 14px; right: 14px; }
+        }
+        /* ── Mobile header ── */
+        .fact-mobile-header { display: none; align-items: center; gap: 10px; }
+        .fact-mobile-title { flex: 1; font-size: 22px; font-weight: 700; color: #fff; margin: 0; }
+        .fact-mobile-menu-btn { background: none; border: none; color: var(--text-muted); padding: 4px; cursor: pointer; display: flex; align-items: center; }
+        .fact-mobile-menu-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+        .fact-mobile-add-btn { background: var(--brand-yellow); border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .fact-mobile-add-btn svg { width: 18px; height: 18px; stroke: #1a1b22; fill: none; stroke-width: 2.5; }
+        .fact-mobile-stats { display: none; font-size: 12px; color: var(--text-faint); margin-top: -6px; }
+
+        @media (max-width: 768px) {
+            /* ── Layout général ── */
+            #view-dashboard { padding: 16px 16px 12px; gap: 12px; }
+            .fact-mobile-header { display: flex; align-items: center; }
+            .fact-mobile-title { font-size: 26px; font-weight: 800; }
+            .fact-mobile-add-btn { width: 42px; height: 42px; border-radius: 50%; }
+            .fact-mobile-add-btn svg { width: 20px; height: 20px; }
+            .fact-mobile-stats { display: block; font-size: 13px; color: var(--text-faint); margin-top: -4px; }
+            .view-header { display: none; }
+            .inv-list-header { display: none; }
+            #inv-compteur { display: none; }
+            .zoom-controls { display: none !important; }
+
+            /* ── Toolbar mobile : search pleine largeur ── */
+            .toolbar { padding: 0; background: transparent; border: none; gap: 8px; align-items: center; }
+            .search-box input { border-radius: var(--r-xl,14px); font-size: 14px; padding: 12px 14px 12px 40px; }
+            /* ── Filtre statut compact (visible seulement sur onglet Toutes) ── */
+            #statusFilterWrap { display: none; width: 42px; flex-shrink: 0; }
+            #statusFilterWrap select { width: 42px; height: 42px; padding: 0; color: transparent; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--r-xl,14px); -webkit-appearance: none; appearance: none; cursor: pointer; }
+            #statusFilterWrap select option { color: var(--text-main); background: var(--bg-panel); }
+            #statusFilterWrap .sel-chevron { right: 50%; transform: translate(50%,-50%); }
+            /* ── Tabs : pills avec compteurs ── */
+            #invoice-tabs { display: flex !important; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: 8px; scrollbar-width: none; }
+            #invoice-tabs::-webkit-scrollbar { display: none; }
+            #invoice-tabs .tab { padding: 7px 16px; font-size: 13px; border-radius: 999px; cursor: pointer; background: var(--bg-panel-2, #2b2c36); border: 1.5px solid var(--border-strong, #3d3e48); color: var(--text-muted); gap: 6px; }
+            #invoice-tabs .tab.active { background: #fff; color: #1a1b22; border-color: #fff; font-weight: 700; }
+            #invoice-tabs .tab svg { display: none; }
+            #invoice-tabs .tab .tab-count { background: rgba(0,0,0,0.12); color: inherit; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+            #invoice-tabs .tab.active .tab-count { background: rgba(26,27,34,0.14); }
+
+            /* ── Carte facture mobile ── */
+            .invoice-item {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                grid-template-rows: auto auto auto;
+                gap: 2px 8px;
+                padding: 14px 16px;
+                border-radius: var(--r-xl,14px);
+            }
+            .inv-id    { grid-column: 1; grid-row: 1; align-self: center; font-size: 12px; }
+            .inv-status { grid-column: 2; grid-row: 1; justify-content: flex-end; align-self: start; }
+            .inv-col-client { grid-column: 1; grid-row: 2 / 4; display: flex; flex-direction: column; justify-content: space-between; gap: 2px; }
+            .inv-client { font-size: 15px; font-weight: 700; white-space: normal; }
+            .inv-author { font-size: 12px; margin-top: 2px; }
+            .inv-date  { grid-column: 2; grid-row: 3; text-align: right; font-size: 12px; align-self: end; color: var(--text-faint); }
+            .inv-actions { display: none; }
+        }
     </style>
 
     <svg style="display:none">
@@ -238,32 +295,39 @@ export async function render(container) {
     </svg>
 
     <div class="fact-main">
-        <div id="view-dashboard">
-            <div class="dash-header">
-                <div class="dash-title"><h1>Facturation</h1><p>Création et suivi comptable</p></div>
-                <button class="action-btn" id="btnNewInvoice">
-                    <svg viewBox="0 0 24 24"><use href="#fic-plus"/></svg> Nouvelle Facture
+        <div id="view-dashboard" class="view">
+            <!-- En-tête mobile -->
+            <div class="fact-mobile-header">
+                <button class="fact-mobile-menu-btn" id="fact-menu-btn" aria-label="Menu">
+                    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <h2 class="fact-mobile-title">Factures</h2>
+                <button class="fact-mobile-add-btn" id="btnNewInvoiceMobile" aria-label="Nouvelle facture">
+                    <svg viewBox="0 0 24 24"><use href="#fic-plus"/></svg>
                 </button>
             </div>
+            <div class="fact-mobile-stats" id="fact-mobile-stats"></div>
 
-            <div class="tabs-container" id="invoice-tabs" style="display:none">
-                <button id="tab-mine" class="btn-tab active">
-                    <svg viewBox="0 0 24 24"><use href="#fic-user"/></svg> Mes Factures
-                </button>
-                <button id="tab-all" class="btn-tab">
-                    <svg viewBox="0 0 24 24"><use href="#fic-inbox"/></svg> Boîte de réception
-                </button>
-                <button id="tab-archives" class="btn-tab">
-                    <svg viewBox="0 0 24 24"><use href="#fic-archive"/></svg> Archives
-                </button>
+            <!-- En-tête desktop -->
+            <div class="view-header">
+                <div>
+                    <h1>Factures</h1>
+                    <p class="sub" id="fact-header-stats"></p>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary btn-pill" id="btnNewInvoice">
+                        <svg viewBox="0 0 24 24"><use href="#fic-plus"/></svg>
+                        Nouvelle facture
+                    </button>
+                </div>
             </div>
 
             <div class="toolbar">
                 <div class="search-box">
                     <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-                    <input type="text" id="searchInput" placeholder="Rechercher (Nom, Tél, Adresse...)">
+                    <input type="text" id="searchInput" placeholder="Rechercher (Nom, Tél, Adresse…)">
                 </div>
-                <div class="select-wrap" id="statusFilterWrap" style="display:none">
+                <div class="select-wrap" id="statusFilterWrap">
                     <select id="statusFilter">
                         <option value="">Tous les statuts</option>
                         <option value="envoye">Reçu (À traiter)</option>
@@ -274,7 +338,29 @@ export async function render(container) {
                     <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
             </div>
+
+            <div id="invoice-tabs" style="display:flex;gap:8px;flex-shrink:0;flex-wrap:nowrap;min-height:38px;padding:2px 0">
+                <button id="tab-mine" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;font-size:13px;font-weight:700;border-radius:999px;cursor:pointer;background:#ffffff;color:#1a1b22;border:2px solid #ffffff;white-space:nowrap;font-family:inherit;flex-shrink:0">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Mes factures <span id="tab-count-mine" style="display:none"></span>
+                </button>
+                <button id="tab-all" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;font-size:13px;font-weight:600;border-radius:999px;cursor:pointer;background:#2b2c36;color:#a0a0b0;border:1.5px solid #3d3e48;white-space:nowrap;font-family:inherit;flex-shrink:0">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                    Toutes <span id="tab-count-all" style="display:none"></span>
+                </button>
+                <button id="tab-archives" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;font-size:13px;font-weight:600;border-radius:999px;cursor:pointer;background:#2b2c36;color:#a0a0b0;border:1.5px solid #3d3e48;white-space:nowrap;font-family:inherit;flex-shrink:0">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                    Archives
+                </button>
+            </div>
             <div id="inv-compteur" class="discrete-stats"></div>
+            <div class="inv-list-header">
+                <span>Numéro</span>
+                <span>Client / Auteur</span>
+                <span>Statut</span>
+                <span class="inv-h-right">Date</span>
+                <span></span>
+            </div>
             <div class="invoice-list" id="invoiceListContainer"></div>
         </div>
 
@@ -297,7 +383,7 @@ export async function render(container) {
                 <button class="action-btn btn-send" id="btnSend">
                     <svg viewBox="0 0 24 24"><use href="#fic-send"/></svg> Envoyer au bureau
                 </button>
-                <button class="action-btn" id="btnPaper" style="background:#e8730a;color:white">
+                <button class="action-btn btn-paper" id="btnPaper">
                     <svg viewBox="0 0 24 24" id="btnPaperIcon"><use href="#fic-camera"/></svg>
                     <span id="btnPaperLabel">Facture papier</span>
                 </button>
@@ -332,10 +418,10 @@ export async function render(container) {
 
             <div class="scroll-area" id="scrollArea">
                 <div id="correction-banner" class="correction-banner" style="display:none">
-                    <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:var(--btn-red);fill:none;stroke-width:2;margin-top:3px;flex-shrink:0"><use href="#fic-alert"/></svg>
+                    <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--status-red);fill:none;stroke-width:2;margin-top:2px;flex-shrink:0"><use href="#fic-alert"/></svg>
                     <div>
-                        <strong style="color:var(--btn-red)">Facture renvoyée par le bureau pour correction :</strong><br>
-                        <span id="correction-note-text" style="display:inline-block;margin-top:5px"></span>
+                        <strong style="color:var(--status-red)">Facture renvoyée par le bureau pour correction :</strong><br>
+                        <span id="correction-note-text" style="display:inline-block;margin-top:4px;color:var(--text-muted)"></span>
                     </div>
                 </div>
                 <div id="invoice-container"></div>
@@ -345,7 +431,7 @@ export async function render(container) {
                 <button id="btnZoomOut">−</button>
                 <span id="zoom-level">100%</span>
                 <button id="btnZoomIn">+</button>
-                <button id="btnZoomReset" style="font-size:14px">↺</button>
+                <button id="btnZoomReset" style="font-size:13px">↺</button>
             </div>
         </div>
     </div>
@@ -362,15 +448,16 @@ export async function render(container) {
 
     <!-- Modal retour -->
     <div class="custom-modal-overlay" id="returnModal">
-        <div class="custom-modal-card">
+        <div class="custom-modal-card" style="text-align:left">
             <div class="custom-modal-title">↩️ Renvoyer pour correction</div>
-            <div style="text-align:left;margin-bottom:15px">
-                <label style="color:#aaa;display:block;margin-bottom:10px;font-size:13px;font-weight:bold">Note pour l'employé :</label>
-                <textarea id="returnNote" placeholder="Ex: Il manque le tarif horaire..." style="width:100%;height:100px;background:var(--bg-dark);color:white;border:1px solid var(--border);padding:10px;border-radius:5px;font-family:sans-serif;outline:none;resize:none;box-sizing:border-box"></textarea>
+            <div style="margin-bottom:14px">
+                <label class="field-label">Note pour l'employé</label>
+                <textarea id="returnNote" placeholder="Ex: Il manque le tarif horaire…"
+                    style="width:100%;height:100px;background:var(--bg-sunken,#15161c);color:#fff;border:1px solid var(--border);padding:12px;border-radius:var(--r-lg,10px);font-family:inherit;font-size:14px;outline:none;resize:none;box-sizing:border-box"></textarea>
             </div>
-            <div style="display:flex;justify-content:center;gap:10px;margin-top:15px">
+            <div style="display:flex;justify-content:center;gap:10px;margin-top:14px">
                 <button class="btn-modal-cancel" id="btnCloseReturnModal">Annuler</button>
-                <button style="background:var(--btn-red);color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold" id="btnExecuteReturn">Renvoyer la facture</button>
+                <button style="background:var(--status-red);color:#fff;border:none;padding:10px 18px;border-radius:var(--r-lg,10px);cursor:pointer;font-weight:700;font-size:13px;font-family:inherit" id="btnExecuteReturn">Renvoyer la facture</button>
             </div>
         </div>
     </div>
@@ -378,7 +465,7 @@ export async function render(container) {
     <!-- Modal confirmation -->
     <div class="custom-modal-overlay" id="confirmModal">
         <div class="custom-modal-card">
-            <div style="font-size:20px;margin-bottom:15px;font-weight:bold">Confirmation</div>
+            <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:14px">Confirmation</div>
             <div id="confirmMsg" class="custom-modal-msg"></div>
             <div class="custom-modal-actions">
                 <button class="btn-modal-cancel" id="btnConfirmNo">Non</button>
@@ -390,7 +477,7 @@ export async function render(container) {
     <!-- Modal alerte -->
     <div class="custom-modal-overlay" id="alertModal">
         <div class="custom-modal-card">
-            <div style="color:var(--accent);font-size:20px;margin-bottom:15px;font-weight:bold">Information</div>
+            <div style="color:var(--brand-yellow);font-size:17px;font-weight:700;margin-bottom:14px">Information</div>
             <div id="alertMsg" class="custom-modal-msg"></div>
             <div class="custom-modal-actions">
                 <button class="btn-modal-ok" id="btnAlertOk">Compris</button>
@@ -398,6 +485,10 @@ export async function render(container) {
         </div>
     </div>
     `
+    const _vd = container.querySelector('#view-dashboard')
+    const _ve = container.querySelector('#view-editor')
+    if (_vd) _vd.style.display = 'flex'
+    if (_ve) _ve.style.display = 'none'
 
     await init(container)
     return cleanup
@@ -411,20 +502,21 @@ async function init(container) {
     const zoomDisplay = container.querySelector('#zoom-level')
 
     // Tabs
-    if (hasPermission('view_all_invoices')) {
-        container.querySelector('#invoice-tabs').style.display = 'flex'
-    } else {
-        container.querySelector('#invoice-tabs').style.display = 'flex'
-        container.querySelector('#tab-all').style.display = 'none'
+    if (!hasPermission('view_all_invoices')) {
+        const tabAll = container.querySelector('#tab-all')
+        if (tabAll) tabAll.style.display = 'none'
     }
+    applyTabStyles(container)
     container.querySelector('#tab-mine').addEventListener('click', () => switchTab('mine', container))
     container.querySelector('#tab-all').addEventListener('click', () => switchTab('all', container))
     container.querySelector('#tab-archives').addEventListener('click', () => switchTab('archives', container))
-    container.querySelector('#searchInput').addEventListener('keyup', () => renderInvoiceList(container, invoiceContainer))
+    container.querySelector('#searchInput').addEventListener('keyup', () => { clearTimeout(_searchDebounce); _searchDebounce = setTimeout(() => renderInvoiceList(container, invoiceContainer), 300) })
     container.querySelector('#statusFilter').addEventListener('change', () => renderInvoiceList(container, invoiceContainer))
 
     // Dashboard
     container.querySelector('#btnNewInvoice').addEventListener('click', () => openNewInvoice(viewDash, viewEditor, invoiceContainer, zoomDisplay, container))
+    container.querySelector('#btnNewInvoiceMobile')?.addEventListener('click', () => openNewInvoice(viewDash, viewEditor, invoiceContainer, zoomDisplay, container))
+    container.querySelector('#fact-menu-btn')?.addEventListener('click', () => document.getElementById('topbar-mobile-menu-btn')?.click())
 
     // Éditeur
     container.querySelector('#btnBack').addEventListener('click', () => showDashboard(viewDash, viewEditor, container))
@@ -469,6 +561,7 @@ async function init(container) {
     container.querySelector('#office-status-div').addEventListener('click', e => toggleStatusMenu(e, container))
     container.querySelectorAll('.status-option').forEach(opt => {
         opt.addEventListener('click', async () => {
+            if (!hasPermission('view_all_invoices')) return
             container.querySelector('#statusOptionsMenu').classList.remove('show')
             const status = opt.dataset.status
             const labels = { envoye: 'Reçu (À traiter)', traite: 'Traité', attente: 'À corriger', paye: 'Facture payée' }
@@ -504,6 +597,7 @@ async function init(container) {
     attachAll(invoiceContainer)
 
     await loadData(true, container)
+    return cleanup
 }
 
 function cleanup() {
@@ -546,17 +640,27 @@ async function loadData(reset = true, container) {
     renderInvoiceList(container, inv)
 }
 
+const TAB_ACTIVE   = 'background:#ffffff;color:#1a1b22;border:2px solid #ffffff;font-weight:700'
+const TAB_INACTIVE = 'background:#2b2c36;color:#a0a0b0;border:1.5px solid #3d3e48;font-weight:600'
+const TAB_BASE     = 'display:inline-flex;align-items:center;gap:6px;padding:7px 16px;font-size:13px;border-radius:999px;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0'
+
+function applyTabStyles(container) {
+    ;['mine','all','archives'].forEach(id => {
+        const btn = container.querySelector(`#tab-${id}`)
+        if (!btn) return
+        const isActive = id === currentInvTab
+        btn.style.cssText = TAB_BASE + ';' + (isActive ? TAB_ACTIVE : TAB_INACTIVE)
+    })
+}
+
 function switchTab(tab, container) {
     archiveSelection.clear()
     currentInvTab = tab
-    container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
-    container.querySelector(`#tab-${tab}`)?.classList.add('active')
-    // Afficher le filtre statut seulement dans "Boîte de réception"
-    const statusFilterWrap = container.querySelector('#statusFilterWrap')
-    if (statusFilterWrap) {
-        statusFilterWrap.style.display = tab === 'all' ? 'block' : 'none'
-        container.querySelector('#statusFilter').value = ''
-    }
+    applyTabStyles(container)
+    const sfEl = container.querySelector('#statusFilter')
+    if (sfEl) sfEl.value = ''
+    const fw = container.querySelector('#statusFilterWrap')
+    if (fw) fw.style.display = tab === 'all' ? 'block' : 'none'
     loadData(true, container)
 }
 
@@ -582,8 +686,19 @@ function renderInvoiceList(container, invoiceContainer) {
         filtered = filtered.filter(inv => inv.status === statusFilter)
     }
 
-    const compteur = container.querySelector('#inv-compteur')
-    if (compteur) compteur.textContent = `${invoicesData.length} facture(s) chargée(s)${hasMore ? ' — il y en a plus' : ''}`
+    const total = filtered.length
+    const paid = filtered.filter(i => i.status === 'paye').length
+    const toTraiter = filtered.filter(i => i.status === 'envoye' || i.status === 'traite' || i.status === 'attente').length
+    const headerStats = container.querySelector('#fact-header-stats')
+    if (headerStats) headerStats.textContent = `${total} affichée${total !== 1 ? 's' : ''} · ${paid} payée${paid !== 1 ? 's' : ''} · ${toTraiter} à traiter`
+    const mobileStats = container.querySelector('#fact-mobile-stats')
+    if (mobileStats) mobileStats.textContent = `${total} affichée${total !== 1 ? 's' : ''} · ${paid} payée${paid !== 1 ? 's' : ''}`
+    const countMine = container.querySelector('#tab-count-mine')
+    const countAll = container.querySelector('#tab-count-all')
+    const mineCount = invoicesData.filter(inv => inv.authorId === currentUser.id).length
+    const allCount = invoicesData.length
+    if (countMine) countMine.textContent = mineCount || ''
+    if (countAll) countAll.textContent = allCount || ''
 
     if (!filtered.length) { listContainer.innerHTML = '<div style="color:#888;text-align:center;padding:20px">Aucune facture trouvée.</div>'; return }
 
@@ -603,25 +718,26 @@ function renderInvoiceList(container, invoiceContainer) {
     }
 
     filtered.forEach(inv => {
+        const DOT = `<svg width="7" height="7" viewBox="0 0 7 7" style="vertical-align:middle;margin-right:5px;flex-shrink:0"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>`
         let badgeHTML = ''
         const st = inv.status || 'brouillon'
-        if (inv.isArchived) { badgeHTML = `<span class="badge-status" style="background:rgba(85,85,85,0.15);color:#777">Archivé</span>` }
-        else if (st === 'brouillon') { badgeHTML = `<span class="badge-status b-brouillon">Brouillon</span>` }
-        else if (!isBureau) {
-            if (st === 'envoye') badgeHTML = `<span class="badge-status b-envoye">Envoyé au bureau</span>`
-            else if (st === 'traite' || st === 'paye') badgeHTML = `<span class="badge-status b-traite">Traité</span>`
-            else if (st === 'attente') badgeHTML = `<span class="badge-status b-renvoye">À corriger</span>`
+        if (inv.isArchived) { badgeHTML = `<span class="badge badge-grey">${DOT}Archivé</span>` }
+        else if (currentInvTab === 'mine') {
+            if      (st === 'brouillon')                   badgeHTML = `<span class="badge badge-grey">${DOT}Brouillon</span>`
+            else if (st === 'attente' || st === 'renvoye') badgeHTML = `<span class="badge badge-orange">${DOT}À corriger</span>`
+            else                                           badgeHTML = `<span class="badge badge-blue">${DOT}Envoyée</span>`
         } else {
-            if (st === 'envoye') badgeHTML = `<span class="badge-status b-envoye">Reçu (À traiter)</span>`
-            else if (st === 'traite') badgeHTML = `<span class="badge-status b-traite">Traité</span>`
-            else if (st === 'attente') badgeHTML = `<span class="badge-status b-renvoye">À corriger</span>`
-            else if (st === 'paye') badgeHTML = `<span class="badge-status b-paye">Facture payée</span>`
+            if      (st === 'brouillon')                   badgeHTML = `<span class="badge badge-grey">${DOT}Brouillon</span>`
+            else if (st === 'envoye')                      badgeHTML = `<span class="badge badge-blue">${DOT}${isBureau ? 'À traiter' : 'Envoyée'}</span>`
+            else if (st === 'traite')                      badgeHTML = `<span class="badge badge-purple">${DOT}Traitée</span>`
+            else if (st === 'paye')                        badgeHTML = `<span class="badge badge-green">${DOT}Payée</span>`
+            else if (st === 'attente' || st === 'renvoye') badgeHTML = `<span class="badge badge-orange">${DOT}À corriger</span>`
         }
-        if (inv.isPaper) badgeHTML = `<span class="badges-wrap">${badgeHTML}<span class="badge-status b-paper"><svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2" viewBox="0 0 24 24"><use href="#fic-camera"/></svg> Papier</span></span>`
+        if (inv.isPaper) badgeHTML = `<span class="badges-wrap">${badgeHTML}<span class="badge b-paper"><svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2" viewBox="0 0 24 24"><use href="#fic-camera"/></svg> Papier</span></span>`
 
         let displayDate = inv.date || ''
-        if (!displayDate) { const d = new Date(inv.timestamp || Date.now()); displayDate = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` }
-        else if (displayDate.includes('-')) { const p = displayDate.split('-'); if (p.length === 3) displayDate = `${p[2]}/${p[1]}/${p[0]}` }
+        if (!displayDate) { const d = new Date(inv.timestamp || Date.now()); displayDate = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}` }
+        else if (displayDate.includes('-')) { const p = displayDate.split('-'); if (p.length === 3) displayDate = `${p[2]}/${p[1]}/${p[0].slice(-2)}` }
 
         let actionsHTML = '<div style="width:36px"></div>'
         if (inv.isArchived) {
@@ -635,8 +751,10 @@ function renderInvoiceList(container, invoiceContainer) {
         div.className = 'invoice-item'
         div.innerHTML = `
             <div class="inv-id">#${sanitize(inv.id)}</div>
-            <div class="inv-client">${sanitize(inv.client)}</div>
-            <div class="inv-author">${sanitize(inv.authorName) || 'Inconnu'}</div>
+            <div class="inv-col-client">
+                <div class="inv-client">${sanitize(inv.client)}</div>
+                <div class="inv-author">${sanitize(inv.authorName) || 'Inconnu'}</div>
+            </div>
             <div class="inv-status">${badgeHTML}</div>
             <div class="inv-date">${displayDate}</div>
             <div class="inv-actions">${actionsHTML}</div>
@@ -727,6 +845,7 @@ function updateInvArchiveBar(container) {
 
 // ── Éditeur ─────────────────────────────────────────────────────────────────
 async function openNewInvoice(viewDash, viewEditor, invoiceContainer, zoomDisplay, container) {
+    document.body.classList.add('detail-mode')
     try { localStorage.removeItem('fdussault_draft_facture_new') } catch {}
     currentInvoiceId = null
     isPaperMode = false; paperPages = []
@@ -759,6 +878,7 @@ async function openNewInvoice(viewDash, viewEditor, invoiceContainer, zoomDispla
 }
 
 function openExistingInvoice(id, container, invoiceContainer) {
+    document.body.classList.add('detail-mode')
     const invoice = invoicesData.find(inv => inv.id === id)
     if (!invoice) return
     currentInvoiceId = id
@@ -800,6 +920,7 @@ function openExistingInvoice(id, container, invoiceContainer) {
 }
 
 function showDashboard(viewDash, viewEditor, container) {
+    document.body.classList.remove('detail-mode')
     stopAutosave(); resetPaperMode(container)
     viewDash.style.display = 'flex'; viewEditor.style.display = 'none'
     loadData(true, container)

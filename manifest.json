@@ -1,4 +1,4 @@
-{
+﻿{
     "name": "F.Dussault",
     "short_name": "F.Dussault",
     "description": "Interface de gestion F.Dussault Plomberie",
@@ -23,7 +23,7 @@
             "purpose": "any"
         },
         {
-            "src": "/assets/logo_app_maskable.png",
+            "src": "/assets/logo_app.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
@@ -50,3 +50,4 @@
         }
     ]
 }
+

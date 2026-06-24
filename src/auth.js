@@ -7,7 +7,7 @@ import { showToast } from './shared/toast.js'
 
 // ── État global de session ──────────────────────────────────────────────────
 export let currentUser = null
-export let currentRole = 'A3'
+export let currentRole = null
 export let currentProfil = null
 
 let _cachedRolesConfig = null
@@ -34,6 +34,15 @@ async function loadRolesConfig() {
     } catch {
         _cachedRolesConfig = defaultRolesConfig
     }
+}
+
+// ── Libellé d'un rôle depuis le cache ──────────────────────────────────────
+export function getRoleLabel(role) {
+    const cfg = _cachedRolesConfig?.[role]
+    if (!cfg) return role
+    if (cfg.label) return cfg.label
+    if (cfg.name) return cfg.name.split(' - ').slice(1).join(' - ') || cfg.name
+    return role
 }
 
 // ── Invalider le cache des rôles (appelé quand l'admin change les permissions) ─
@@ -112,13 +121,11 @@ export async function logout() {
 // ── Écoute des changements de session ───────────────────────────────────────
 export function watchSession(onExpired) {
     supabase.auth.onAuthStateChange((event) => {
-        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-            if (event === 'SIGNED_OUT') {
-                currentUser = null
-                currentRole = 'A3'
-                currentProfil = null
-                if (onExpired) onExpired()
-            }
+        if (event === 'SIGNED_OUT') {
+            currentUser = null
+            currentRole = null
+            currentProfil = null
+            if (onExpired) onExpired()
         }
     })
 }

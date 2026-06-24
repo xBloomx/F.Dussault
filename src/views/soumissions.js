@@ -1,5 +1,4 @@
 // src/views/soumissions.js
-// Migré fidèlement depuis code_soumissions/code_soumissions.html
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
@@ -13,7 +12,7 @@ import { enqueueOfflineSave } from '../shared/offlineQueue.js'
 import { createZoomController } from '../shared/zoom.js'
 import { friendlyError } from '../shared/errorMsg.js'
 
-// ── État local ──────────────────────────────────────────────────────────────
+// ── État local ───────────────────────────────────────────────────────────────
 let myUserName = 'Employé'
 let currentQuoteTab = 'mine'
 let quotesData = []
@@ -32,7 +31,7 @@ let archiveSelection = new Set()
 let isPaperMode = false
 let paperPages = []
 
-// ── Render principal ────────────────────────────────────────────────────────
+// ── Render principal ──────────────────────────────────────────────────────────
 export async function render(container) {
     myUserName = currentProfil?.prenom_nom || 'Employé'
     currentQuoteTab = 'mine'
@@ -40,78 +39,98 @@ export async function render(container) {
     container.innerHTML = `
     <style>
         /* --blue-bg défini dans styles.css : #d1e9ff */
-        .soum-main { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        #view-dashboard { padding: 30px; height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; }
-        .dash-title h1 { margin: 0; font-size: 28px; color: white; }
-        .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
-        .toolbar { display: flex; flex-direction: row; align-items: center; gap: 10px; background: var(--bg-panel); padding: 15px; border-radius: 12px; }
-        .toolbar .select-wrap { min-width: 200px; flex-shrink: 0; }
+        .soum-main { background: var(--bg-dark); color: var(--text-main); height: 100%; display: flex; flex-direction: column; overflow: hidden; font-family: var(--font-sans); }
+
+        /* Badges — globaux dans styles.css (.badge .badge-*) */
+
+        /* ── Tabs ── */
+        .tabs-container { display: flex; gap: 8px; flex-wrap: wrap; }
+        .tab-count { background: rgba(255,255,255,0.12); color: inherit; font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+        .tab.active .tab-count { background: rgba(26,27,34,0.14); }
+
+        /* ── En-tête colonnes ── */
+        .soum-list-header { display: grid; grid-template-columns: 110px 1fr 150px 90px 38px; gap: 14px; padding: 0 18px; margin-bottom: -2px; margin-top: -14px; }
+        #quote-compteur { margin-top: -14px; }
+        .soum-list-header span { font-size: 10.5px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.6px; }
+        .soum-list-header .soum-h-right { text-align: right; }
+        /* ── Mobile header ── */
+        .soum-mobile-header { display: none; align-items: center; gap: 10px; }
+        .soum-mobile-title { flex: 1; font-size: 26px; font-weight: 800; color: #fff; margin: 0; }
+        .soum-mobile-menu-btn { background: none; border: none; color: var(--text-muted); padding: 4px; cursor: pointer; display: flex; align-items: center; }
+        .soum-mobile-menu-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+        .soum-mobile-add-btn { background: var(--brand-yellow); border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .soum-mobile-add-btn svg { width: 20px; height: 20px; stroke: #1a1b22; fill: none; stroke-width: 2.5; }
+        .soum-mobile-stats { display: none; font-size: 13px; color: var(--text-faint); margin-top: -4px; }
+
+        /* ── Toolbar ── */
+        .toolbar { display: flex; flex-direction: row; align-items: center; gap: 10px; background: var(--bg-panel); border: 1px solid var(--border); padding: 10px; border-radius: var(--r-xl,14px); }
+        .toolbar .select-wrap { min-width: 180px; flex-shrink: 0; }
         .select-wrap { position: relative; display: block; }
-        .select-wrap select { width: 100%; -webkit-appearance: none; appearance: none; padding: 14px 42px 14px 15px; background: var(--bg-dark); border: 1px solid var(--border); color: white; border-radius: 8px; font-size: 15px; outline: none; cursor: pointer; font-family: inherit; }
-        .select-wrap select:focus { border-color: var(--accent); }
-        .select-wrap .sel-chevron { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 18px; height: 18px; stroke: #888; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-        .discrete-stats { color: #aaa; font-size: 13px; font-style: italic; margin: 1px 0; padding-left: 10px; }
+        .select-wrap select { width: 100%; -webkit-appearance: none; appearance: none; padding: 10px 36px 10px 14px; background: var(--bg-sunken,#15161c); border: 1px solid var(--border); color: #fff; border-radius: var(--r-lg,10px); font-size: 13px; outline: none; cursor: pointer; font-family: inherit; transition: border-color var(--t-base); }
+        .select-wrap select:focus { border-color: var(--brand-yellow); }
+        .select-wrap .sel-chevron { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; width: 16px; height: 16px; stroke: var(--text-faint); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        .discrete-stats { color: var(--text-faint); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 4px; }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
-        .search-box input { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: white; padding: 14px 15px 14px 45px; border-radius: 8px; font-size: 16px; outline: none; transition: 0.2s; }
-        .search-box input:focus { border-color: var(--accent); }
-        .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
-        .search-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 5px; }
-        .btn-tab { background: #1a1b23; color: #aaa; border: 1px solid #444; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
-        .btn-tab svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-tab.active { background: var(--btn-blue); color: white; border-color: var(--btn-blue); }
-        .quote-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 30px; }
-        .quote-item { background: var(--bg-panel); padding: 12px 20px; border-radius: 10px; display: grid; grid-template-columns: 120px 1fr 140px 130px 100px 44px; align-items: center; gap: 15px; cursor: pointer; border: 1px solid transparent; border-left: 4px solid transparent; transition: 0.2s; }
-        .quote-item:hover { transform: translateX(5px); background: #343542; border-left-color: var(--accent); background-color: #30313c; border-color: #555;}
-        .inv-id { font-weight: bold; color: var(--accent); font-size: 15px; }
-        .inv-client { font-weight: bold; font-size: 16px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .inv-author { font-size: 14px; color: #888; font-style: italic; }
-        .inv-date { color: #aaa; font-size: 14px; text-align: right; }
-        .inv-status span { font-size: 12px; padding: 3px 10px; border-radius: 6px; font-weight: bold; display: inline-flex; align-items: center; }
-        .status-attente   { background: rgba(255,193,7,0.15);  color: #ffc107; }
-        .status-convertie { background: rgba(40,167,69,0.15);  color: var(--btn-green); }
-        .status-brouillon { background: rgba(136,136,136,0.15); color: #888; }
-        .status-archivee  { background: rgba(85,85,85,0.15);   color: #777; }
-        .status-approuvee { background: rgba(40,167,69,0.15);  color: var(--btn-green); }
-        .status-acorriger { background: rgba(255,152,0,0.15);  color: var(--btn-orange); }
-        .inv-actions { display: flex; justify-content: flex-end; }
-        .btn-icon { background: #444; border: none; width: 36px; height: 36px; border-radius: 8px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: white; flex-shrink: 0; transition: 0.2s;}
-        .btn-delete { background: rgba(255,77,77,0.1); color: var(--btn-red); border: 1px solid transparent; }
-        .btn-delete:hover { background: var(--btn-red); color: white; }
+        .search-box input { width: 100%; background: var(--bg-sunken,#15161c); border: 1px solid var(--border); color: #fff; padding: 10px 14px 10px 38px; border-radius: var(--r-lg,10px); font-size: 14px; outline: none; transition: border-color var(--t-base); font-family: inherit; }
+        .search-box input:focus { border-color: var(--brand-yellow); }
+        .search-icon { position: absolute; left: 12px; color: var(--text-faint); pointer-events: none; display: flex; align-items: center; }
+        .search-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+        /* ── Liste soumissions ── */
+        .quote-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 30px; }
+        .quote-item { background: var(--bg-panel); padding: 12px 18px; border-radius: var(--r-lg,10px); display: grid; grid-template-columns: 110px 1fr 150px 90px 38px; align-items: center; gap: 14px; cursor: pointer; border: 1px solid var(--border); border-left: 3px solid transparent; transition: background var(--t-base), border-color var(--t-base), transform var(--t-fast); }
+        .quote-item:hover { transform: translateX(3px); background: var(--bg-panel-2); border-left-color: var(--brand-yellow); }
+        .inv-id         { font-weight: 700; color: var(--brand-yellow); font-size: 13px; font-family: var(--font-mono); }
+        .inv-col-client { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .inv-client     { font-weight: 700; font-size: 14px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .inv-author     { font-size: 12px; color: var(--text-faint); }
+        .inv-date       { color: var(--text-muted); font-size: 13px; text-align: right; }
+        .inv-actions    { display: flex; justify-content: flex-end; }
+        .btn-icon   { background: var(--bg-panel-2); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: var(--r-md,8px); display: flex; justify-content: center; align-items: center; cursor: pointer; color: var(--text-muted); transition: all var(--t-base); flex-shrink: 0; }
+        .btn-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .btn-delete { background: var(--tint-red); color: var(--status-red); border-color: transparent; }
+        .btn-delete:hover { background: var(--status-red); color: #fff; }
+
+        /* Archive selection */
         .arc-selectable { position: relative; padding-left: 48px !important; }
-        .arc-check { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; border: 2px solid #444; background: transparent; display: flex; align-items: center; justify-content: center; transition: border-color 0.15s, background 0.15s; pointer-events: none; }
-        .arc-selected .arc-check { border-color: var(--btn-blue,#007bff); background: var(--btn-blue,#007bff); }
-        .arc-selected { background: rgba(0,120,255,0.05) !important; border-left-color: var(--btn-blue,#007bff) !important; }
+        .arc-check { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-strong,#3d3e48); background: transparent; display: flex; align-items: center; justify-content: center; transition: all var(--t-fast); pointer-events: none; }
+        .arc-selected .arc-check { border-color: var(--status-blue); background: var(--status-blue); }
+        .arc-selected { background: rgba(59,130,246,0.05) !important; border-left-color: var(--status-blue) !important; }
+
+        /* Load more */
+        .load-more-btn { width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--r-lg,10px); cursor: pointer; font-size: 13px; font-weight: 600; margin-top: 4px; font-family: inherit; transition: border-color var(--t-base); }
+        .load-more-btn:hover { border-color: var(--brand-yellow); color: var(--brand-yellow); }
+
+        /* ── Éditeur ── */
         #view-editor { display: none; flex-direction: column; height: 100%; }
-        .top-bar { height: auto; min-height: 80px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; background: rgba(30,31,38,0.95); border-bottom: 1px solid #333; z-index: 101; flex-wrap: wrap; }
-        .action-btn { background: var(--accent); color: black; border: none; padding: 10px 20px; border-radius: 50px; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: 0.2s; }
-        .action-btn:hover { background: var(--accent-hover); transform: translateY(-1px); background-color: var(--accent-hover);}
-        .action-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
-        .btn-back { background: #6c757d !important; color: white !important; }
-        .btn-save { background: var(--btn-green) !important; color: white !important; }
-        .btn-send { background: var(--btn-blue) !important; color: white !important; }
-        .btn-convert { background: var(--btn-blue) !important; color: white !important; }
-        .btn-unlock { background: var(--btn-orange) !important; color: white !important; }
-        @media (min-width: 769px) and (max-width: 1024px) {
-            #view-dashboard { padding: 20px; }
-            .toolbar { flex-direction: row; align-items: center; }
-            .select-wrap { min-width: 180px; flex-shrink: 0; }
-            .quote-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
-            .inv-id { grid-area: id; font-size: inherit; } .inv-client { grid-area: client; font-size: inherit; } .inv-author { grid-area: author; font-size: inherit; }
-            .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; font-size: inherit; }
-            .inv-actions { position: absolute; top: 16px; right: 16px; }
-        }
+        .top-bar { height: auto; min-height: 70px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; background: var(--bg-panel); border-bottom: 1px solid var(--border); z-index: 101; flex-wrap: wrap; }
+        .action-btn { background: var(--brand-yellow); color: var(--text-on-yellow,#1a1b22); border: 1px solid transparent; padding: 8px 14px; border-radius: var(--r-pill,999px); font-weight: 600; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 7px; white-space: nowrap; transition: all var(--t-base); font-family: inherit; }
+        .action-btn:hover { background: var(--brand-yellow-hover); }
+        .action-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .btn-back   { background: var(--bg-panel-2) !important; color: var(--text-muted) !important; border: 1px solid var(--border) !important; }
+        .btn-back:hover { background: var(--bg-panel-3) !important; color: #fff !important; }
+        .btn-send   { background: var(--status-green)  !important; color: #fff !important; border-color: transparent !important; }
+        .btn-send:hover { background: #16a34a !important; }
+        .btn-paper  { background: #e8730a !important; color: #fff !important; border-color: transparent !important; }
+        .btn-convert { background: var(--status-blue) !important; color: #fff !important; border-color: transparent !important; }
+        .btn-unlock { background: var(--status-orange) !important; color: #1a1b22 !important; border-color: transparent !important; }
         @media (max-width: 1024px) {
-            .top-bar { padding: 10px 85px 10px 10px; gap: 10px; height: 65px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+            .top-bar { padding: 10px 80px 10px 10px; gap: 8px; height: 60px; overflow-x: auto; justify-content: flex-start; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
             .top-bar::-webkit-scrollbar { display: none; }
-            .top-bar .action-btn { flex-shrink: 0; width: auto; margin-bottom: 0; font-size: 11px; padding: 8px 15px; }
+            .top-bar .action-btn { flex-shrink: 0; font-size: 11px; padding: 7px 12px; }
         }
+
+        /* ── Scroll/zoom ── */
         .scroll-area { flex: 1; overflow: auto; padding: 15px 0; display: block; touch-action: none; }
+        #quote-container { display: block; width: 8.5in; transform-origin: 0 0; padding-bottom: 50px; }
+        .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: var(--bg-panel-2); padding: 5px 14px; border-radius: 999px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow-md); z-index: 2000; border: 1px solid var(--border); }
+        .zoom-controls button { background: var(--brand-yellow); border: none; width: 28px; height: 28px; border-radius: 50%; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1a1b22; }
+        .zoom-controls span { color: #fff; font-size: 12px; font-weight: 700; min-width: 44px; text-align: center; }
+
+        /* ── Page papier (inchangé) ── */
         .page { width: 8.5in; height: 11in; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); box-sizing: border-box; display: flex; flex-direction: column; position: relative; margin: 0 auto 20px; color: black; padding: 0.25in; flex-shrink: 0; }
         input { outline: none; border-radius: 0; }
         input:focus { background-color: transparent !important; border-bottom: 2px solid #000 !important; }
-        #quote-container { display: block; width: 8.5in; transform-origin: 0 0; padding-bottom: 50px; }
         .top-section { width: 100%; }
         .header-main { width: 100%; margin-top: -15px; margin-bottom: 0; text-align: center; }
         .header-main img { width: 100%; height: auto; display: block; }
@@ -149,9 +168,8 @@ export async function render(container) {
         .sig-text { font-size: 10px; font-weight: bold; margin-top: 2px; }
         .quote-num-box { text-align: right; padding-bottom: 5px; display: flex; justify-content: flex-end; align-items: flex-end; }
         .red-quote-input { color: #dc3545; font-weight: bold; font-size: 18px; font-family: 'Courier New', monospace; text-align: right; border: none; background: var(--blue-bg); width: 100%; margin: 0; padding: 0 5px; }
-        .zoom-controls { position: fixed; bottom: 20px; right: 20px; background: rgba(30,31,38,0.95); padding: 5px 10px; border-radius: 50px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: 1px solid #555; }
-        .zoom-controls button { background: var(--accent); border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; color: #1e1f26; }
-        .zoom-controls span { color: white; font-size: 12px; font-weight: bold; min-width: 45px; text-align: center; }
+
+        /* ── Paper mode ── */
         .paper-mode-container { background: #fff; margin: 20px auto; max-width: 800px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); overflow: hidden; }
         .paper-mode-header { display: flex; gap: 0; background: #fff; border-bottom: 1px solid #e0e0e0; }
         .paper-mode-header .pmh-field { flex: 1; padding: 10px 14px; border-right: 1px solid #e8e8e8; min-width: 0; }
@@ -166,63 +184,91 @@ export async function render(container) {
         .paper-page-display .ppd-num { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; pointer-events: none; }
         .pim-progress { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9000; justify-content: center; align-items: center; }
         .pim-progress.show { display: flex; }
-        .pim-progress-card { background: var(--bg-panel); padding: 30px 40px; border-radius: 12px; text-align: center; color: white; font-size: 16px; }
-        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); box-sizing: border-box; }
+        .pim-progress-card { background: var(--bg-panel); padding: 30px 40px; border-radius: var(--r-xl,14px); text-align: center; color: #fff; font-size: 16px; border: 1px solid var(--border); }
+
+        /* ── Modales ── */
+        .custom-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; z-index: 4000; justify-content: center; align-items: center; padding: env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px); box-sizing: border-box; }
         .custom-modal-overlay.open { display: flex; }
-        .custom-modal-card { background: var(--bg-panel); width: 350px; padding: 25px; border-radius: 12px; border: 1px solid #555; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
-        .custom-modal-title { font-size: 20px; color: var(--accent); margin-bottom: 15px; font-weight: bold; }
-        .custom-modal-msg { color: var(--text-main); margin-bottom: 25px; font-size: 15px; line-height: 1.4; }
+        .custom-modal-card { background: var(--bg-panel); width: 360px; padding: 24px; border-radius: var(--r-xl,14px); border: 1px solid var(--border); text-align: center; box-shadow: var(--shadow-lg); }
+        .custom-modal-title { font-size: 17px; color: var(--brand-yellow); margin-bottom: 14px; font-weight: 700; }
+        .custom-modal-msg { color: var(--text-muted); margin-bottom: 22px; font-size: 14px; line-height: 1.5; }
         .custom-modal-actions { display: flex; justify-content: center; gap: 10px; }
-        .btn-modal-cancel { background: #444; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
-        .btn-modal-confirm { background: var(--btn-green); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-modal-ok { background: var(--accent); color: black; border: none; padding: 10px 30px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        @media (max-width: 768px) {
-            #view-dashboard { padding: 15px; }
-            .dash-header { flex-direction: column; align-items: flex-start; gap: 15px; width: 100%; }
-            .dash-title { padding-right: 80px; width: 100%; }
-            .dash-header .action-btn { width: 100%; justify-content: center; font-size: 14px; }
-            .tabs-container { flex-direction: column; width: 100%; }
-            .btn-tab { width: 100%; justify-content: center; }
-            .quote-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "client client" "author author" "status date"; gap: 4px 12px; padding: 16px; border-radius: 12px; border: 1px solid #3a3b46; border-left: 1px solid #3a3b46; margin-bottom: 12px; position: relative; }
-            .inv-id { grid-area: id; } .inv-client { grid-area: client; } .inv-author { grid-area: author; }
+        .btn-modal-cancel  { background: var(--bg-panel-2); color: var(--text-muted); border: 1px solid var(--border); padding: 10px 18px; border-radius: var(--r-lg,10px); cursor: pointer; font-weight: 600; font-size: 13px; font-family: inherit; }
+        .btn-modal-confirm { background: var(--status-green); color: #fff; border: none; padding: 10px 18px; border-radius: var(--r-lg,10px); cursor: pointer; font-weight: 700; font-size: 13px; font-family: inherit; }
+        .btn-modal-ok { background: var(--brand-yellow); color: #1a1b22; border: none; padding: 10px 28px; border-radius: var(--r-lg,10px); cursor: pointer; font-weight: 700; font-size: 13px; font-family: inherit; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            #view-dashboard { padding: 20px; }
+            .quote-item { grid-template-columns: 1fr auto; grid-template-areas: "id id" "clientcell clientcell" "status date"; gap: 4px 12px; padding: 16px; border-radius: var(--r-xl,14px); position: relative; }
+            .inv-id { grid-area: id; } .inv-col-client { grid-area: clientcell; }
             .inv-status { grid-area: status; } .inv-date { grid-area: date; text-align: right; }
-            .inv-actions { position: absolute; top: 16px; right: 16px; }
+            .inv-actions { position: absolute; top: 14px; right: 14px; }
+        }
+        @media (max-width: 768px) {
+            #view-dashboard { padding: 16px 16px 12px; gap: 10px; }
+            .soum-mobile-header { display: flex; }
+            .soum-mobile-stats { display: block; }
+            .view-header { display: none; }
+            .soum-list-header { display: none; }
+            .tab svg { display: none; }
+            .tabs-container { flex-wrap: nowrap; overflow-x: auto; flex-direction: row; }
+            .tabs-container::-webkit-scrollbar { display: none; }
+            .toolbar { flex-direction: row; padding: 0; background: transparent; border: none; }
+            .search-box input { border-radius: var(--r-xl,14px); padding: 12px 14px 12px 40px; }
+            /* ── Filtre statut compact (visible seulement sur onglet Toutes) ── */
+            #statusFilterWrap { display: none; width: 42px; flex-shrink: 0; }
+            #statusFilterWrap select { width: 42px; height: 42px; padding: 0; color: transparent; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--r-xl,14px); -webkit-appearance: none; appearance: none; cursor: pointer; }
+            #statusFilterWrap select option { color: var(--text-main); background: var(--bg-panel); }
+            #statusFilterWrap .sel-chevron { right: 50%; transform: translate(50%,-50%); }
+            .tab-count { background: transparent; padding: 0; }
+            .quote-item { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto auto; gap: 2px 8px; padding: 14px 16px; border-radius: var(--r-xl,14px); position: static; }
+            .inv-id { grid-column: 1; grid-row: 1; align-self: center; font-size: 12px; }
+            .inv-status { grid-column: 2; grid-row: 1; justify-content: flex-end; align-self: start; }
+            .inv-col-client { grid-column: 1; grid-row: 2 / 4; display: flex; flex-direction: column; justify-content: space-between; gap: 2px; }
+            .inv-client { font-size: 15px; font-weight: 700; white-space: normal; }
+            .inv-date { grid-column: 2; grid-row: 3; text-align: right; font-size: 12px; align-self: end; color: var(--text-faint); }
+            .inv-actions { display: none; }
+            #quote-compteur { display: none; }
             .zoom-controls { display: none !important; }
         }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 
     <div class="soum-main">
-        <div id="view-dashboard">
-            <div class="dash-header">
-                <div class="dash-title"><h1>Mes Soumissions</h1><p>Gérez vos estimations</p></div>
-                <button class="action-btn" id="btnNewQuote">
-                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Nouvelle Soumission
+        <div id="view-dashboard" class="view">
+            <!-- En-tête mobile -->
+            <div class="soum-mobile-header">
+                <button class="soum-mobile-menu-btn" id="soum-menu-btn" aria-label="Menu">
+                    <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <h2 class="soum-mobile-title">Soumissions</h2>
+                <button class="soum-mobile-add-btn" id="btnNewQuoteMobile" aria-label="Nouvelle soumission">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
             </div>
+            <div class="soum-mobile-stats" id="soum-mobile-stats"></div>
 
-            <div class="tabs-container" id="quote-tabs" style="display:none">
-                <button id="tab-mine" class="btn-tab active">
-                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Mes Soumissions
-                </button>
-                <button id="tab-all" class="btn-tab">
-                    <svg viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
-                    Boîte de réception
-                </button>
-                <button id="tab-archives" class="btn-tab">
-                    <svg viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
-                    Archives
-                </button>
+            <!-- En-tête desktop -->
+            <div class="view-header">
+                <div>
+                    <h1>Soumissions</h1>
+                    <p class="sub" id="soum-header-stats"></p>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-primary btn-pill" id="btnNewQuote">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Nouvelle soumission
+                    </button>
+                </div>
             </div>
 
             <div class="toolbar">
                 <div class="search-box">
                     <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-                    <input type="text" id="searchInput" placeholder="Rechercher (Nom, Tél, Adresse...)">
+                    <input type="text" id="searchInput" placeholder="Rechercher (Nom, Tél, Adresse…)">
                 </div>
-                <div class="select-wrap" id="statusFilterWrap" style="display:none">
+                <div class="select-wrap" id="statusFilterWrap">
                     <select id="statusFilter">
                         <option value="">Tous les statuts</option>
                         <option value="En attente">En attente</option>
@@ -233,7 +279,29 @@ export async function render(container) {
                     <svg class="sel-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
             </div>
+
+            <div class="tabs-container" id="quote-tabs" style="display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto">
+                <button id="tab-mine" class="tab active">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Mes soumissions <span class="tab-count" id="tab-count-mine" style="display:none"></span>
+                </button>
+                <button id="tab-all" class="tab">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+                    Toutes <span class="tab-count" id="tab-count-all" style="display:none"></span>
+                </button>
+                <button id="tab-archives" class="tab">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                    Archives
+                </button>
+            </div>
             <div id="quote-compteur" class="discrete-stats"></div>
+            <div class="soum-list-header">
+                <span>Numéro</span>
+                <span>Client / Auteur</span>
+                <span>Statut</span>
+                <span class="soum-h-right">Date</span>
+                <span></span>
+            </div>
             <div class="quote-list" id="quoteListContainer"></div>
         </div>
 
@@ -251,7 +319,7 @@ export async function render(container) {
                     <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     Envoyer au bureau
                 </button>
-                <button class="action-btn" id="btnPaper" style="background:#e8730a;color:white">
+                <button class="action-btn btn-paper" id="btnPaper">
                     <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     <span id="btnPaperLabel">Soumission papier</span>
                 </button>
@@ -259,11 +327,11 @@ export async function render(container) {
                     <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
                     Convertir en facture
                 </button>
-                <button class="action-btn" id="btnApprouver" style="display:none;background:var(--btn-green) !important;color:white !important">
+                <button class="action-btn" id="btnApprouver" style="display:none;background:var(--status-green)!important;color:#fff!important;border-color:transparent!important">
                     <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                     Approuver
                 </button>
-                <button class="action-btn" id="btnCorrections" style="display:none;background:var(--btn-orange) !important;color:white !important">
+                <button class="action-btn" id="btnCorrections" style="display:none;background:var(--status-orange)!important;color:#1a1b22!important;border-color:transparent!important">
                     <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.22"/></svg>
                     À corriger
                 </button>
@@ -298,7 +366,7 @@ export async function render(container) {
                 <button id="btnZoomOut">−</button>
                 <span id="zoom-level">100%</span>
                 <button id="btnZoomIn">+</button>
-                <button id="btnZoomReset" style="font-size:14px">↺</button>
+                <button id="btnZoomReset" style="font-size:13px">↺</button>
             </div>
         </div>
     </div>
@@ -329,7 +397,6 @@ export async function render(container) {
     <input type="file" id="pim-gallery-input" accept="image/*" multiple style="display:none">
     <div class="pim-progress" id="pimProgress"><div class="pim-progress-card"><div id="pimProgressText">Téléversement…</div></div></div>
     `
-
     await init(container)
     return cleanup
 }
@@ -357,6 +424,8 @@ async function init(container) {
 
     // Boutons dashboard
     container.querySelector('#btnNewQuote').addEventListener('click', () => openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay))
+    container.querySelector('#btnNewQuoteMobile')?.addEventListener('click', () => openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay))
+    container.querySelector('#soum-menu-btn')?.addEventListener('click', () => document.getElementById('topbar-mobile-menu-btn')?.click())
 
     // Boutons éditeur
     container.querySelector('#btnBack').addEventListener('click', () => showDashboard(viewDash, viewEditor, container))
@@ -416,6 +485,7 @@ async function init(container) {
     attachAll(quoteContainer)
 
     await loadData(true, container)
+    return cleanup
 }
 
 function cleanup() {
@@ -463,11 +533,13 @@ function mapQuote(db) {
 function switchTab(tab, container) {
     archiveSelection.clear()
     currentQuoteTab = tab
-    container.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'))
+    container.querySelectorAll('.tab').forEach(b => b.classList.remove('active'))
     const tabEl = container.querySelector(`#tab-${tab}`)
     if (tabEl) tabEl.classList.add('active')
-    const statusFilterWrap = container.querySelector('#statusFilterWrap')
-    if (statusFilterWrap) { statusFilterWrap.style.display = tab === 'all' ? 'block' : 'none'; container.querySelector('#statusFilter').value = '' }
+    const sfEl = container.querySelector('#statusFilter')
+    if (sfEl) sfEl.value = ''
+    const fw = container.querySelector('#statusFilterWrap')
+    if (fw) fw.style.display = tab === 'all' ? 'block' : 'none'
     loadData(true, container)
 }
 
@@ -481,8 +553,17 @@ function renderQuoteList(container) {
         : (!isBureau || currentQuoteTab === 'mine') ? quotesData.filter(q => q.authorId === currentUser.id || !q.authorId)
         : quotesData.filter(q => q.status !== 'brouillon')
 
-    const compteur = container.querySelector('#quote-compteur')
-    if (compteur) compteur.textContent = `${quotesData.length} soumission(s) chargée(s)${quotesHasMore ? ' — il y en a plus' : ''}`
+    const total = baseList.length
+    const pending = baseList.filter(q => q.status === 'En attente').length
+    const converted = baseList.filter(q => q.status === 'Convertie').length
+    const headerStats = container.querySelector('#soum-header-stats')
+    if (headerStats) headerStats.textContent = `${total} soumission${total !== 1 ? 's' : ''} · ${pending} en attente · ${converted} convertie${converted !== 1 ? 's' : ''} ce mois`
+    const mobileStats = container.querySelector('#soum-mobile-stats')
+    if (mobileStats) mobileStats.textContent = `${total} affichée${total !== 1 ? 's' : ''} · ${pending} en attente`
+    const countMine = container.querySelector('#tab-count-mine')
+    const countAll = container.querySelector('#tab-count-all')
+    if (countMine) countMine.textContent = currentQuoteTab === 'mine' ? total : ''
+    if (countAll) countAll.textContent = currentQuoteTab === 'all' ? total : ''
 
     if (baseList.length === 0) {
         listContainer.innerHTML = '<div style="color:#888;text-align:center;padding:20px;font-style:italic">Aucune soumission trouvée.</div>'
@@ -504,14 +585,20 @@ function renderQuoteList(container) {
         listContainer.appendChild(selBar)
     }
 
+    const DOT = `<svg width="7" height="7" viewBox="0 0 7 7" style="vertical-align:middle;margin-right:5px;flex-shrink:0"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>`
     baseList.forEach(q => {
         let statusHTML = ''
-        if (q.isArchived) statusHTML = `<span class="inv-status status-archivee" style="display:inline-flex">Archivée</span>`
-        else if (q.status === 'Convertie') statusHTML = `<span class="status-convertie">Convertie</span>`
-        else if (q.status === 'brouillon') statusHTML = `<span class="status-brouillon">Brouillon</span>`
-        else if (q.status === 'Approuvée') statusHTML = `<span class="status-approuvee">Approuvée</span>`
-        else if (q.status === 'A corriger') statusHTML = `<span class="status-acorriger">À corriger</span>`
-        else statusHTML = `<span class="status-attente">${!isBureau ? 'Envoyée' : 'En attente'}</span>`
+        if (q.isArchived)               statusHTML = `<span class="badge badge-grey">${DOT}Archivée</span>`
+        else if (q.status === 'Convertie')  statusHTML = `<span class="badge badge-green">${DOT}Convertie</span>`
+        else if (q.status === 'brouillon')  statusHTML = `<span class="badge badge-grey">${DOT}Brouillon</span>`
+        else if (q.status === 'Approuvée')  statusHTML = `<span class="badge badge-green">${DOT}Approuvée</span>`
+        else if (q.status === 'A corriger') statusHTML = `<span class="badge badge-orange">${DOT}À corriger</span>`
+        else if (q.status === 'Refusée')    statusHTML = `<span class="badge badge-red">${DOT}Refusée</span>`
+        else statusHTML = `<span class="badge badge-orange">${DOT}${!isBureau ? 'Envoyée' : 'En attente'}</span>`
+
+        const rawDate = q.date || ''
+        let displayDate = rawDate
+        if (rawDate.includes('-')) { const p = rawDate.split('-'); if (p.length === 3) displayDate = `${p[2]}/${p[1]}/${p[0].slice(-2)}` }
 
         let actionsHTML = '<div style="width:36px"></div>'
         if (q.isArchived) {
@@ -531,10 +618,12 @@ function renderQuoteList(container) {
         div.className = 'quote-item'
         div.innerHTML = `
             <div class="inv-id">${q.id}</div>
-            <div class="inv-client">${q.client}</div>
-            <div class="inv-author">${q.authorName || 'Inconnu'}</div>
+            <div class="inv-col-client">
+                <div class="inv-client">${sanitize(q.client)}</div>
+                <div class="inv-author">${sanitize(q.authorName) || 'Inconnu'}</div>
+            </div>
             <div class="inv-status">${statusHTML}</div>
-            <div class="inv-date">${q.date}</div>
+            <div class="inv-date">${displayDate}</div>
             <div class="inv-actions">${actionsHTML}</div>
         `
         if (q.isArchived) {
@@ -636,10 +725,22 @@ function filterQuotes(container) {
     const listContainer = container.querySelector('#quoteListContainer')
     listContainer.innerHTML = ''
     if (filtered.length === 0) { listContainer.innerHTML = '<div style="color:#888;text-align:center;padding:20px;font-style:italic">Aucun résultat.</div>'; return }
+    const DOT2 = `<svg width="7" height="7" viewBox="0 0 7 7" style="vertical-align:middle;margin-right:5px;flex-shrink:0"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>`
     filtered.forEach(q => {
+        const rawDate = q.date || ''
+        let displayDate = rawDate
+        if (rawDate.includes('-')) { const p = rawDate.split('-'); if (p.length === 3) displayDate = `${p[2]}/${p[1]}/${p[0].slice(-2)}` }
         const div = document.createElement('div')
         div.className = 'quote-item'
-        div.innerHTML = `<div class="inv-id">${sanitize(q.id)}</div><div class="inv-client">${sanitize(q.client)}</div><div class="inv-author">${sanitize(q.authorName)}</div><div class="inv-status"><span class="status-brouillon">${sanitize(q.status)}</span></div><div class="inv-date">${sanitize(q.date)}</div><div class="inv-actions"></div>`
+        div.innerHTML = `
+            <div class="inv-id">${sanitize(q.id)}</div>
+            <div class="inv-col-client">
+                <div class="inv-client">${sanitize(q.client)}</div>
+                <div class="inv-author">${sanitize(q.authorName) || 'Inconnu'}</div>
+            </div>
+            <div class="inv-status"><span class="badge badge-grey">${DOT2}${sanitize(q.status)}</span></div>
+            <div class="inv-date">${displayDate}</div>
+            <div class="inv-actions"></div>`
         div.addEventListener('click', () => openExistingQuote(q.id, container))
         listContainer.appendChild(div)
     })
@@ -648,6 +749,7 @@ function filterQuotes(container) {
 
 // ── Éditeur ─────────────────────────────────────────────────────────────────
 function openExistingQuote(id, container) {
+    document.body.classList.add('detail-mode')
     const quote = quotesData.find(q => q.id === id)
     if (!quote) return
     currentQuoteId = id
@@ -687,6 +789,7 @@ function openExistingQuote(id, container) {
 }
 
 async function openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay) {
+    document.body.classList.add('detail-mode')
     try { localStorage.removeItem('fdussault_draft_soumission_new') } catch {}
     currentQuoteId = null
     viewDash.style.display = 'none'
@@ -710,6 +813,7 @@ async function openNewQuote(viewDash, viewEditor, quoteContainer, zoomDisplay) {
 }
 
 function showDashboard(viewDash, viewEditor, container) {
+    document.body.classList.remove('detail-mode')
     stopAutosave()
     isPaperMode = false; paperPages = []
     updatePaperToggleButton(container)
@@ -1267,6 +1371,7 @@ function showConfirm(msg, callback, container, title = 'Confirmation', isConvert
     confirmCallback = callback
     modal?.classList.add('open')
 }
+
 
 function closeConfirmModal(container) {
     container.querySelector('#confirmModal')?.classList.remove('open')
