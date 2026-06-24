@@ -1,4 +1,4 @@
-// src/views/messagerie.js
+﻿// src/views/messagerie.js
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentProfil } from '../auth.js'
@@ -33,7 +33,6 @@ let _swipeState = null
 let _titleNotifPending = false
 let _chatSearchTerm = ''
 let _onClickMsgDoc = null
-let currentFilter = 'tous'
 let quickReactions = (() => { try { return JSON.parse(localStorage.getItem('dussault_quick_reacts')) || ['❤️','👍','😂','😮','😢','🙏'] } catch { return ['❤️','👍','😂','😮','😢','🙏'] } })()
 
 const conversationsData = { 'global': { name: 'Équipe (Général)', isGroup: true, messages: [] } }
@@ -56,7 +55,7 @@ export async function render(container) {
 
         /* ── Sidebar ── */
         .chat-sidebar {
-            width: 340px; background: var(--bg-dark,#1a1b22);
+            width: 340px; background: var(--bg-panel);
             border-radius: var(--r-xl,14px); display: flex; flex-direction: column;
             border: 1px solid var(--border); overflow: hidden; flex-shrink: 0;
         }
@@ -94,7 +93,7 @@ export async function render(container) {
         }
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
         .search-box input {
-            width: 100%; background: var(--bg-panel,#24252e); border: 1px solid var(--border-faint,#25262e);
+            width: 100%; background: var(--bg-sunken,#15161c); border: 1px solid var(--border);
             color: #fff; padding: 10px 14px 10px 38px; border-radius: var(--r-lg,10px);
             font-size: 14px; outline: none; transition: border-color var(--t-base); font-family: inherit;
         }
@@ -103,7 +102,7 @@ export async function render(container) {
         .search-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
 
         /* ── Contact list ── */
-        .contact-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .contact-list { flex: 1; overflow-y: auto; padding: 0; background: transparent; }
         .contact-last-msg-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
         .contact-unread { background: var(--brand-yellow); color: #1a1b22; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 5px; flex-shrink: 0; }
         /* Status en ligne */
@@ -120,8 +119,8 @@ export async function render(container) {
         .btn-emoji svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .contact-wrapper {
             position: relative; overflow: hidden;
-            border-radius: 12px; margin-bottom: 6px;
-            background: var(--bg-panel,#24252e);
+            border-radius: 0; margin: 0;
+            background: transparent;
         }
         .delete-btn-bg {
             position: absolute; top: 0; right: 0; bottom: 0; width: 76px;
@@ -132,16 +131,17 @@ export async function render(container) {
         .delete-btn-bg svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
         .contact-item.swiped + .delete-btn-bg { opacity: 1; }
         .contact-item {
-            display: flex; align-items: center; padding: 14px 16px;
-            cursor: pointer; border-left: 4px solid transparent;
-            background: var(--bg-panel,#24252e); position: relative; z-index: 2;
+            display: flex; align-items: center; padding: 13px 18px;
+            cursor: pointer; border-left: 3px solid transparent;
+            background: transparent; position: relative; z-index: 2;
+            border-bottom: 1px solid rgba(0,0,0,0.15);
             transition: background var(--t-fast), transform 0.3s ease;
             user-select: none; -webkit-user-select: none; touch-action: pan-y;
         }
         .contact-item.swiping { transition: none; }
         .contact-item.swiped  { transform: translateX(-76px); }
-        .contact-item:hover   { background: var(--bg-panel-2,#2b2c36); }
-        .contact-item.active  { background: var(--bg-panel-2,#2b2c36); border-left-color: var(--brand-yellow); }
+        .contact-item:hover   { background: rgba(255,255,255,0.07); }
+        .contact-item.active  { background: rgba(252,202,70,0.12); border-left-color: var(--brand-yellow); }
         .avatar-wrap { position: relative; flex-shrink: 0; margin-right: 14px; }
         .avatar {
             width: 48px; height: 48px; border-radius: 50%;
@@ -149,7 +149,7 @@ export async function render(container) {
             display: flex; justify-content: center; align-items: center;
             font-weight: 700; font-size: 17px;
         }
-        .avatar-group { background: var(--brand-yellow-dim); color: var(--brand-yellow); border-radius: var(--r-lg,10px); }
+        .avatar-group { background: #2a2218; color: var(--brand-yellow); border-radius: var(--r-lg,10px); border: 1px solid rgba(252,202,70,0.2); }
         .avatar-group svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
         .contact-info { flex: 1; min-width: 0; }
         .contact-name { font-weight: 600; color: #fff; font-size: 15px; display: flex; justify-content: space-between; margin-bottom: 4px; pointer-events: none; }
@@ -158,13 +158,13 @@ export async function render(container) {
 
         /* ── Chat main ── */
         .chat-main {
-            flex: 1; background: var(--bg-panel);
+            flex: 1; background: var(--bg-dark,#1a1b22);
             border-radius: var(--r-xl,14px); display: flex; flex-direction: column;
             border: 1px solid var(--border); overflow: hidden; min-width: 0;
         }
         .chat-header {
             padding: 12px 18px; border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; background: var(--bg-panel-2); flex-shrink: 0;
+            display: flex; align-items: center; background: var(--bg-panel); flex-shrink: 0;
         }
         .chat-header h2 { margin: 0; font-size: 16px; font-weight: 700; color: #fff; }
         .chat-header-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
@@ -386,7 +386,7 @@ export async function render(container) {
                         <p id="sidebar-stats" style="margin:3px 0 0;color:var(--text-faint);font-size:12px"></p>
                     </div>
                     <button class="btn-new-chat" id="btnNewChat" title="Nouvelle discussion">
-                        <svg viewBox="0 0 24 24"><use href="#msg-edit"/></svg>
+                        <svg viewBox="0 0 24 24"><use href="#msg-plus"/></svg>
                     </button>
                 </div>
                 <div class="sidebar-search">
@@ -395,12 +395,7 @@ export async function render(container) {
                         <input type="text" id="searchContactInput" placeholder="Rechercher une conversation…">
                     </div>
                 </div>
-                <div class="msg-filter-tabs" id="msgFilterTabs">
-                    <button class="msg-tab active" data-filter="tous">Tous</button>
-                    <button class="msg-tab" data-filter="equipe">Équipe <span class="msg-tab-badge" id="badge-equipe" style="display:none"></span></button>
-                    <button class="msg-tab" data-filter="clients">Clients <span class="msg-tab-badge" id="badge-clients" style="display:none"></span></button>
-                    <button class="msg-tab" data-filter="fournisseurs">Fournisseurs</button>
-                </div>
+
                 <div class="contact-list" id="contactListContainer"></div>
             </aside>
 
@@ -602,14 +597,7 @@ async function init(container) {
         document.getElementById('topbar-mobile-menu-btn')?.click()
     })
 
-    // Onglets de filtre
-    container.querySelectorAll('.msg-tab').forEach(btn => {
-        btn.addEventListener('click', () => {
-            currentFilter = btn.dataset.filter
-            container.querySelectorAll('.msg-tab').forEach(t => t.classList.toggle('active', t === btn))
-            renderContactList(container)
-        })
-    })
+
 
     // Recherche in-chat
     container.querySelector('#btnChatSearch').addEventListener('click', () => {
@@ -920,7 +908,6 @@ function renderContactList(container) {
     list.innerHTML = ''
     Object.entries(conversationsData).reverse().forEach(([id, chat]) => {
         if (id !== 'global' && hiddenChatIds.has(id)) return
-        if (currentFilter !== 'tous' && getChatCategory(id) !== currentFilter) return
         const isActive = id === currentChatId ? 'active' : ''
         const avatarColor = getAvatarColor(chat.name)
         const avatarClass = chat.isGroup ? 'avatar-group' : ''

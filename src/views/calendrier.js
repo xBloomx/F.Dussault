@@ -1,4 +1,4 @@
-// src/views/calendrier.js
+﻿// src/views/calendrier.js
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
@@ -515,7 +515,10 @@ function switchCalTab(calId) {
     renderLegend()
     renderCalendar()
     document.getElementById('btnDeleteCal').style.display = currentCalId.startsWith('cal-') ? 'flex' : 'none'
-    document.getElementById('btnAddEvent').style.display  = (currentCalId === 'urgence' && !canManageUrgence()) ? 'none' : ''
+    const _hideAdd = (currentCalId === 'urgence' && !canManageUrgence()) || (currentCalId === 'global' && !hasPermission('manage_calendar'))
+    document.getElementById('btnAddEvent').style.display = _hideAdd ? 'none' : ''
+    const _mobAdd = document.getElementById('btnAddEventMobile')
+    if (_mobAdd) _mobAdd.style.display = _hideAdd ? 'none' : ''
 }
 
 const TAB_COLORS = {
@@ -1132,3 +1135,4 @@ function closeModal(id) {
     const el = document.getElementById(id)
     if (el) el.style.display = 'none'
 }
+

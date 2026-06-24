@@ -799,9 +799,9 @@ function updateTsArchiveBar(container) {
     bar.innerHTML = `
         <span style="font-size:14px;font-weight:bold;color:var(--text-main,#eee)">${archiveSelection.size} sélectionné(s)</span>
         ${canRes ? `<button id="bar-ts-restore" style="background:rgba(40,167,69,0.18);color:#28a745;border:1px solid rgba(40,167,69,0.3);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">↺ Restaurer</button>` : ''}
-        <button id="bar-ts-delete" style="background:rgba(220,53,69,0.18);color:#dc3545;border:1px solid rgba(220,53,69,0.3);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-left:auto">Supprimer définitivement</button>
+        ${hasPermission('delete_documents') ? '<button id="bar-ts-delete" style="background:rgba(220,53,69,0.18);color:#dc3545;border:1px solid rgba(220,53,69,0.3);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-left:auto">Supprimer définitivement</button>' : ''}
     `
-    bar.querySelector('#bar-ts-delete').addEventListener('click', () => {
+    bar.querySelector('#bar-ts-delete')?.addEventListener('click', () => {
         const ids = [...archiveSelection]
         showConfirmModal(`Supprimer définitivement ${ids.length} feuille(s) de temps ? Cette action est irréversible.`, async () => {
             const { error } = await supabase.from('feuilles_de_temps').delete().in('id', ids)

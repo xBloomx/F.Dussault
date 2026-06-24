@@ -1,4 +1,4 @@
-// src/views/outils.js
+﻿// src/views/outils.js
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
@@ -719,7 +719,7 @@ function renderTools(list = toolsLog) {
             if (hasPending) {
                 rowActHTML = `<button class="btn-row-return" data-cancel="${t.id}">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Annuler</button>`
-            } else if (isMyTool || canManage) {
+            } else if (isMyTool || currentRole === 'A0') {
                 rowActHTML = `<button class="btn-row-return" data-return="${t.id}">
                     <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>Retourner</button>`
                 if (isMyTool) rowActHTML += `<button class="btn-row-icon" data-transfer="${t.id}" title="Transférer">
@@ -840,7 +840,7 @@ function openToolDrawer(id) {
     // Actions
     const actDiv = document.getElementById('tdActions')
     actDiv.innerHTML = ''
-    if (t.status === 'active' && (isMyTool || canManage)) {
+    if (t.status === 'active' && (isMyTool || currentRole === 'A0')) {
         actDiv.innerHTML = `<div class="td-action-row" style="margin-bottom:12px">
             <button class="btn-td-return" id="tdBtnReturn"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Retourner</button>
             ${isMyTool ? `<button class="btn-td-transfer" id="tdBtnTransfer"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Transférer</button>` : ''}
@@ -849,7 +849,7 @@ function openToolDrawer(id) {
         document.getElementById('tdBtnReturn')?.addEventListener('click', () => { closeDrawer(); askReturn(id) })
         document.getElementById('tdBtnTransfer')?.addEventListener('click', () => { closeDrawer(); openTransferModal(id) })
         document.getElementById('tdBtnBris')?.addEventListener('click', () => { closeDrawer(); openBriseModal(id) })
-    } else if (t.status === 'en_reparation' && canManage) {
+    } else if (t.status === 'en_reparation' && (isMyTool || currentRole === 'A0')) {
         actDiv.innerHTML = `<div class="td-action-row" style="margin-bottom:12px">
             <button class="btn-td-return" id="tdBtnRepare"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Marquer réparé</button>
         </div>`

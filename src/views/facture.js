@@ -1,4 +1,4 @@
-// src/views/facture.js
+﻿// src/views/facture.js
 
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
@@ -508,7 +508,7 @@ async function init(container) {
     }
     applyTabStyles(container)
     container.querySelector('#tab-mine').addEventListener('click', () => switchTab('mine', container))
-    container.querySelector('#tab-all').addEventListener('click', () => switchTab('all', container))
+    container.querySelector('#tab-all')?.addEventListener('click', () => switchTab('all', container))
     container.querySelector('#tab-archives').addEventListener('click', () => switchTab('archives', container))
     container.querySelector('#searchInput').addEventListener('keyup', () => { clearTimeout(_searchDebounce); _searchDebounce = setTimeout(() => renderInvoiceList(container, invoiceContainer), 300) })
     container.querySelector('#statusFilter').addEventListener('change', () => renderInvoiceList(container, invoiceContainer))
@@ -619,7 +619,7 @@ async function loadData(reset = true, container) {
         if (!canSeeAllArchives(currentRole)) query = query.eq('author_id', currentUser.id)
     } else {
         query = query.eq('is_archived', false)
-        if (currentInvTab === 'mine') query = query.eq('author_id', currentUser.id)
+        if (currentInvTab === 'mine' || !hasPermission('view_all_invoices')) query = query.eq('author_id', currentUser.id)
         else query = query.neq('status', 'brouillon')
     }
 
@@ -819,9 +819,9 @@ function updateInvArchiveBar(container) {
     bar.innerHTML = `
         <span style="font-size:14px;font-weight:bold;color:var(--text-main,#eee)">${archiveSelection.size} sélectionné(s)</span>
         ${canRes ? `<button id="bar-inv-restore" style="background:rgba(40,167,69,0.18);color:#28a745;border:1px solid rgba(40,167,69,0.3);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">↺ Restaurer</button>` : ''}
-        <button id="bar-inv-delete" style="background:rgba(220,53,69,0.18);color:#dc3545;border:1px solid rgba(220,53,69,0.3);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-left:auto">Supprimer définitivement</button>
+        ${hasPermission('delete_documents') ? '<button id="bar-inv-delete" style="background:rgba(220,53,69,0.18);color:#dc3545;border:1px solid rgba(220,53,69,0.3);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-left:auto">Supprimer définitivement</button>' : ''}
     `
-    bar.querySelector('#bar-inv-delete').addEventListener('click', () => {
+    bar.querySelector('#bar-inv-delete')?.addEventListener('click', () => {
         const ids = [...archiveSelection]
         showConfirmModal(`Supprimer définitivement ${ids.length} facture(s) ? Cette action est irréversible.`, async () => {
             const { error } = await supabase.from('factures').delete().in('id', ids)
@@ -1536,3 +1536,4 @@ function showAlertModal(msg, container) {
 function closeModal(id, container) {
     container.querySelector(`#${id}`)?.classList.remove('open')
 }
+

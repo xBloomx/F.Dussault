@@ -123,7 +123,7 @@ export async function render(container) {
         @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } #profilMenuBtn { display: flex; } }
     </style>
 
-    <div class="view" style="max-width:1200px">
+    <div class="view">
 
         <!-- ── Header ── -->
         <div class="profil-page-header">

@@ -1,4 +1,4 @@
-// src/views/accueil.js
+﻿// src/views/accueil.js
 import { supabase } from '../supabase.js'
 import { currentUser, currentRole, currentProfil, hasPermission } from '../auth.js'
 import { showToast } from '../shared/toast.js'
@@ -619,11 +619,9 @@ function renderNews() {
         div.innerHTML = `
             <div class="news-card-top">
                 ${typeTag}
-                <span class="nc-date">${sanitize(shortDate)}</span>
             </div>
             <div class="news-card-header">
                 <h3 class="news-card-title">${sanitize(news.title)}</h3>
-                <div class="news-card-meta nc-full-date">Publié le ${sanitize(dateStr)}</div>
             </div>
             <div class="news-card-body">${sanitize(news.body)}</div>
             ${news.author ? `<div class="nc-author">${makeAvatar(news.author, 22)}<span><span style="color:var(--text-faint)">Publié par</span> <strong style="color:var(--text-main)">${sanitize(news.author)}</strong></span></div>` : ''}
@@ -782,3 +780,4 @@ function closeConfirmModal() {
     document.getElementById('confirmModal').style.display = 'none'
     confirmCallback = null
 }
+

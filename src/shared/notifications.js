@@ -53,24 +53,28 @@ export async function refreshNotifs() {
         counts.emails = parseInt(emailEl.textContent) || 0
     }
 
-    // Factures en attente (bureau / admin)
+    // Factures en attente depuis plus de 7 jours
     if (hasPermission('view_all_invoices')) {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
         const since = seen.factures || '2000-01-01T00:00:00Z'
         const { count } = await supabase
             .from('factures')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'envoye')
+            .lt('created_at', sevenDaysAgo)
             .gt('created_at', since)
         counts.factures = count || 0
     }
 
-    // Feuilles de temps en attente d'approbation (bureau / admin)
+    // Feuilles de temps en attente depuis plus de 7 jours
     if (hasPermission('approve_timesheets')) {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
         const since = seen.timesheets || '2000-01-01T00:00:00Z'
         const { count } = await supabase
             .from('feuilles_de_temps')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'envoye')
+            .lt('created_at', sevenDaysAgo)
             .gt('created_at', since)
         counts.timesheets = count || 0
     }

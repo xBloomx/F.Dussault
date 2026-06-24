@@ -76,7 +76,7 @@ export async function render(container) {
         .search-box { flex: 1; position: relative; display: flex; align-items: center; }
         .search-box input:focus { border-color: var(--accent) !important; }
         .search-icon { position: absolute; left: 15px; color: #888; pointer-events: none; display: flex; align-items: center; }
-        .admin-main { max-width: 1200px; margin: 0 auto; overscroll-behavior-y: contain; }
+        .admin-main { width: 100%; overscroll-behavior-y: contain; box-sizing: border-box; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; }
         .dash-title h1 { margin: 0; font-size: 28px; color: white; }
         .dash-title p { margin: 5px 0 0; color: #aaa; font-size: 14px; }
@@ -930,10 +930,16 @@ async function init() {
         document.getElementById('btnOpenAddFormation')?.addEventListener('click', openAddFormationModal)
     } else {
         // Cacher outils, compteurs et tickets pour tous sauf A0/A1
-        ;['toolsPanel', 'countersPanel', 'SupportPanel'].forEach(id => {
+        ;['countersPanel', 'SupportPanel'].forEach(id => {
             const el = document.getElementById(id)
             if (el) el.style.display = 'none'
         })
+        if (hasPermission('manage_tools')) {
+            loadTools()
+        } else {
+            const tp = document.getElementById('toolsPanel')
+            if (tp) tp.style.display = 'none'
+        }
         if (currentRole === 'A2') {
             // A2 voit les certifications
             loadAllFormations()
@@ -944,7 +950,7 @@ async function init() {
         }
         // Cacher l'onglet Système si rien n'est visible
         const tabSys = document.querySelector('[data-tab="systeme"]')
-        if (tabSys && !hasPermission('manage_suppliers')) tabSys.style.display = 'none'
+        if (tabSys && !hasPermission('manage_suppliers') && !hasPermission('manage_tools')) tabSys.style.display = 'none'
     }
 
     return function cleanup() {
