@@ -746,7 +746,7 @@ body.signature-mode-active .topbar   { display: none !important; }
     /* Padding for bottom nav */
     #view-host { padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
     .main-content { width: 100%; padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
-    .view { padding: 16px 14px calc(80px + env(safe-area-inset-bottom, 0px)) 14px; gap: 16px; }
+    .view { padding: 16px 14px 20px 14px; gap: 16px; }
 
     /* Old bottom nav compat */
     #bottom-nav {
