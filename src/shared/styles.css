@@ -104,7 +104,7 @@ body {
     text-rendering: optimizeLegibility;
 }
 
-#root { display: flex; min-height: 100dvh; }
+#root { display: flex; height: 100dvh; }
 
 button, input, textarea, select { font-family: inherit; color: inherit; }
 button { cursor: pointer; }
