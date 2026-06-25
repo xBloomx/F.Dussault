@@ -667,10 +667,21 @@ boot()
 })()
 
 // ── SW update ──────────────────────────────────────────────────────
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload())
-    navigator.serviceWorker.ready.then(reg => reg.update())
-}
-</script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+            navigator.serviceWorker.ready.then(reg => reg.update());
+        }
+    </script>
+
+    <script>
+        setTimeout(() => {
+            alert(
+                `window.innerHeight = ${window.innerHeight}\n` +
+                `body.scrollHeight = ${document.body.scrollHeight}\n` +
+                `root = ${document.getElementById("root")?.offsetHeight}`
+            );
+        }, 2000);
+    </script>
 </body>
 </html>
