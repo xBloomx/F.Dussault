@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>F.Dussault</title>
 
-    <!-- Inter + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,12 +38,10 @@
         }
     </style>
 
-    <!-- emoji-picker-element -->
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 </head>
 <body>
 
-<!-- Loader initial -->
 <div id="security-loader">
     <img src="/assets/logo+nom.png" alt="Logo F.Dussault" style="width:200px;height:auto;margin-bottom:24px;display:block">
     <svg width="200" height="3" viewBox="0 0 200 3">
@@ -55,10 +52,8 @@
     </svg>
 </div>
 
-<!-- Indicateur connexion -->
 <div id="conn-indicator"><div id="conn-dot"></div><span id="conn-text">Connecté</span></div>
 
-<!-- Écran maintenance -->
 <div id="maintenance-screen">
     <svg style="width:80px;height:80px;color:#fcca46;stroke:currentColor;stroke-width:2;fill:none;margin-bottom:20px" viewBox="0 0 24 24">
         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -68,15 +63,11 @@
     <p style="color:var(--text-muted);font-size:15px;max-width:380px;line-height:1.5;margin:0 auto">L'application F.Dussault est temporairement indisponible pour une mise à jour.</p>
 </div>
 
-<!-- Hamburger (mobile) -->
 <button id="menu-toggle" class="menu-btn" title="Menu" aria-label="Menu">
     <svg viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg>
 </button>
 
-<!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
 <aside id="sidebar" class="sidebar">
-
-    <!-- Drawer header (mobile only) -->
     <div class="sidebar-drawer-header">
         <div class="sidebar-drawer-logo" id="sidebar-mob-logo">FD</div>
         <div class="sidebar-drawer-info">
@@ -85,10 +76,8 @@
         </div>
     </div>
 
-    <!-- Brand (desktop only) -->
     <div class="sidebar-brand" title="F.Dussault">FD</div>
 
-    <!-- Navigation principale -->
     <div class="sidebar-top">
         <button class="nav-btn active" data-view="accueil" data-label="Accueil" title="Accueil" aria-label="Accueil">
             <svg class="nav-svg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -154,15 +143,12 @@
         </button>
     </div>
 
-    <!-- Navigation bas (Admin + Profil) -->
     <div class="sidebar-bottom">
         <div class="sidebar-divider"></div>
-
         <button class="nav-btn hidden" id="btn-nav-admin" data-view="admin" data-label="Administration" title="Administration" aria-label="Administration">
             <svg class="nav-svg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
             <span class="nav-label">Administration</span>
         </button>
-
         <button class="nav-btn" data-view="profil" data-label="Profil personnel" title="Profil personnel" aria-label="Profil personnel">
             <svg class="nav-svg" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <img class="nav-png" src="/assets/logo_profil.png" alt="Profil" style="display:none;width:24px;height:24px;object-fit:contain">
@@ -171,12 +157,8 @@
     </div>
 </aside>
 
-<!-- ══ MAIN CONTENT ══════════════════════════════════════════════ -->
 <div class="main-content">
-
-    <!-- Topbar -->
     <header class="topbar" id="app-topbar">
-        <!-- Mobile brand (hidden on desktop) -->
         <div class="topbar-mobile-brand">
             <div class="topbar-mobile-logo" id="topbar-mobile-logo">FD</div>
             <span class="topbar-mobile-company">F.Dussault</span>
@@ -213,7 +195,6 @@
         </div>
     </header>
 
-    <!-- App loader -->
     <div id="app-loader">
         <svg width="200" height="3" viewBox="0 0 200 3">
             <rect width="200" height="3" fill="rgba(255,255,255,0.05)" rx="1.5"/>
@@ -228,7 +209,6 @@
 
 <div id="overlay"></div>
 
-<!-- Mobile bottom nav -->
 <nav id="bottom-nav">
     <button class="nav-btn" data-view="accueil" data-label="Accueil" aria-label="Accueil">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -253,7 +233,6 @@
     </button>
 </nav>
 
-<!-- Portrait hint -->
 <div id="portrait-hint">
     <svg class="ph-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
     <h2 style="margin:0 0 10px;font-size:22px;font-weight:700">Redressez votre téléphone</h2>
@@ -262,13 +241,11 @@
 
 <div id="toast-container"></div>
 
-<!-- Offline banner -->
 <div id="offline-banner">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
     <span id="offline-text">Hors ligne — les modifications sont sauvegardées localement</span>
 </div>
 
-<!-- iOS Install Banner -->
 <div id="ios-install-banner">
     <div style="width:40px;height:40px;background:var(--bg-sunken);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <img src="/assets/logo_app.png" style="width:30px;height:30px;border-radius:7px;object-fit:contain" onerror="this.style.display='none'">
@@ -284,404 +261,407 @@
 </div>
 
 <script type="module">
-import { installConsoleFilter } from '/src/shared/consoleFilter.js'
-import { loadSession, watchSession, currentUser, currentRole, currentProfil, hasPermission, invalidateRolesCache, reloadRolesConfig, getRoleLabel } from '/src/auth.js'
-import { supabase } from '/src/supabase.js'
-import { hasPendingOfflineSaves, getPendingCount, flushOfflineQueue } from '/src/shared/offlineQueue.js'
-import { initGlobalSearch, hidePanel as hideSearchPanel } from '/src/shared/globalSearch.js'
-import { initNotifications, markNotifSeen } from '/src/shared/notifications.js'
+    import { installConsoleFilter } from '/src/shared/consoleFilter.js'
+    import { loadSession, watchSession, currentUser, currentRole, currentProfil, hasPermission, invalidateRolesCache, reloadRolesConfig, getRoleLabel } from '/src/auth.js'
+    import { supabase } from '/src/supabase.js'
+    import { hasPendingOfflineSaves, getPendingCount, flushOfflineQueue } from '/src/shared/offlineQueue.js'
+    import { initGlobalSearch, hidePanel as hideSearchPanel } from '/src/shared/globalSearch.js'
+    import { initNotifications, markNotifSeen } from '/src/shared/notifications.js'
 
-installConsoleFilter()
+    installConsoleFilter()
 
-// ── Breadcrumb labels ──────────────────────────────────────────
-const VIEW_LABELS = {
-    accueil: 'Accueil', facture: 'Factures', soumissions: 'Soumissions',
-    feuilleTemps: 'Feuille de temps', messagerie: 'Messagerie',
-    courriel: 'Boîte courriel', calendrier: 'Calendrier',
-    clients: 'Clients', outils: 'Outils', po: 'Bons de commande',
-    admin: 'Administration', profil: 'Profil personnel',
-}
-
-// ── Modules lazy ───────────────────────────────────────────────
-const MODULE_MAP = {
-    accueil:      () => import('/src/views/accueil.js'),
-    facture:      () => import('/src/views/facture.js'),
-    soumissions:  () => import('/src/views/soumissions.js'),
-    feuilleTemps: () => import('/src/views/feuilleTemps.js'),
-    messagerie:   () => import('/src/views/messagerie.js'),
-    courriel:     () => import('/src/views/courriel.js'),
-    calendrier:   () => import('/src/views/calendrier.js'),
-    clients:      () => import('/src/views/clients.js'),
-    outils:       () => import('/src/views/outils.js'),
-    po:           () => import('/src/views/po.js'),
-    admin:        () => import('/src/views/admin.js'),
-    profil:       () => import('/src/views/profil.js'),
-}
-
-// ── État ───────────────────────────────────────────────────────
-let currentView = 'accueil'
-let currentCleanup = null
-const appContainer = document.getElementById('app-container')
-const appLoader    = document.getElementById('app-loader')
-const mainLoader   = document.getElementById('security-loader')
-const sidebar      = document.getElementById('sidebar')
-const menuBtn      = document.getElementById('menu-toggle')
-const overlay      = document.getElementById('overlay')
-const topbarCrumb  = document.getElementById('topbar-crumb')
-
-// ── Router ─────────────────────────────────────────────────────
-async function navigateTo(viewName) {
-    if (!MODULE_MAP[viewName]) return
-    if (currentCleanup) { try { currentCleanup() } catch {} currentCleanup = null }
-
-    // Fermer la barre de recherche mobile si elle était ouverte
-    closeMobileSearch()
-    hideSearchPanel()
-    document.body.classList.remove('detail-mode')
-    const inp = document.querySelector('.topbar-search')
-    if (inp) { inp.value = ''; }
-
-    document.body.dataset.view = viewName
-
-    appLoader.classList.remove('hidden')
-    appContainer.innerHTML = ''
-    appContainer.style.opacity = '0'
-
-    // Breadcrumb
-    if (topbarCrumb) topbarCrumb.textContent = VIEW_LABELS[viewName] || viewName
-
-    const el = document.createElement('div')
-    el.className = 'view-container'
-    appContainer.appendChild(el)
-
-    try {
-        const mod = await MODULE_MAP[viewName]()
-        const cleanup = await mod.render(el)
-        if (typeof cleanup === 'function') currentCleanup = cleanup
-    } catch (e) {
-        if (e instanceof TypeError && e.message.includes('Failed to fetch dynamically imported module')) {
-            if (!sessionStorage.getItem('sw_reload_attempted')) {
-                sessionStorage.setItem('sw_reload_attempted', '1')
-                window.location.reload(); return
-            }
-        }
-        sessionStorage.removeItem('sw_reload_attempted')
-        console.error('[Router]', viewName, e)
-        el.innerHTML = `<div style="color:var(--status-red);padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
+    // ── Breadcrumb labels ──────────────────────────────────────────
+    const VIEW_LABELS = {
+        accueil: 'Accueil', facture: 'Factures', soumissions: 'Soumissions',
+        feuilleTemps: 'Feuille de temps', messagerie: 'Messagerie',
+        courriel: 'Boîte courriel', calendrier: 'Calendrier',
+        clients: 'Clients', outils: 'Outils', po: 'Bons de commande',
+        admin: 'Administration', profil: 'Profil personnel',
     }
 
-    currentView = viewName
-    markNotifSeen(viewName)
-    appLoader.classList.add('hidden')
-    requestAnimationFrame(() => {
-        appContainer.style.transition = 'opacity 0.18s ease'
-        appContainer.style.opacity = '1'
-    })
-}
+    // ── Modules lazy ───────────────────────────────────────────────
+    const MODULE_MAP = {
+        accueil:      () => import('/src/views/accueil.js'),
+        facture:      () => import('/src/views/facture.js'),
+        soumissions:  () => import('/src/views/soumissions.js'),
+        feuilleTemps: () => import('/src/views/feuilleTemps.js'),
+        messagerie:   () => import('/src/views/messagerie.js'),
+        courriel:     () => import('/src/views/courriel.js'),
+        calendrier:   () => import('/src/views/calendrier.js'),
+        clients:      () => import('/src/views/clients.js'),
+        outils:       () => import('/src/views/outils.js'),
+        po:           () => import('/src/views/po.js'),
+        admin:        () => import('/src/views/admin.js'),
+        profil:       () => import('/src/views/profil.js'),
+    }
 
-// ── Sidebar nav ─────────────────────────────────────────────────
-document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const view = btn.dataset.view
+    // ── État ───────────────────────────────────────────────────────
+    let currentView = 'accueil'
+    let currentCleanup = null
+    const appContainer = document.getElementById('app-container')
+    const appLoader    = document.getElementById('app-loader')
+    const mainLoader   = document.getElementById('security-loader')
+    const sidebar      = document.getElementById('sidebar')
+    const menuBtn      = document.getElementById('menu-toggle')
+    const overlay      = document.getElementById('overlay')
+    const topbarCrumb  = document.getElementById('topbar-crumb')
 
-        if (view === 'messagerie') {
-            const badge = document.getElementById('badge-messagerie')
-            if (badge) { badge.textContent = '0'; badge.style.display = 'none' }
-            const bnavBadge = document.getElementById('bnav-badge-messagerie')
-            if (bnavBadge) { bnavBadge.textContent = ''; bnavBadge.style.display = 'none' }
-        }
+    // ── Router ─────────────────────────────────────────────────────
+    async function navigateTo(viewName) {
+        if (!MODULE_MAP[viewName]) return
+        if (currentCleanup) { try { currentCleanup() } catch {} currentCleanup = null }
 
-        document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.remove('active'))
-        document.querySelectorAll(`.nav-btn[data-view="${view}"]`).forEach(b => b.classList.add('active'))
-
-        if (window.innerWidth <= 768) {
-            sidebar.classList.remove('open')
-            overlay.classList.remove('active')
-            menuBtn.classList.remove('hide')
-        }
-
-        navigateTo(view)
-    })
-})
-
-// ── Hamburger ───────────────────────────────────────────────────
-menuBtn.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active'); menuBtn.classList.add('hide') })
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); menuBtn.classList.remove('hide') })
-document.getElementById('topbar-mobile-menu-btn')?.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active') })
-function closeMobileSearch() {
-    const sw = document.querySelector('.topbar-search-wrap')
-    const closeBtn = document.getElementById('topbar-search-close')
-    if (sw) sw.classList.remove('mobile-open')
-    if (closeBtn) closeBtn.style.display = 'none'
-}
-document.getElementById('topbar-mobile-search-btn')?.addEventListener('click', () => {
-    const sw = document.querySelector('.topbar-search-wrap')
-    const inp = document.querySelector('.topbar-search')
-    const closeBtn = document.getElementById('topbar-search-close')
-    if (!sw || !inp) return
-    if (sw.classList.contains('mobile-open')) {
         closeMobileSearch()
-    } else {
-        sw.classList.add('mobile-open')
-        if (closeBtn) closeBtn.style.display = 'block'
-        inp.focus()
-    }
-})
-document.getElementById('topbar-search-close')?.addEventListener('click', () => closeMobileSearch())
-document.querySelector('.topbar-search')?.addEventListener('blur', () => {
-    if (window.innerWidth <= 768) setTimeout(() => closeMobileSearch(), 200)
-})
+        hideSearchPanel()
+        document.body.classList.remove('detail-mode')
+        const inp = document.querySelector('.topbar-search')
+        if (inp) { inp.value = ''; }
 
-// ── Topbar: update user info after login ────────────────────────
-function updateTopbarUser() {
-    const ava       = document.getElementById('topbar-ava')
-    const mobileAva = document.getElementById('topbar-mobile-logo')
-    const name      = document.getElementById('topbar-name')
-    const role      = document.getElementById('topbar-role')
-    if (!currentProfil) return
-    const initials = (currentProfil.prenom_nom || 'FD').split(' ').map(w=>w[0]).slice(0,2).join('')
-    if (ava)       ava.textContent  = initials
-    if (mobileAva) mobileAva.textContent = initials
-    if (name) name.textContent = currentProfil.prenom_nom || 'F. Dussault'
-    if (role) role.textContent = `${currentProfil.role || 'A1'} · ${getRoleLabel(currentProfil.role)}`
-    // Drawer mobile header
-    const sidebarLogo = document.getElementById('sidebar-mob-logo')
-    const sidebarName = document.getElementById('sidebar-mob-name')
-    const sidebarSub  = document.getElementById('sidebar-mob-sub')
-    if (sidebarLogo) sidebarLogo.textContent = initials
-    if (sidebarName) sidebarName.textContent = currentProfil.prenom_nom || 'F.Dussault'
-    if (sidebarSub)  sidebarSub.textContent  = `${currentProfil.role || 'A1'} · ${getRoleLabel(currentProfil.role)}`
-}
+        document.body.dataset.view = viewName
 
-// ── Badge messagerie ─────────────────────────────────────────────
-window.addEventListener('new_message_notif', () => {
-    if (currentView !== 'messagerie') {
-        const badge = document.getElementById('badge-messagerie')
-        if (badge) {
-            badge.textContent = (parseInt(badge.textContent) || 0) + 1
-            badge.style.display = 'flex'
+        appLoader.classList.remove('hidden')
+        appContainer.innerHTML = ''
+        appContainer.style.opacity = '0'
+
+        if (topbarCrumb) topbarCrumb.textContent = VIEW_LABELS[viewName] || viewName
+
+        const el = document.createElement('div')
+        el.className = 'view-container'
+        appContainer.appendChild(el)
+
+        try {
+            const mod = await MODULE_MAP[viewName]()
+            const cleanup = await mod.render(el)
+            if (typeof cleanup === 'function') currentCleanup = cleanup
+        } catch (e) {
+            if (e instanceof TypeError && e.message.includes('Failed to fetch dynamically imported module')) {
+                if (!sessionStorage.getItem('sw_reload_attempted')) {
+                    sessionStorage.setItem('sw_reload_attempted', '1')
+                    window.location.reload();
+                    return
+                }
+            }
+            sessionStorage.removeItem('sw_reload_attempted')
+            console.error('[Router]', viewName, e)
+            el.innerHTML = `<div style="color:var(--status-red);padding:30px;text-align:center">Erreur de chargement du module.<br><small>${e.message}</small></div>`
         }
-        const bnavBadge = document.getElementById('bnav-badge-messagerie')
-        if (bnavBadge) {
-            bnavBadge.textContent = (parseInt(bnavBadge.textContent) || 0) + 1
-            bnavBadge.style.display = 'flex'
+
+        currentView = viewName
+        markNotifSeen(viewName)
+        appLoader.classList.add('hidden')
+        requestAnimationFrame(() => {
+            appContainer.style.transition = 'opacity 0.18s ease'
+            appContainer.style.opacity = '1'
+        })
+    }
+
+    // ── Sidebar nav ─────────────────────────────────────────────────
+    document.querySelectorAll('.nav-btn[data-view]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const view = btn.dataset.view
+
+            if (view === 'messagerie') {
+                const badge = document.getElementById('badge-messagerie')
+                if (badge) { badge.textContent = '0'; badge.style.display = 'none' }
+                const bnavBadge = document.getElementById('bnav-badge-messagerie')
+                if (bnavBadge) { bnavBadge.textContent = ''; bnavBadge.style.display = 'none' }
+            }
+
+            document.querySelectorAll('.nav-btn[data-view]').forEach(b => b.classList.remove('active'))
+            document.querySelectorAll(`.nav-btn[data-view="${view}"]`).forEach(b => b.classList.add('active'))
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open')
+                overlay.classList.remove('active')
+                menuBtn.classList.remove('hide')
+            }
+
+            navigateTo(view)
+        })
+    })
+
+    // ── Hamburger ───────────────────────────────────────────────────
+    menuBtn.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active'); menuBtn.classList.add('hide') })
+    overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('active'); menuBtn.classList.remove('hide') })
+    document.getElementById('topbar-mobile-menu-btn')?.addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('active') })
+    
+    function closeMobileSearch() {
+        const sw = document.querySelector('.topbar-search-wrap')
+        const closeBtn = document.getElementById('topbar-search-close')
+        if (sw) sw.classList.remove('mobile-open')
+        if (closeBtn) closeBtn.style.display = 'none'
+    }
+    
+    document.getElementById('topbar-mobile-search-btn')?.addEventListener('click', () => {
+        const sw = document.querySelector('.topbar-search-wrap')
+        const inp = document.querySelector('.topbar-search')
+        const closeBtn = document.getElementById('topbar-search-close')
+        if (!sw || !inp) return
+        if (sw.classList.contains('mobile-open')) {
+            closeMobileSearch()
+        } else {
+            sw.classList.add('mobile-open')
+            if (closeBtn) closeBtn.style.display = 'block'
+            inp.focus()
         }
+    })
+    document.getElementById('topbar-search-close')?.addEventListener('click', () => closeMobileSearch())
+    document.querySelector('.topbar-search')?.addEventListener('blur', () => {
+        if (window.innerWidth <= 768) setTimeout(() => closeMobileSearch(), 200)
+    })
+
+    // ── Topbar: update user info after login ────────────────────────
+    function updateTopbarUser() {
+        const ava       = document.getElementById('topbar-ava')
+        const mobileAva = document.getElementById('topbar-mobile-logo')
+        const name      = document.getElementById('topbar-name')
+        const role      = document.getElementById('topbar-role')
+        if (!currentProfil) return
+        const initials = (currentProfil.prenom_nom || 'FD').split(' ').map(w=>w[0]).slice(0,2).join('')
+        if (ava)       ava.textContent  = initials
+        if (mobileAva) mobileAva.textContent = initials
+        if (name) name.textContent = currentProfil.prenom_nom || 'F. Dussault'
+        if (role) role.textContent = `${currentProfil.role || 'A1'} · ${getRoleLabel(currentProfil.role)}`
+        
+        const sidebarLogo = document.getElementById('sidebar-mob-logo')
+        const sidebarName = document.getElementById('sidebar-mob-name')
+        const sidebarSub  = document.getElementById('sidebar-mob-sub')
+        if (sidebarLogo) sidebarLogo.textContent = initials
+        if (sidebarName) sidebarName.textContent = currentProfil.prenom_nom || 'F.Dussault'
+        if (sidebarSub)  sidebarSub.textContent  = `${currentProfil.role || 'A1'} · ${getRoleLabel(currentProfil.role)}`
     }
-})
 
-// ── Badge courriel (sidebar drawer) ──────────────────────────────
-window.addEventListener('sidebar_courriel_count', (e) => {
-    const count = e.detail?.count || 0
-    const el = document.getElementById('sidebar-count-courriel')
-    if (!el) return
-    if (count > 0) { el.textContent = count; el.style.display = 'flex' }
-    else { el.textContent = ''; el.style.display = 'none' }
-})
-
-// ── Permissions ──────────────────────────────────────────────────
-function appliquerPermissions() {
-    const btnAdmin       = document.getElementById('btn-nav-admin')
-    const btnPo          = document.getElementById('btn-nav-po')
-    const btnSoumissions = document.getElementById('btn-nav-soumissions')
-    const btnCourriel    = document.getElementById('btn-nav-courriel')
-    if (btnAdmin)       btnAdmin.classList.toggle('hidden', !hasPermission('view_admin'))
-    if (btnPo)          btnPo.classList.toggle('hidden', !hasPermission('access_po_tab'))
-    if (btnSoumissions) btnSoumissions.classList.toggle('hidden', !hasPermission('access_soumissions_tab'))
-    if (btnCourriel)    btnCourriel.classList.toggle('hidden', !hasPermission('access_courriel_tab'))
-}
-
-window.addEventListener('permissions_updated', async () => {
-    await reloadRolesConfig()
-    appliquerPermissions()
-})
-
-// ── PWA shortcuts ─────────────────────────────────────────────────
-function handlePWAShortcut() {
-    const v = new URLSearchParams(window.location.search).get('view')
-    if (!v) return
-    const map = { factures:'facture', soumissions:'soumissions', temps:'feuilleTemps', feuilles:'feuilleTemps', messagerie:'messagerie', courriel:'courriel', calendrier:'calendrier', clients:'clients', client:'clients', po:'po', outils:'outils', admin:'admin', profil:'profil', parametres:'profil' }
-    const target = map[v.toLowerCase()]
-    if (!target) return
-    const btn = document.querySelector(`.nav-btn[data-view="${target}"]`)
-    if (btn && !btn.classList.contains('hidden')) btn.click()
-}
-
-// ── Toast global ──────────────────────────────────────────────────
-window.showToast = function(msg, type = 'info', duration = 3000) {
-    if (type !== 'error' && type !== 'warning' && type !== 'success') return
-    const tc = document.getElementById('toast-container')
-    const t  = document.createElement('div')
-    t.className = `shared-toast ${type}`
-    t.textContent = msg
-    tc.appendChild(t)
-    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')))
-    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300) }, duration)
-}
-
-// ── Modal observer (hide hamburger when modal open) ───────────────
-window.addEventListener('toggle_menu', (e) => {
-    if (window.innerWidth > 768) return
-    menuBtn.style.display = e.detail?.action === 'hide' ? 'none' : ''
-})
-const _modalObserver = new MutationObserver((mutations) => {
-    if (window.innerWidth > 768) return
-    const relevant = mutations.some(m => m.target !== document.body && (
-        m.target.classList.contains('modal-overlay') ||
-        m.target.classList.contains('custom-modal-overlay') ||
-        m.target.id === 'sig-fd-modal'
-    ))
-    if (!relevant) return
-    const hasOpen = document.querySelector('.modal-overlay.open, .custom-modal-overlay.open, #sig-fd-modal.show')
-    menuBtn.style.display = hasOpen ? 'none' : ''
-})
-_modalObserver.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] })
-
-// ── Connexion ─────────────────────────────────────────────────────
-const connIndicator = document.getElementById('conn-indicator')
-const connText      = document.getElementById('conn-text')
-const offlineBanner = document.getElementById('offline-banner')
-const offlineText   = document.getElementById('offline-text')
-let connTimer = null
-
-function showConnStatus(online) {
-    if (connTimer) clearTimeout(connTimer)
-    connIndicator.className = online ? 'show' : 'offline show'
-    connText.textContent = online ? 'Reconnecté' : 'Hors ligne'
-    if (online) {
-        offlineBanner?.classList.remove('show')
-        connTimer = setTimeout(() => connIndicator.classList.remove('show'), 2000)
-    } else { offlineBanner?.classList.add('show') }
-}
-
-window.addEventListener('online', async () => {
-    if (!hasPendingOfflineSaves()) { showConnStatus(true); return }
-    const n = getPendingCount()
-    if (offlineText) offlineText.textContent = `Reconnecté — synchronisation de ${n} document(s)...`
-    const { flushed, failed } = await flushOfflineQueue(async (table, payload) => supabase.from(table).upsert(payload))
-    showConnStatus(true)
-    if (flushed > 0) window.showToast(`${flushed} document(s) synchronisé(s) avec succès.`, 'success', 4000)
-    if (failed > 0)  window.showToast(`${failed} synchronisation(s) échouée(s). Ouvrez et sauvegardez manuellement.`, 'error', 6000)
-    if (offlineText) offlineText.textContent = 'Hors ligne — les modifications sont sauvegardées localement'
-})
-window.addEventListener('offline', () => showConnStatus(false))
-
-// ── Maintenance toggle ─────────────────────────────────────────────
-window.addEventListener('toggle_maintenance', (e) => {
-    const active = e.detail?.active
-    const ms = document.getElementById('maintenance-screen')
-    if (!ms) return
-    if (active) { if (currentRole === 'A0') return; ms.style.display = 'flex'; menuBtn.style.display = 'none' }
-    else { ms.style.display = 'none'; if (window.innerWidth <= 768) menuBtn.style.display = 'flex' }
-})
-
-// ── Formations cascade ─────────────────────────────────────────────
-window.addEventListener('formations_updated', () => {
-    if (currentView === 'accueil' || currentView === 'calendrier') navigateTo(currentView)
-})
-
-// ── Signature plein écran ──────────────────────────────────────────
-window.addEventListener('signature_mode', (e) => {
-    const topbar = document.getElementById('app-topbar')
-    if (e.detail?.action === 'enter') {
-        document.body.classList.add('signature-mode-active')
-        menuBtn.classList.add('hide')
-        if (topbar) topbar.style.display = 'none'
-    } else {
-        document.body.classList.remove('signature-mode-active')
-        menuBtn.classList.remove('hide')
-        if (topbar) topbar.style.display = ''
-    }
-})
-
-// ── Boot ───────────────────────────────────────────────────────────
-async function boot() {
-    try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) { window.location.replace('/login.html'); return }
-
-        const user = await loadSession()
-        if (!user) { window.location.replace('/login.html'); return }
-
-        if (currentRole !== 'A0') {
-            const { data: param } = await supabase.from('parametres_globaux').select('valeur').eq('cle', 'mode_maintenance').maybeSingle()
-            if (param?.valeur === 'true') {
-                document.getElementById('maintenance-screen').style.display = 'flex'
-                menuBtn.style.display = 'none'
-                mainLoader.style.opacity = '0'
-                setTimeout(() => mainLoader.style.display = 'none', 400)
-                return
+    // ── Badge messagerie ─────────────────────────────────────────────
+    window.addEventListener('new_message_notif', () => {
+        if (currentView !== 'messagerie') {
+            const badge = document.getElementById('badge-messagerie')
+            if (badge) {
+                badge.textContent = (parseInt(badge.textContent) || 0) + 1
+                badge.style.display = 'flex'
+            }
+            const bnavBadge = document.getElementById('bnav-badge-messagerie')
+            if (bnavBadge) {
+                bnavBadge.textContent = (parseInt(bnavBadge.textContent) || 0) + 1
+                bnavBadge.style.display = 'flex'
             }
         }
-
-        appliquerPermissions()
-        updateTopbarUser()
-        watchSession(() => { window.location.replace('/login.html') })
-        if (!navigator.onLine) showConnStatus(false)
-
-        mainLoader.style.opacity = '0'
-        setTimeout(() => mainLoader.style.display = 'none', 400)
-
-        handlePWAShortcut()
-        initGlobalSearch(navigateTo)
-        initNotifications(navigateTo)
-        if (currentView === 'accueil') await navigateTo('accueil')
-
-    } catch (e) { console.warn('[Boot]', e?.message) }
-}
-
-boot()
-
-// ── iOS Install banner ─────────────────────────────────────────────
-;(() => {
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
-    const isStandalone = navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches
-    if (!isIOS || isStandalone || localStorage.getItem('ios_install_dismissed')) return
-    const banner = document.getElementById('ios-install-banner')
-    if (!banner) return
-    setTimeout(() => { banner.style.display = 'flex' }, 3000)
-    document.getElementById('ios-install-close').addEventListener('click', () => {
-        banner.style.display = 'none'
-        localStorage.setItem('ios_install_dismissed', '1')
     })
-})()
 
-// ── Portrait hint ──────────────────────────────────────────────────
-;(() => {
-    const hint = document.getElementById('portrait-hint')
-    if (!hint) return
-    let wasOpen = false
-    function onSigChange() {
-        const sigOpen = document.getElementById('sig-fd-modal')?.classList.contains('show')
-        const isLandscape = window.innerWidth > window.innerHeight
-        const isMobile = window.innerWidth < 900
-        if (sigOpen) { wasOpen = true; hint.classList.remove('show') }
-        else if (wasOpen) { wasOpen = false; if (isMobile && isLandscape) hint.classList.add('show') }
+    // ── Badge courriel (sidebar drawer) ──────────────────────────────
+    window.addEventListener('sidebar_courriel_count', (e) => {
+        const count = e.detail?.count || 0
+        const el = document.getElementById('sidebar-count-courriel')
+        if (!el) return
+        if (count > 0) { el.textContent = count; el.style.display = 'flex' }
+        else { el.textContent = ''; el.style.display = 'none' }
+    })
+
+    // ── Permissions ──────────────────────────────────────────────────
+    function appliquerPermissions() {
+        const btnAdmin       = document.getElementById('btn-nav-admin')
+        const btnPo          = document.getElementById('btn-nav-po')
+        const btnSoumissions = document.getElementById('btn-nav-soumissions')
+        const btnCourriel    = document.getElementById('btn-nav-courriel')
+        if (btnAdmin)       btnAdmin.classList.toggle('hidden', !hasPermission('view_admin'))
+        if (btnPo)          btnPo.classList.toggle('hidden', !hasPermission('access_po_tab'))
+        if (btnSoumissions) btnSoumissions.classList.toggle('hidden', !hasPermission('access_soumissions_tab'))
+        if (btnCourriel)    btnCourriel.classList.toggle('hidden', !hasPermission('access_courriel_tab'))
     }
-    function hideIfPortrait() { if (window.innerWidth <= window.innerHeight) hint.classList.remove('show') }
-    window.addEventListener('resize', hideIfPortrait)
-    window.addEventListener('orientationchange', () => setTimeout(hideIfPortrait, 150))
-    const attachObs = (modal) => new MutationObserver(onSigChange).observe(modal, { attributes: true, attributeFilter: ['class'] })
-    const sigModal = document.getElementById('sig-fd-modal')
-    if (sigModal) attachObs(sigModal)
-    else new MutationObserver((_, obs) => { const m = document.getElementById('sig-fd-modal'); if (m) { attachObs(m); obs.disconnect() } }).observe(document.body, { childList: true, subtree: true })
-})()
 
-// ── SW update ──────────────────────────────────────────────────────
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
-            navigator.serviceWorker.ready.then(reg => reg.update());
+    window.addEventListener('permissions_updated', async () => {
+        await reloadRolesConfig()
+        appliquerPermissions()
+    })
+
+    // ── PWA shortcuts ─────────────────────────────────────────────────
+    function handlePWAShortcut() {
+        const v = new URLSearchParams(window.location.search).get('view')
+        if (!v) return
+        const map = { factures:'facture', soumissions:'soumissions', temps:'feuilleTemps', feuilles:'feuilleTemps', messagerie:'messagerie', courriel:'courriel', calendrier:'calendrier', clients:'clients', client:'clients', po:'po', outils:'outils', admin:'admin', profil:'profil', parametres:'profil' }
+        const target = map[v.toLowerCase()]
+        if (!target) return
+        const btn = document.querySelector(`.nav-btn[data-view="${target}"]`)
+        if (btn && !btn.classList.contains('hidden')) btn.click()
+    }
+
+    // ── Toast global ──────────────────────────────────────────────────
+    window.showToast = function(msg, type = 'info', duration = 3000) {
+        if (type !== 'error' && type !== 'warning' && type !== 'success') return
+        const tc = document.getElementById('toast-container')
+        const t  = document.createElement('div')
+        t.className = `shared-toast ${type}`
+        t.textContent = msg
+        tc.appendChild(t)
+        requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')))
+        setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300) }, duration)
+    }
+
+    // ── Modal observer (hide hamburger when modal open) ───────────────
+    window.addEventListener('toggle_menu', (e) => {
+        if (window.innerWidth > 768) return
+        menuBtn.style.display = e.detail?.action === 'hide' ? 'none' : ''
+    })
+    
+    const _modalObserver = new MutationObserver((mutations) => {
+        if (window.innerWidth > 768) return
+        const relevant = mutations.some(m => m.target !== document.body && (
+            m.target.classList.contains('modal-overlay') ||
+            m.target.classList.contains('custom-modal-overlay') ||
+            m.target.id === 'sig-fd-modal'
+        ))
+        if (!relevant) return
+        const hasOpen = document.querySelector('.modal-overlay.open, .custom-modal-overlay.open, #sig-fd-modal.show')
+        menuBtn.style.display = hasOpen ? 'none' : ''
+    })
+    _modalObserver.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] })
+
+    // ── Connexion ─────────────────────────────────────────────────────
+    const connIndicator = document.getElementById('conn-indicator')
+    const connText      = document.getElementById('conn-text')
+    const offlineBanner = document.getElementById('offline-banner')
+    const offlineText   = document.getElementById('offline-text')
+    let connTimer = null
+
+    function showConnStatus(online) {
+        if (connTimer) clearTimeout(connTimer)
+        connIndicator.className = online ? 'show' : 'offline show'
+        connText.textContent = online ? 'Reconnecté' : 'Hors ligne'
+        if (online) {
+            offlineBanner?.classList.remove('show')
+            connTimer = setTimeout(() => connIndicator.classList.remove('show'), 2000)
+        } else { offlineBanner?.classList.add('show') }
+    }
+
+    window.addEventListener('online', async () => {
+        if (!hasPendingOfflineSaves()) { showConnStatus(true); return }
+        const n = getPendingCount()
+        if (offlineText) offlineText.textContent = `Reconnecté — synchronisation de ${n} document(s)...`
+        const { flushed, failed } = await flushOfflineQueue(async (table, payload) => supabase.from(table).upsert(payload))
+        showConnStatus(true)
+        if (flushed > 0) window.showToast(`${flushed} document(s) synchronisé(s) avec succès.`, 'success', 4000)
+        if (failed > 0)  window.showToast(`${failed} synchronisation(s) échouée(s). Ouvrez et sauvegardez manuellement.`, 'error', 6000)
+        if (offlineText) offlineText.textContent = 'Hors ligne — les modifications sont sauvegardées localement'
+    })
+    window.addEventListener('offline', () => showConnStatus(false))
+
+    // ── Maintenance toggle ─────────────────────────────────────────────
+    window.addEventListener('toggle_maintenance', (e) => {
+        const active = e.detail?.active
+        const ms = document.getElementById('maintenance-screen')
+        if (!ms) return
+        if (active) { if (currentRole === 'A0') return; ms.style.display = 'flex'; menuBtn.style.display = 'none' }
+        else { ms.style.display = 'none'; if (window.innerWidth <= 768) menuBtn.style.display = 'flex' }
+    })
+
+    // ── Formations cascade ─────────────────────────────────────────────
+    window.addEventListener('formations_updated', () => {
+        if (currentView === 'accueil' || currentView === 'calendrier') navigateTo(currentView)
+    })
+
+    // ── Signature plein écran ──────────────────────────────────────────
+    window.addEventListener('signature_mode', (e) => {
+        const topbar = document.getElementById('app-topbar')
+        if (e.detail?.action === 'enter') {
+            document.body.classList.add('signature-mode-active')
+            menuBtn.classList.add('hide')
+            if (topbar) topbar.style.display = 'none'
+        } else {
+            document.body.classList.remove('signature-mode-active')
+            menuBtn.classList.remove('hide')
+            if (topbar) topbar.style.display = ''
         }
-    </script>
+    })
 
-    <script>
-        setTimeout(() => {
-            alert(
-                `window.innerHeight = ${window.innerHeight}\n` +
-                `body.scrollHeight = ${document.body.scrollHeight}\n` +
-                `root = ${document.getElementById("root")?.offsetHeight}`
-            );
-        }, 2000);
-    </script>
+    // ── Boot ───────────────────────────────────────────────────────────
+    async function boot() {
+        try {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session) { window.location.replace('/login.html'); return }
+
+            const user = await loadSession()
+            if (!user) { window.location.replace('/login.html'); return }
+
+            if (currentRole !== 'A0') {
+                const { data: param } = await supabase.from('parametres_globaux').select('valeur').eq('cle', 'mode_maintenance').maybeSingle()
+                if (param?.valeur === 'true') {
+                    document.getElementById('maintenance-screen').style.display = 'flex'
+                    menuBtn.style.display = 'none'
+                    mainLoader.style.opacity = '0'
+                    setTimeout(() => mainLoader.style.display = 'none', 400)
+                    return
+                }
+            }
+
+            appliquerPermissions()
+            updateTopbarUser()
+            watchSession(() => { window.location.replace('/login.html') })
+            if (!navigator.onLine) showConnStatus(false)
+
+            mainLoader.style.opacity = '0'
+            setTimeout(() => mainLoader.style.display = 'none', 400)
+
+            handlePWAShortcut()
+            initGlobalSearch(navigateTo)
+            initNotifications(navigateTo)
+            if (currentView === 'accueil') await navigateTo('accueil')
+
+        } catch (e) { console.warn('[Boot]', e?.message) }
+    }
+
+    boot()
+
+    // ── iOS Install banner ─────────────────────────────────────────────
+    ;(() => {
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+        const isStandalone = navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches
+        if (!isIOS || isStandalone || localStorage.getItem('ios_install_dismissed')) return
+        const banner = document.getElementById('ios-install-banner')
+        if (!banner) return
+        setTimeout(() => { banner.style.display = 'flex' }, 3000)
+        document.getElementById('ios-install-close').addEventListener('click', () => {
+            banner.style.display = 'none'
+            localStorage.setItem('ios_install_dismissed', '1')
+        })
+    })()
+
+    // ── Portrait hint ──────────────────────────────────────────────────
+    ;(() => {
+        const hint = document.getElementById('portrait-hint')
+        if (!hint) return
+        let wasOpen = false
+        function onSigChange() {
+            const sigOpen = document.getElementById('sig-fd-modal')?.classList.contains('show')
+            const isLandscape = window.innerWidth > window.innerHeight
+            const isMobile = window.innerWidth < 900
+            if (sigOpen) { wasOpen = true; hint.classList.remove('show') }
+            else if (wasOpen) { wasOpen = false; if (isMobile && isLandscape) hint.classList.add('show') }
+        }
+        function hideIfPortrait() { if (window.innerWidth <= window.innerHeight) hint.classList.remove('show') }
+        window.addEventListener('resize', hideIfPortrait)
+        window.addEventListener('orientationchange', () => setTimeout(hideIfPortrait, 150))
+        const attachObs = (modal) => new MutationObserver(onSigChange).observe(modal, { attributes: true, attributeFilter: ['class'] })
+        const sigModal = document.getElementById('sig-fd-modal')
+        if (sigModal) attachObs(sigModal)
+        else new MutationObserver((_, obs) => { const m = document.getElementById('sig-fd-modal'); if (m) { attachObs(m); obs.disconnect() } }).observe(document.body, { childList: true, subtree: true })
+    })()
+</script>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+        navigator.serviceWorker.ready.then(reg => reg.update());
+    }
+</script>
+
+<script>
+    setTimeout(() => {
+        alert(
+            `window.innerHeight = ${window.innerHeight}\n` +
+            `body.scrollHeight = ${document.body.scrollHeight}\n` +
+            `root = ${document.getElementById("app-container")?.offsetHeight}`
+        );
+    }, 2000);
+</script>
+
 </body>
 </html>
